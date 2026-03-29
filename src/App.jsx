@@ -12,6 +12,7 @@ import Pipeline from "./pages/Pipeline";
 import MarketMap from "./pages/MarketMap";
 import Competitors from "./pages/Competitors";
 import Workflows from "./pages/Workflows";
+import PricingTool from "./pages/PricingTool";
 import AICoach from "./pages/AICoach";
 
 const PAGE_TITLES = {
@@ -21,6 +22,7 @@ const PAGE_TITLES = {
   "/market-map": "Bản đồ thị trường",
   "/competitors": "Phân tích đối thủ",
   "/workflows": "Quy trình sản phẩm",
+  "/pricing": "Báo giá & Giá",
   "/ai-coach": "AI Sales Coach"
 };
 
@@ -113,6 +115,7 @@ export default function App() {
             <Route path="/market-map" element={<MarketMap showToast={showToast} />} />
             <Route path="/competitors" element={<Competitors showToast={showToast} />} />
             <Route path="/workflows" element={<Workflows showToast={showToast} />} />
+            <Route path="/pricing" element={<PricingTool showToast={showToast} />} />
             <Route path="/ai-coach" element={<AICoach />} />
           </Routes>
         </main>

@@ -8,7 +8,8 @@ import {
   GitBranch,
   Brain,
   X,
-  Activity
+  Activity,
+  Tag
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { to: "/market-map", label: "Bản đồ thị trường", icon: Map },
   { to: "/competitors", label: "Đối thủ", icon: Target },
   { to: "/workflows", label: "Quy trình", icon: GitBranch },
+  { to: "/pricing", label: "Báo giá & Giá", icon: Tag },
   { to: "/ai-coach", label: "AI Coach", icon: Brain }
 ];
 

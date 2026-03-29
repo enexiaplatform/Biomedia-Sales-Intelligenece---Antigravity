@@ -383,6 +383,52 @@ export async function deleteWorkflow(id) {
   return { error };
 }
 
+// ── Products ──────────────────────────────────────────────────────────────────
+export async function fetchProducts(filters = {}) {
+  let query = supabase.from("products").select("*").order("name");
+  if (filters.category) query = query.eq("category", filters.category);
+  const { data, error } = await query;
+  return { data, error };
+}
+
+export async function createProduct(productData) {
+  const { data, error } = await supabase.from("products").insert([productData]).select().single();
+  return { data, error };
+}
+
+export async function updateProduct(id, productData) {
+  const { data, error } = await supabase.from("products").update(productData).eq("id", id).select().single();
+  return { data, error };
+}
+
+export async function deleteProduct(id) {
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  return { error };
+}
+
+// ── Quotes ────────────────────────────────────────────────────────────────────
+export async function fetchQuotes(accountId = null) {
+  let query = supabase.from("quotes").select("*, accounts(name), deals(name)").order("updated_at", { ascending: false });
+  if (accountId) query = query.eq("account_id", accountId);
+  const { data, error } = await query;
+  return { data, error };
+}
+
+export async function createQuote(quoteData) {
+  const { data, error } = await supabase.from("quotes").insert([quoteData]).select().single();
+  return { data, error };
+}
+
+export async function updateQuote(id, quoteData) {
+  const { data, error } = await supabase.from("quotes").update(quoteData).eq("id", id).select().single();
+  return { data, error };
+}
+
+export async function deleteQuote(id) {
+  const { error } = await supabase.from("quotes").delete().eq("id", id);
+  return { error };
+}
+
 // ── Complex Queries ───────────────────────────────────────────────────────────
 export async function getAccountStats() {
   const [accountsResult, dealsResult] = await Promise.all([

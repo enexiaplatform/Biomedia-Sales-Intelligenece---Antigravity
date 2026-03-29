@@ -184,3 +184,51 @@ CREATE POLICY "All access to battlecards" ON battlecards FOR ALL USING (true);
 CREATE POLICY "All access to win_loss" ON win_loss FOR ALL USING (true);
 CREATE POLICY "All access to market_segments" ON market_segments FOR ALL USING (true);
 CREATE POLICY "All access to workflows" ON workflows FOR ALL USING (true);
+
+-- Products table
+CREATE TABLE products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  category TEXT, -- 'sterility_testing','endotoxin','environmental','microbial','consumable','equipment'
+  sku TEXT,
+  list_price BIGINT DEFAULT 0, -- VND
+  cost BIGINT DEFAULT 0,
+  unit TEXT,
+  description TEXT,
+  usp TEXT, -- unique selling points
+  competitor_alternatives JSONB DEFAULT '[]', -- [{competitor, product, price}]
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Quotes table
+CREATE TABLE quotes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id UUID REFERENCES accounts(id),
+  deal_id UUID REFERENCES deals(id),
+  name TEXT NOT NULL,
+  status TEXT DEFAULT 'draft', -- 'draft','sent','accepted','rejected'
+  items JSONB DEFAULT '[]', -- [{product_id, name, qty, unit_price, discount_pct, total}]
+  subtotal BIGINT DEFAULT 0,
+  total_discount BIGINT DEFAULT 0,
+  grand_total BIGINT DEFAULT 0,
+  notes TEXT,
+  valid_until DATE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Trigger updated_at for products and quotes
+CREATE TRIGGER products_updated_at BEFORE UPDATE ON products
+FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER quotes_updated_at BEFORE UPDATE ON quotes
+FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- Enable RLS
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+
+-- Permissive RLS policies
+CREATE POLICY "All access to products" ON products FOR ALL USING (true);
+CREATE POLICY "All access to quotes" ON quotes FOR ALL USING (true);
