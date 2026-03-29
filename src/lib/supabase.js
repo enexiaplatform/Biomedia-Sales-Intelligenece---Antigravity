@@ -496,6 +496,31 @@ export async function createAccountFromIntel(intelRecord) {
   return { data: accData, error: intelError || null };
 }
 
+// ── Market Sizing ───────────────────────────────────────────────────────────────
+export async function fetchMarketSizing() {
+  const { data, error } = await supabase
+    .from("market_sizing")
+    .select("*")
+    .order("year", { ascending: false })
+    .order("segment", { ascending: true });
+  return { data, error };
+}
+
+export async function createMarketSizing(marketData) {
+  const { data, error } = await supabase.from("market_sizing").insert([marketData]).select().single();
+  return { data, error };
+}
+
+export async function updateMarketSizing(id, marketData) {
+  const { data, error } = await supabase.from("market_sizing").update(marketData).eq("id", id).select().single();
+  return { data, error };
+}
+
+export async function deleteMarketSizing(id) {
+  const { error } = await supabase.from("market_sizing").delete().eq("id", id);
+  return { error };
+}
+
 // ── Complex Queries ───────────────────────────────────────────────────────────
 export async function getAccountStats() {
   const [accountsResult, dealsResult] = await Promise.all([

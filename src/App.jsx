@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { Menu, Plus, Search } from "lucide-react";
+import { Menu, Plus, Search, Package } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import QuickLogModal from "./components/QuickLogModal";
 import GlobalSearchModal from "./components/GlobalSearchModal";
@@ -16,6 +16,7 @@ import PricingTool from "./pages/PricingTool";
 import KPITracker from "./pages/KPITracker";
 import MarketScan from "./pages/MarketScan";
 import AICoach from "./pages/AICoach";
+import ProductManagement from "./pages/ProductManagement";
 
 const PAGE_TITLES = {
   "/": "Dashboard",
@@ -27,7 +28,8 @@ const PAGE_TITLES = {
   "/pricing": "Báo giá & Giá",
   "/kpi": "KPI & Hiệu suất",
   "/market-scan": "Market Scan",
-  "/ai-coach": "AI Sales Coach"
+  "/ai-coach": "AI Sales Coach",
+  "/products": "Sản Phẩm"
 };
 
 export default function App() {
@@ -123,6 +125,7 @@ export default function App() {
             <Route path="/kpi" element={<KPITracker showToast={showToast} />} />
             <Route path="/market-scan" element={<MarketScan showToast={showToast} />} />
             <Route path="/ai-coach" element={<AICoach />} />
+            <Route path="/products" element={<ProductManagement showToast={showToast} />} />
           </Routes>
         </main>
       </div>
