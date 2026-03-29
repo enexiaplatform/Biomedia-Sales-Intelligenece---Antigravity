@@ -10,7 +10,8 @@ import {
   X,
   Activity,
   Tag,
-  BarChart2
+  BarChart2,
+  Radar
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: "/workflows", label: "Quy trình", icon: GitBranch },
   { to: "/pricing", label: "Báo giá & Giá", icon: Tag },
   { to: "/kpi", label: "KPI & Hiệu suất", icon: BarChart2 },
+  { to: "/market-scan", label: "Market Scan", icon: Radar },
   { to: "/ai-coach", label: "AI Coach", icon: Brain }
 ];
 

@@ -232,3 +232,24 @@ ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
 -- Permissive RLS policies
 CREATE POLICY "All access to products" ON products FOR ALL USING (true);
 CREATE POLICY "All access to quotes" ON quotes FOR ALL USING (true);
+
+-- Market Intel table
+CREATE TABLE market_intel (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  scan_date TIMESTAMPTZ,
+  category TEXT, -- 'pharma_factory', 'fnb_factory', 'gmp_license', 'tender', 'regulatory'
+  title TEXT,
+  summary TEXT,
+  companies_mentioned TEXT[],
+  region TEXT,
+  relevance_score INTEGER,
+  source_type TEXT,
+  is_lead_candidate BOOLEAN,
+  converted_to_account UUID, -- null if not yet converted
+  notes TEXT,
+  raw_data JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE market_intel ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "All access to market_intel" ON market_intel FOR ALL USING (true);

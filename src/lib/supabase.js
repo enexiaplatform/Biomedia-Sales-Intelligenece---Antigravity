@@ -460,6 +460,42 @@ export async function fetchKPITargetsByPeriods(periods) {
   return { data, error };
 }
 
+// ── Market Scan ─────────────────────────────────────────────────────────────────
+export async function fetchMarketIntel() {
+  const { data, error } = await supabase.from("market_intel").select("*").order("scan_date", { ascending: false });
+  return { data, error };
+}
+
+export async function updateMarketIntel(id, updates) {
+  const { data, error } = await supabase.from("market_intel").update(updates).eq("id", id).select().single();
+  return { data, error };
+}
+
+export async function createAccountFromIntel(intelRecord) {
+  // intelRecord expected to have at least title, region, category
+  const type = intelRecord.category === "fnb_factory" ? "fnb" : "pharma";
+  // The accounts table usually expects { name, type, region, status ... }
+  // Let's create account directly
+  const newAccount = {
+    name: intelRecord.title || "New Account",
+    type: type,
+    region: intelRecord.region || "North",
+    status: "active",
+    score: intelRecord.relevance_score || 50
+  };
+
+  const { data: accData, error: accError } = await supabase.from("accounts").insert([newAccount]).select().single();
+  
+  if (accError) return { data: null, error: accError };
+
+  // Update market_intel to link
+  const { error: intelError } = await supabase.from("market_intel")
+    .update({ converted_to_account: accData.id })
+    .eq("id", intelRecord.id);
+
+  return { data: accData, error: intelError || null };
+}
+
 // ── Complex Queries ───────────────────────────────────────────────────────────
 export async function getAccountStats() {
   const [accountsResult, dealsResult] = await Promise.all([

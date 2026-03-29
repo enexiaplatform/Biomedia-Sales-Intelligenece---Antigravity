@@ -14,6 +14,7 @@ import Competitors from "./pages/Competitors";
 import Workflows from "./pages/Workflows";
 import PricingTool from "./pages/PricingTool";
 import KPITracker from "./pages/KPITracker";
+import MarketScan from "./pages/MarketScan";
 import AICoach from "./pages/AICoach";
 
 const PAGE_TITLES = {
@@ -25,6 +26,7 @@ const PAGE_TITLES = {
   "/workflows": "Quy trình sản phẩm",
   "/pricing": "Báo giá & Giá",
   "/kpi": "KPI & Hiệu suất",
+  "/market-scan": "Market Scan",
   "/ai-coach": "AI Sales Coach"
 };
 
@@ -119,6 +121,7 @@ export default function App() {
             <Route path="/workflows" element={<Workflows showToast={showToast} />} />
             <Route path="/pricing" element={<PricingTool showToast={showToast} />} />
             <Route path="/kpi" element={<KPITracker showToast={showToast} />} />
+            <Route path="/market-scan" element={<MarketScan showToast={showToast} />} />
             <Route path="/ai-coach" element={<AICoach />} />
           </Routes>
         </main>
