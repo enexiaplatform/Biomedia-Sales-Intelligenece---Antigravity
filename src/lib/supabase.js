@@ -429,6 +429,37 @@ export async function deleteQuote(id) {
   return { error };
 }
 
+// ── KPI Tracker ───────────────────────────────────────────────────────────────
+export async function fetchKPITarget(period) {
+  const { data, error } = await supabase.from("kpi_targets").select("*").eq("period", period).single();
+  return { data, error };
+}
+
+export async function upsertKPITarget(kpiData) {
+  const { data, error } = await supabase.from("kpi_targets").upsert(kpiData).select().single();
+  return { data, error };
+}
+
+export async function fetchKPIActuals(period) {
+  const { data, error } = await supabase.from("kpi_actuals").select("*").eq("period", period).order("week");
+  return { data, error };
+}
+
+export async function upsertKPIActual(kpiActualData) {
+  const { data, error } = await supabase.from("kpi_actuals").upsert(kpiActualData).select().single();
+  return { data, error };
+}
+
+export async function fetchKPIActualsByPeriods(periods) {
+  const { data, error } = await supabase.from("kpi_actuals").select("*").in("period", periods);
+  return { data, error };
+}
+
+export async function fetchKPITargetsByPeriods(periods) {
+  const { data, error } = await supabase.from("kpi_targets").select("*").in("period", periods);
+  return { data, error };
+}
+
 // ── Complex Queries ───────────────────────────────────────────────────────────
 export async function getAccountStats() {
   const [accountsResult, dealsResult] = await Promise.all([

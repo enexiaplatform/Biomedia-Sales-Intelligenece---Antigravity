@@ -13,6 +13,7 @@ import MarketMap from "./pages/MarketMap";
 import Competitors from "./pages/Competitors";
 import Workflows from "./pages/Workflows";
 import PricingTool from "./pages/PricingTool";
+import KPITracker from "./pages/KPITracker";
 import AICoach from "./pages/AICoach";
 
 const PAGE_TITLES = {
@@ -23,6 +24,7 @@ const PAGE_TITLES = {
   "/competitors": "Phân tích đối thủ",
   "/workflows": "Quy trình sản phẩm",
   "/pricing": "Báo giá & Giá",
+  "/kpi": "KPI & Hiệu suất",
   "/ai-coach": "AI Sales Coach"
 };
 
@@ -116,6 +118,7 @@ export default function App() {
             <Route path="/competitors" element={<Competitors showToast={showToast} />} />
             <Route path="/workflows" element={<Workflows showToast={showToast} />} />
             <Route path="/pricing" element={<PricingTool showToast={showToast} />} />
+            <Route path="/kpi" element={<KPITracker showToast={showToast} />} />
             <Route path="/ai-coach" element={<AICoach />} />
           </Routes>
         </main>

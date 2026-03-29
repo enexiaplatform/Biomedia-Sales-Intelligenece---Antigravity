@@ -9,7 +9,8 @@ import {
   Brain,
   X,
   Activity,
-  Tag
+  Tag,
+  BarChart2
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { to: "/competitors", label: "Đối thủ", icon: Target },
   { to: "/workflows", label: "Quy trình", icon: GitBranch },
   { to: "/pricing", label: "Báo giá & Giá", icon: Tag },
+  { to: "/kpi", label: "KPI & Hiệu suất", icon: BarChart2 },
   { to: "/ai-coach", label: "AI Coach", icon: Brain }
 ];
 
