@@ -521,6 +521,41 @@ export async function deleteMarketSizing(id) {
   return { error };
 }
 
+// ── Org Nodes ─────────────────────────────────────────────────────────────────
+export async function fetchOrgNodes(accountId) {
+  const { data, error } = await supabase
+    .from("org_nodes")
+    .select("*, contacts(name, email)")
+    .eq("account_id", accountId)
+    .order("level", { ascending: true })
+    .order("name", { ascending: true });
+  return { data, error };
+}
+
+export async function createOrgNode(orgNodeData) {
+  const { data, error } = await supabase
+    .from("org_nodes")
+    .insert([orgNodeData])
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function updateOrgNode(id, orgNodeData) {
+  const { data, error } = await supabase
+    .from("org_nodes")
+    .update(orgNodeData)
+    .eq("id", id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function deleteOrgNode(id) {
+  const { error } = await supabase.from("org_nodes").delete().eq("id", id);
+  return { error };
+}
+
 // ── Complex Queries ───────────────────────────────────────────────────────────
 export async function getAccountStats() {
   const [accountsResult, dealsResult] = await Promise.all([

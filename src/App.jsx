@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { Menu, Plus, Search, Package } from "lucide-react";
+import { Menu, Plus, Search, Package, Network } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import QuickLogModal from "./components/QuickLogModal";
 import GlobalSearchModal from "./components/GlobalSearchModal";
@@ -17,6 +17,7 @@ import KPITracker from "./pages/KPITracker";
 import MarketScan from "./pages/MarketScan";
 import AICoach from "./pages/AICoach";
 import ProductManagement from "./pages/ProductManagement";
+import BDTool from "./pages/BDTool";
 
 const PAGE_TITLES = {
   "/": "Dashboard",
@@ -29,7 +30,8 @@ const PAGE_TITLES = {
   "/kpi": "KPI & Hiệu suất",
   "/market-scan": "Market Scan",
   "/ai-coach": "AI Sales Coach",
-  "/products": "Sản Phẩm"
+  "/products": "Sản Phẩm",
+  "/bd-tool": "BD Tool"
 };
 
 export default function App() {
@@ -126,6 +128,7 @@ export default function App() {
             <Route path="/market-scan" element={<MarketScan showToast={showToast} />} />
             <Route path="/ai-coach" element={<AICoach />} />
             <Route path="/products" element={<ProductManagement showToast={showToast} />} />
+            <Route path="/bd-tool" element={<BDTool />} />
           </Routes>
         </main>
       </div>

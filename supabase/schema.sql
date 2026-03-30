@@ -253,3 +253,29 @@ CREATE TABLE market_intel (
 
 ALTER TABLE market_intel ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "All access to market_intel" ON market_intel FOR ALL USING (true);
+
+-- Org Nodes table (BD Tool — stakeholder org chart)
+CREATE TABLE org_nodes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  contact_id UUID REFERENCES contacts(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  title TEXT,
+  department TEXT,
+  level INTEGER DEFAULT 3,          -- 1=C-level, 2=Director, 3=Manager, 4=Staff
+  reports_to UUID REFERENCES org_nodes(id) ON DELETE SET NULL,
+  influence_score INTEGER DEFAULT 5 CHECK (influence_score >= 1 AND influence_score <= 10),
+  relationship_status TEXT DEFAULT 'neutral', -- champion|supporter|neutral|skeptic|blocker
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_org_nodes_account ON org_nodes(account_id);
+CREATE INDEX idx_org_nodes_reports_to ON org_nodes(reports_to);
+
+CREATE TRIGGER org_nodes_updated_at BEFORE UPDATE ON org_nodes
+FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+ALTER TABLE org_nodes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "All access to org_nodes" ON org_nodes FOR ALL USING (true);

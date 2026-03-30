@@ -12,13 +12,15 @@ import {
   Tag,
   BarChart2,
   Radar,
-  Package
+  Package,
+  Network
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: BarChart3 },
   { to: "/accounts", label: "Tài khoản", icon: Users },
   { to: "/products", label: "Sản Phẩm", icon: Package },
+  { to: "/bd-tool", label: "BD Tool", icon: Network },
   { to: "/pipeline", label: "Pipeline", icon: TrendingUp },
   { to: "/market-map", label: "Bản đồ thị trường", icon: Map },
   { to: "/competitors", label: "Đối thủ", icon: Target },
