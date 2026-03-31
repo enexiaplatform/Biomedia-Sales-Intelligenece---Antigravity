@@ -13,11 +13,11 @@ import { PageLoader } from "../components/LoadingSpinner";
 
 // Enum mappings
 const CATEGORY_MAP = {
-  pharma_factory: { label: "Nhà máy Pharma", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  fnb_factory: { label: "Nhà máy F&B", color: "bg-green-100 text-green-800 border-green-200" },
-  gmp_license: { label: "GMP License", color: "bg-purple-100 text-purple-800 border-purple-200" },
-  tender: { label: "Đấu thầu", color: "bg-orange-100 text-orange-800 border-orange-200" },
-  regulatory: { label: "Quy định", color: "bg-gray-100 text-gray-800 border-gray-200" }
+  pharma_factory: { label: "Nhà máy Pharma", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+  fnb_factory: { label: "Nhà máy F&B", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  gmp_license: { label: "GMP License", color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
+  tender: { label: "Đấu thầu", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+  regulatory: { label: "Quy định", color: "bg-slate-500/10 text-slate-400 border-slate-500/20" }
 };
 
 export default function MarketScan({ showToast }) {
@@ -113,51 +113,52 @@ export default function MarketScan({ showToast }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-            <Radar size={24} />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-900 p-6 rounded-2xl border border-surface-700/50 shadow-xl overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -mr-32 -mt-32"></div>
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="p-3 bg-primary/10 text-primary rounded-2xl shadow-glow-sm">
+            <Radar size={28} className={isScanning ? "animate-pulse" : ""} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Market Scan</h1>
-            <p className="text-gray-500 text-sm">Tin tức nhà máy & cơ hội mới tại Việt Nam</p>
+            <h1 className="text-2xl font-black text-slate-100 tracking-tight">Market Scan</h1>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Tin tức & Cơ hội mới tại Việt Nam</p>
           </div>
         </div>
         <button 
           onClick={handleScanNow} 
           disabled={isScanning}
-          className="btn-primary flex items-center gap-2 whitespace-nowrap"
+          className="btn-primary flex items-center gap-2 whitespace-nowrap h-12 px-6 rounded-xl shadow-lg shadow-primary/20 relative z-10"
         >
-          <RefreshCw size={16} className={isScanning ? "animate-spin" : ""} />
-          {isScanning ? "Đang quét..." : "Quét Ngay"}
+          <RefreshCw size={18} className={isScanning ? "animate-spin" : ""} />
+          <span className="font-bold">{isScanning ? "Đang quét..." : "Quét Ngay"}</span>
         </button>
       </div>
 
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Tổng tin tức" value={totalCount} />
-        <StatCard label="Lead tiềm năng" value={leadCount} color="text-yellow-600" />
-        <StatCard label="Đã chuyển đổi" value={convertedCount} color="text-emerald-600" />
+        <StatCard label="Lead tiềm năng" value={leadCount} color="text-amber-400" />
+        <StatCard label="Đã chuyển đổi" value={convertedCount} color="text-primary" />
         <StatCard 
           label="Lần quét gần nhất" 
           value={lastScanDate ? format(new Date(lastScanDate), "dd/MM/yyyy HH:mm") : "---"} 
-          valueClassName="text-lg"
+          valueClassName="text-sm md:text-base"
         />
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center flex-wrap">
-        <div className="w-full md:flex-1 min-w-[200px]">
+      <div className="bg-surface-900 p-4 rounded-xl border border-surface-700/50 shadow-sm flex flex-col md:flex-row gap-4 items-center flex-wrap">
+        <div className="w-full md:flex-1">
           <input 
             type="text" 
             placeholder="Tìm theo tiêu đề, công ty..." 
-            className="input w-full"
+            className="input w-full bg-surface-950/50 border-surface-700"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <select 
-          className="input w-full md:w-auto"
+          className="input w-full md:w-auto bg-surface-950/50 border-surface-700"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
         >
@@ -168,17 +169,17 @@ export default function MarketScan({ showToast }) {
           <option value="tender">Đấu thầu</option>
           <option value="regulatory">Quy định</option>
         </select>
-        <label className="flex items-center gap-2 cursor-pointer w-full md:w-auto mt-2 md:mt-0">
+        <label className="flex items-center gap-2 cursor-pointer w-full md:w-auto py-2 pr-4 bg-surface-950/30 rounded-lg px-3 border border-surface-700/50">
           <input 
             type="checkbox" 
-            className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+            className="rounded border-surface-700 bg-surface-950 text-primary cursor-pointer"
             checked={onlyLeads}
             onChange={(e) => setOnlyLeads(e.target.checked)}
           />
-          <span className="text-sm font-medium text-gray-700">Chỉ xem Lead</span>
+          <span className="text-[10px] uppercase font-black text-slate-400">Chỉ xem Lead</span>
         </label>
         <select 
-          className="input w-full md:w-auto"
+          className="input w-full md:w-auto bg-surface-950/50 border-surface-700"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
         >
@@ -243,79 +244,80 @@ function IntelCard({ item, onUpdateNotes, onConvertClick }) {
   const [expanded, setExpanded] = useState(false);
   const [localNotes, setLocalNotes] = useState(item.notes || "");
   
-  const catInfo = CATEGORY_MAP[item.category] || { label: item.category, color: "bg-gray-100 text-gray-800 border-gray-200" };
+  const catInfo = CATEGORY_MAP[item.category] || { label: item.category, color: "bg-surface-800 text-slate-400 border-surface-700" };
   const score = item.relevance_score || 0;
   
-  let scoreColor = "text-red-700 bg-red-50 border-red-100";
-  if (score >= 70) scoreColor = "text-emerald-700 bg-emerald-50 border-emerald-100";
-  else if (score >= 40) scoreColor = "text-yellow-700 bg-yellow-50 border-yellow-100";
+  let scoreColor = "text-amber-400 bg-amber-400/10 border-amber-400/20";
+  if (score >= 70) scoreColor = "text-primary bg-primary/10 border-primary/20 shadow-glow-sm";
+  else if (score < 40) scoreColor = "text-slate-500 bg-slate-500/10 border-slate-500/20";
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
+    <div className="bg-surface-900 rounded-2xl border border-surface-700/50 shadow-sm flex flex-col h-full hover:shadow-xl transition-all duration-300 group overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-2 flex-wrap bg-gray-50/50 rounded-t-xl">
+      <div className="p-4 border-b border-surface-700/50 flex items-center justify-between gap-2 flex-wrap bg-surface-800/30">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${catInfo.color}`}>
+          <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border ${catInfo.color}`}>
             {catInfo.label}
           </span>
           {item.is_lead_candidate && (
-            <span className="px-2.5 py-1 text-xs font-bold rounded-full border border-yellow-300 bg-yellow-100 text-yellow-800 flex items-center gap-1">
-              <Star size={12} className="fill-yellow-500 text-yellow-500"/> Lead
+            <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-500 flex items-center gap-1">
+              <Star size={10} className="fill-amber-500"/> Lead
             </span>
           )}
           {item.converted_to_account && (
-            <span className="px-2.5 py-1 text-xs font-semibold rounded-full border border-emerald-200 bg-emerald-100 text-emerald-800 flex items-center gap-1">
-              <CheckCircle size={12} /> Đã chuyển đổi
+            <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border border-primary/30 bg-primary/10 text-primary flex items-center gap-1">
+              <CheckCircle size={10} /> Đã chuyển đổi
             </span>
           )}
         </div>
-        <div className={`px-2.5 py-1 text-xs font-bold rounded border flex items-center gap-1 ${scoreColor}`}>
-          Điểm: {score}/100
+        <div className={`px-2 py-0.5 text-[10px] font-black tracking-widest rounded border flex items-center gap-1 ${scoreColor}`}>
+          SCORE: {score}
         </div>
       </div>
 
       {/* Body */}
       <div className="p-5 flex-1 flex flex-col">
-        <h3 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
+        <h3 className="text-lg font-black text-slate-100 mb-3 leading-tight tracking-tight group-hover:text-primary transition-colors">
           {item.title}
         </h3>
         {item.region && (
-          <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-3">
-            <MapPin size={14} />
+          <div className="flex items-center gap-1.5 text-slate-400 text-xs font-bold mb-4">
+            <MapPin size={12} className="text-primary" />
             {item.region}
           </div>
         )}
         
-        <div className="text-sm text-gray-600 mb-4 whitespace-pre-wrap">
+        <div className="text-sm text-slate-400 mb-6 whitespace-pre-wrap leading-relaxed">
           {expanded ? item.summary : (item.summary?.substring(0, 150) || "") + (item.summary?.length > 150 ? "..." : "")}
           {item.summary?.length > 150 && (
             <button 
               onClick={() => setExpanded(!expanded)} 
-              className="text-blue-600 font-medium ml-1 hover:underline focus:outline-none"
+              className="text-primary font-black ml-1 hover:underline focus:outline-none uppercase text-[10px] tracking-widest"
             >
-              {expanded ? "Thu gọn" : "Xem thêm"}
+              [{expanded ? "Thu gọn" : "Xem thêm"}]
             </button>
           )}
         </div>
 
         {item.companies_mentioned?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
+          <div className="flex flex-wrap gap-2 mb-6">
             {item.companies_mentioned.map((c, i) => (
-              <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded border border-gray-200 flex items-center gap-1">
-                <Building size={10} /> {c}
+              <span key={i} className="px-2 py-1 bg-surface-950 text-slate-400 text-[10px] font-bold rounded border border-surface-700 flex items-center gap-1.5 shadow-inner">
+                <Building size={10} className="text-primary" /> {c}
               </span>
             ))}
           </div>
         )}
 
-        <div className="text-xs text-gray-400 mb-4 mt-auto">
-          Cập nhật: {format(new Date(item.scan_date), "dd/MM/yyyy HH:mm")}
+        <div className="text-[10px] font-black text-slate-500 mb-4 mt-auto uppercase tracking-widest flex items-center gap-2">
+           <div className="w-1 h-1 rounded-full bg-slate-600"></div>
+           Cập nhật: {format(new Date(item.scan_date), "dd/MM/yyyy")}
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+        <div className="pt-4 border-t border-surface-700/50 flex flex-col gap-3">
           <textarea
-            className="input w-full text-sm resize-none"
+            className="input w-full text-xs resize-none bg-surface-950 border-surface-700 focus:border-primary/50 text-slate-300"
             placeholder="Ghi chú thêm..."
             rows={2}
             value={localNotes}
@@ -325,7 +327,7 @@ function IntelCard({ item, onUpdateNotes, onConvertClick }) {
             }}
           />
           {item.is_lead_candidate && !item.converted_to_account && (
-            <button onClick={onConvertClick} className="btn-secondary w-full justify-center">
+            <button onClick={onConvertClick} className="btn-secondary w-full justify-center h-10 rounded-xl font-black uppercase tracking-widest text-[10px] border-amber-500/20 text-amber-500 hover:bg-amber-500/5">
               Tạo Account
             </button>
           )}
@@ -418,11 +420,12 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
   );
 }
 
-function StatCard({ label, value, color = "text-gray-900", valueClassName = "text-3xl" }) {
+function StatCard({ label, value, color = "text-slate-100", valueClassName = "text-2xl md:text-3xl" }) {
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center">
-      <div className="text-sm text-gray-500 font-medium mb-1">{label}</div>
-      <div className={`${valueClassName} font-bold ${color}`}>{value}</div>
+    <div className="bg-surface-900 p-5 rounded-2xl border border-surface-700/50 shadow-sm flex flex-col justify-center relative overflow-hidden group">
+      <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">{label}</div>
+      <div className={`${valueClassName} font-black tracking-tight ${color}`}>{value}</div>
     </div>
   );
 }

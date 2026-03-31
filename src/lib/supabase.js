@@ -556,6 +556,39 @@ export async function deleteOrgNode(id) {
   return { error };
 }
 
+// ── Org Node History ──────────────────────────────────────────────────────────
+export async function fetchOrgNodeHistory(nodeId) {
+  const { data, error } = await supabase
+    .from("org_node_history")
+    .select("*")
+    .eq("org_node_id", nodeId)
+    .order("changed_at", { ascending: false });
+  return { data, error };
+}
+
+// ── Org Node Influences ───────────────────────────────────────────────────────
+export async function fetchInfluenceLinks(accountId) {
+  const { data, error } = await supabase
+    .from("org_node_influences")
+    .select("*, source:source_node_id(name, title), target:target_node_id(name, title)")
+    .eq("account_id", accountId);
+  return { data, error };
+}
+
+export async function createInfluenceLink(linkData) {
+  const { data, error } = await supabase
+    .from("org_node_influences")
+    .insert([linkData])
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function deleteInfluenceLink(id) {
+  const { error } = await supabase.from("org_node_influences").delete().eq("id", id);
+  return { error };
+}
+
 // ── Complex Queries ───────────────────────────────────────────────────────────
 export async function getAccountStats() {
   const [accountsResult, dealsResult] = await Promise.all([
@@ -629,6 +662,37 @@ export async function getMarketMatrixData() {
     segments: segmentsResult.data || [],
     error: accountsResult.error || dealsResult.error || segmentsResult.error
   };
+}
+
+// ── Documents / Storage ───────────────────────────────────────────────────────
+export async function uploadProductDoc(file, path) {
+  const { data, error } = await supabase.storage
+    .from("catalogues")
+    .upload(path, file, { upsert: true });
+  return { data, error };
+}
+
+export async function listProductDocs(folder = "") {
+  const { data, error } = await supabase.storage
+    .from("catalogues")
+    .list(folder, {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: "name", order: "asc" },
+    });
+  return { data, error };
+}
+
+export async function getProductDocUrl(path) {
+  const { data } = supabase.storage.from("catalogues").getPublicUrl(path);
+  return data?.publicUrl;
+}
+
+export async function deleteProductDoc(path) {
+  const { data, error } = await supabase.storage
+    .from("catalogues")
+    .remove([path]);
+  return { data, error };
 }
 
 export async function globalSearch(query) {

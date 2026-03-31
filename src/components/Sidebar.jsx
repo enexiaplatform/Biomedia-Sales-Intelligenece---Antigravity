@@ -13,7 +13,8 @@ import {
   BarChart2,
   Radar,
   Package,
-  Network
+  Network,
+  FlaskConical
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { to: "/competitors", label: "Đối thủ", icon: Target },
   { to: "/workflows", label: "Quy trình", icon: GitBranch },
   { to: "/pricing", label: "Báo giá & Giá", icon: Tag },
+  { to: "/lab-tools", label: "Công cụ Lab", icon: FlaskConical },
   { to: "/kpi", label: "KPI & Hiệu suất", icon: BarChart2 },
   { to: "/market-scan", label: "Market Scan", icon: Radar },
   { to: "/ai-coach", label: "AI Coach", icon: Brain }
@@ -44,28 +46,29 @@ export default function Sidebar({ open, onClose }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-200
+        className={`fixed top-0 left-0 h-full z-50 w-64 bg-surface-900 border-r border-surface-700/50 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl
           ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
-          <div className="flex items-center gap-2">
-            <Activity className="text-blue-400" size={22} />
+        <div className="flex items-center justify-between px-6 py-6 border-b border-surface-700/50 bg-surface-950/20">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-xl shadow-glow-sm">
+              <Activity className="text-primary" size={20} />
+            </div>
             <div>
-              <div className="font-bold text-white text-sm leading-tight">Biomedia SI</div>
-              <div className="text-gray-400 text-xs">Sales Intelligence</div>
+              <div className="font-black text-slate-100 text-sm tracking-tight uppercase">Biomedia SI</div>
+              <div className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Intelligence</div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden text-gray-400 hover:text-white"
+            className="lg:hidden text-slate-500 hover:text-white transition-colors"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto scrollbar-hide">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -73,24 +76,27 @@ export default function Sidebar({ open, onClose }) {
               end={to === "/"}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300
                 ${isActive
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                  ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_rgba(105,246,184,0.1)] border border-primary/20"
+                  : "text-slate-400 hover:bg-surface-800 hover:text-slate-100 border border-transparent"
                 }`
               }
             >
-              <Icon size={18} />
+              <Icon size={18} className={({ isActive }) => isActive ? "drop-shadow-glow" : ""} />
               {label}
             </NavLink>
           ))}
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-700">
-          <div className="text-xs text-gray-500">
-            <div className="font-medium text-gray-400">Henry @ Biomedia Group</div>
-            <div className="mt-0.5">Sales Manager</div>
+        <div className="px-6 py-6 border-t border-surface-700/50 bg-surface-950/20">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-surface-800 border border-surface-700 flex items-center justify-center text-[10px] font-black text-primary">HB</div>
+            <div>
+              <div className="text-[11px] font-black text-slate-300 uppercase tracking-wide">Henry @ Biomedia</div>
+              <div className="text-[9px] font-bold text-slate-500 uppercase">Sales Manager</div>
+            </div>
           </div>
         </div>
       </aside>

@@ -4,6 +4,7 @@ import { Menu, Plus, Search, Package, Network } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import QuickLogModal from "./components/QuickLogModal";
 import GlobalSearchModal from "./components/GlobalSearchModal";
+import MobileNav from "./components/MobileNav";
 
 import Dashboard from "./pages/Dashboard";
 import Accounts from "./pages/Accounts";
@@ -75,36 +76,36 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-surface-950 text-slate-100 font-inter">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 lg:ml-64">
         {/* Header */}
-        <header className="flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-200 shrink-0">
+        <header className="flex items-center gap-4 px-4 py-3 bg-surface-900/50 backdrop-blur-md border-b border-surface-700/50 shrink-0 z-40">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-gray-500 hover:text-gray-700"
+            className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-primary transition-colors"
           >
-            <Menu size={22} />
+            <Menu size={20} />
           </button>
 
-          <h1 className="font-semibold text-gray-900 text-base flex-1">{pageTitle}</h1>
+          <h1 className="font-bold text-slate-100 text-sm md:text-base flex-1 truncate">{pageTitle}</h1>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-surface-800 text-slate-400 rounded-lg text-xs hover:text-primary border border-surface-700 transition-all hover:border-primary/50"
               title="Tìm kiếm (Ctrl+K)"
             >
               <Search size={14} />
               <span className="hidden sm:inline">Tìm kiếm</span>
-              <kbd className="hidden sm:inline text-xs bg-white border border-gray-300 rounded px-1">⌘K</kbd>
+              <kbd className="hidden sm:inline text-[10px] opacity-50 ml-1">⌘K</kbd>
             </button>
 
             <button
               onClick={() => setQuickLogOpen(true)}
-              className="btn-primary text-sm"
+              className="btn-primary text-xs h-8 px-3"
               title="Ghi nhanh (Ctrl+L)"
             >
               <Plus size={14} />
@@ -114,7 +115,7 @@ export default function App() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-24 md:pb-6">
           <Routes>
             <Route path="/" element={<Dashboard showToast={showToast} />} />
             <Route path="/accounts" element={<Accounts showToast={showToast} />} />
@@ -132,6 +133,8 @@ export default function App() {
           </Routes>
         </main>
       </div>
+
+      <MobileNav />
 
       {/* Modals */}
       <QuickLogModal

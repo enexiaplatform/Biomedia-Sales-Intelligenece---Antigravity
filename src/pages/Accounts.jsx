@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, LayoutGrid, List, Edit2, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Search, LayoutGrid, List, Edit2, Trash2, AlertCircle, Map as MapIcon } from "lucide-react";
+import MapView from "../components/MapView";
 import { format, parseISO } from "date-fns";
 import ScoreBadge from "../components/ScoreBadge";
 import { PageLoader } from "../components/LoadingSpinner";
@@ -99,10 +100,10 @@ export default function Accounts({ showToast }) {
             <LayoutGrid size={16} className="text-gray-600" />
           </button>
           <button
-            onClick={() => setView("list")}
-            className={`p-1.5 rounded ${view === "list" ? "bg-white shadow-sm" : ""}`}
+            onClick={() => setView("map")}
+            className={`p-1.5 rounded transition-all ${view === "map" ? "bg-primary text-white shadow-glow-sm" : "text-gray-600 hover:bg-gray-200"}`}
           >
-            <List size={16} className="text-gray-600" />
+            <MapIcon size={16} />
           </button>
         </div>
 
@@ -141,6 +142,8 @@ export default function Accounts({ showToast }) {
             />
           ))}
         </div>
+      ) : view === "map" ? (
+        <MapView accounts={accounts} onAccountClick={(id) => navigate(`/accounts/${id}`)} />
       ) : (
         <div className="card table-container">
           <table className="table">
@@ -159,21 +162,21 @@ export default function Accounts({ showToast }) {
               {accounts.map((acc) => (
                 <tr key={acc.id}>
                   <td>
-                    <Link to={`/accounts/${acc.id}`} className="font-medium text-blue-600 hover:underline">
+                    <Link to={`/accounts/${acc.id}`} className="font-medium text-primary hover:underline">
                       {acc.name}
                     </Link>
                   </td>
                   <td>{acc.region || "—"}</td>
-                  <td><span className="badge bg-gray-100 text-gray-700">{acc.type}</span></td>
+                  <td><span className="badge bg-surface-700 text-slate-300 border border-surface-600">{acc.type}</span></td>
                   <td><ScoreBadge score={acc.score} /></td>
                   <td>{acc.contacts?.[0]?.count ?? 0}</td>
                   <td>{acc.deals?.[0]?.count ?? 0}</td>
                   <td>
                     <div className="flex gap-2">
-                      <button onClick={() => { setEditingAccount(acc); setModalOpen(true); }} className="text-gray-400 hover:text-blue-600">
+                      <button onClick={() => { setEditingAccount(acc); setModalOpen(true); }} className="text-slate-400 hover:text-primary transition-colors">
                         <Edit2 size={15} />
                       </button>
-                      <button onClick={() => setDeleteTarget(acc)} className="text-gray-400 hover:text-red-600">
+                      <button onClick={() => setDeleteTarget(acc)} className="text-slate-400 hover:text-red-500 transition-colors">
                         <Trash2 size={15} />
                       </button>
                     </div>

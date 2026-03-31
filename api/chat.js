@@ -60,6 +60,16 @@ export default async function handler(req, res) {
       if (competitor.weaknesses) contextStr += `, Điểm yếu: ${competitor.weaknesses}`;
       contextStr += "]";
     }
+    
+    if (req.body.product) {
+      const p = req.body.product;
+      contextStr += `\n[Sản phẩm đang xem: ${p.name}`;
+      if (p.sku) contextStr += `, SKU: ${p.sku}`;
+      if (p.category) contextStr += `, Danh mục: ${p.category}`;
+      if (p.usp) contextStr += `, USP/Điểm mạnh: ${p.usp}`;
+      if (p.description) contextStr += `, Mô tả: ${p.description}`;
+      contextStr += "]";
+    }
 
     // Build messages array
     const messages = [

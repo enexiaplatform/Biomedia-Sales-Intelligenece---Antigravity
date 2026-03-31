@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Network, Plus, Calendar, Target, AlertCircle, GitBranch, Save, Edit2, X } from 'lucide-react';
+import { 
+  Network, Plus, Calendar, Target, AlertCircle, GitBranch, 
+  Save, Edit2, X, Filter, Share2, Zap, History, Info, ChevronRight,
+  TrendingUp, TrendingDown, Minus
+} from 'lucide-react';
 import { 
   supabase, 
   fetchAccounts, 
@@ -8,8 +12,14 @@ import {
   fetchOrgNodes,
   createOrgNode,
   updateOrgNode,
-  deleteOrgNode
+  deleteOrgNode,
+  fetchOrgNodeHistory,
+  fetchInfluenceLinks,
+  createInfluenceLink,
+  deleteInfluenceLink,
+  fetchDeals
 } from '../lib/supabase';
+import { callAISalesCoach } from '../lib/ai';
 
 const DEPARTMENTS = ['QC', 'R&D', 'Procurement', 'Management', 'Production', 'Finance', 'Khác'];
 const LEVELS = [
@@ -54,10 +64,44 @@ function renderCircles(score) {
   const filled = Math.ceil((score || 1) / 2);
   const circles = [];
   for (let i = 1; i <= max; i++) {
-    circles.push(<span key={i} className={i <= filled ? 'text-indigo-400' : 'text-slate-600'}>●</span>);
+    circles.push(<span key={i} className={i <= filled ? 'text-primary' : 'text-slate-700'}>●</span>);
   }
-  return <span className="flex tracking-widest text-xs">{circles}</span>;
+  return <span className="flex tracking-widest text-[10px]">{circles}</span>;
 }
+
+const BudgetTimeline = ({ data }) => {
+  if (!data) return null;
+  const milestones = data.split('\n').filter(line => line.trim());
+  
+  return (
+    <div className="relative pl-6 space-y-4 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-surface-700">
+      {milestones.map((ms, idx) => (
+        <div key={idx} className="relative group">
+          <div className="absolute -left-6 top-1.5 w-3 h-3 rounded-full bg-surface-900 border-2 border-primary group-hover:scale-125 transition-transform" />
+          <div className="bg-surface-800/40 p-3 rounded-lg border border-surface-700/50 hover:border-primary/30 transition-colors">
+            <p className="text-sm text-slate-300">{ms}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const InfluenceOverlay = ({ nodes, links }) => {
+  if (!links || links.length === 0) return null;
+  // This is a simplified version - in a real app, we'd need to calculate coordinates
+  // For now, we'll show a list of relationship links above the chart
+  return (
+    <div className="flex flex-wrap gap-2 mb-4">
+      {links.map(link => (
+        <div key={link.id} className="text-xs px-2 py-1 bg-secondary/10 border border-secondary/30 rounded-full text-secondary flex items-center gap-1">
+          <Zap size={10} />
+          <span>{link.source?.name} → {link.target?.name}: {link.influence_type}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const buildTree = (nodes, parentId = null) => {
   return nodes
@@ -65,44 +109,52 @@ const buildTree = (nodes, parentId = null) => {
     .map(n => ({ ...n, children: buildTree(nodes, n.id) }));
 };
 
-const TreeNode = ({ node, onEdit }) => {
+const TreeNode = ({ node, onEdit, filterDepts, influenceLinks }) => {
+  const isHidden = filterDepts?.length > 0 && !filterDepts.includes(node.department);
   const hasChildren = node.children && node.children.length > 0;
+  const filteredChildren = node.children?.filter(c => 
+    filterDepts?.length === 0 || filterDepts.includes(c.department) || (c.children && c.children.length > 0)
+  );
+
   return (
-    <div className="flex flex-col items-center">
+    <div className={`flex flex-col items-center transition-all duration-300 ${isHidden ? 'opacity-30 grayscale blur-[1px]' : ''}`}>
       <div 
         onClick={() => onEdit(node)}
-        className="w-56 p-3 bg-slate-800 border border-slate-700 rounded-lg shadow-md cursor-pointer hover:border-indigo-500 hover:bg-slate-750 transition-all z-10 mx-2"
+        className="w-56 p-3 bg-surface-800 border border-surface-700 rounded-xl shadow-2xl cursor-pointer hover:border-primary hover:bg-surface-700 transition-all z-10 mx-2 glass-panel"
       >
-        <div className="font-bold text-slate-100 truncate">{node.name}</div>
-        <div className="text-sm text-slate-400 truncate mb-2">{node.title || 'Chưa rõ chức danh'}</div>
+        <div className="flex justify-between items-start mb-1">
+          <div className="font-bold text-slate-100 truncate flex-1">{node.name}</div>
+          {node.level === 1 && <span className="text-[10px] bg-red-500/20 text-red-400 px-1 rounded border border-red-500/30">C-Suite</span>}
+        </div>
+        <div className="text-xs text-slate-400 truncate mb-2">{node.title || 'Chưa rõ chức danh'}</div>
         <div className="flex flex-wrap gap-1 mt-2">
-          <span className={`px-2 py-0.5 text-xs rounded border ${getDeptColor(node.department)}`}>
+          <span className={`px-2 py-0.5 text-[10px] rounded border ${getDeptColor(node.department)}`}>
             {node.department || 'Khác'}
           </span>
-          <span className={`px-2 py-0.5 text-xs rounded border ${getRelStyles(node.relationship_status)}`}>
+          <span className={`px-2 py-0.5 text-[10px] rounded border ${getRelStyles(node.relationship_status)}`}>
             {getRelLabel(node.relationship_status)}
           </span>
         </div>
-        <div className="mt-3 text-xs flex justify-between items-center bg-slate-900/50 p-1.5 rounded">
-          <span className="text-slate-400">Ảnh hưởng:</span>
+        <div className="mt-3 text-[10px] flex justify-between items-center bg-surface-900/50 p-1.5 rounded border border-surface-700/30">
+          <span className="text-slate-500 uppercase tracking-tighter font-bold">Influence</span>
           <span>{renderCircles(node.influence_score)}</span>
         </div>
       </div>
 
-      {hasChildren && (
+      {hasChildren && filteredChildren.length > 0 && (
         <div className="flex flex-col items-center w-full">
-          <div className="w-px h-6 bg-slate-600"></div>
+          <div className="w-px h-6 bg-surface-700"></div>
           <div className="flex relative items-start justify-center">
-             {node.children.map((child, index) => {
+             {filteredChildren.map((child, index) => {
                 const isFirst = index === 0;
-                const isLast = index === node.children.length - 1;
-                const onlyChild = node.children.length === 1;
+                const isLast = index === filteredChildren.length - 1;
+                const onlyChild = filteredChildren.length === 1;
 
                 return (
                   <div key={child.id} className="flex flex-col items-center relative">
                      {!onlyChild && (
                         <div 
-                           className={`absolute top-0 h-px bg-slate-600`}
+                           className={`absolute top-0 h-px bg-surface-700`}
                            style={{ 
                               width: isFirst || isLast ? '50%' : '100%',
                               left: isFirst ? '50%' : 0,
@@ -110,8 +162,8 @@ const TreeNode = ({ node, onEdit }) => {
                            }}
                         ></div>
                      )}
-                     <div className="w-px h-6 bg-slate-600 relative z-0"></div>
-                     <TreeNode node={child} onEdit={onEdit} />
+                     <div className="w-px h-6 bg-surface-700 relative z-0"></div>
+                     <TreeNode node={child} onEdit={onEdit} filterDepts={filterDepts} influenceLinks={influenceLinks} />
                   </div>
                 )
              })}
@@ -128,12 +180,21 @@ export default function BDTool() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   
   const [activeTab, setActiveTab] = useState('org_chart');
-  const [orgNodes, setOrgNodes] = useState([]);
-  const [contacts, setContacts] = useState([]);
+  const [influenceLinks, setInfluenceLinks] = useState([]);
+  const [deals, setDeals] = useState([]);
+  const [competitors, setCompetitors] = useState([]);
   const [loading, setLoading] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState(null);
+  
+  // New States
+  const [selectedDepts, setSelectedDepts] = useState([]);
+  const [showInfluences, setShowInfluences] = useState(false);
+  const [aiInsight, setAiInsight] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [nodeHistory, setNodeHistory] = useState([]);
+  const [historyNode, setHistoryNode] = useState(null);
   
   const [toast, setToast] = useState('');
 
@@ -168,12 +229,18 @@ export default function BDTool() {
   const loadAccountData = async (accountId) => {
     setLoading(true);
     try {
-      const [orgRes, contactsRes] = await Promise.all([
+      const [orgRes, contactsRes, influenceRes, dealsRes, compRes] = await Promise.all([
         fetchOrgNodes(accountId),
-        fetchContacts(accountId)
+        fetchContacts(accountId),
+        fetchInfluenceLinks(accountId),
+        fetchDeals(accountId),
+        fetchCompetitors()
       ]);
       if (orgRes.data) setOrgNodes(orgRes.data);
       if (contactsRes.data) setContacts(contactsRes.data);
+      if (influenceRes.data) setInfluenceLinks(influenceRes.data);
+      if (dealsRes.data) setDeals(dealsRes.data);
+      if (compRes.data) setCompetitors(compRes.data);
     } catch (err) {
       console.error(err);
       showToast('Lỗi tải dữ liệu account.');
@@ -250,163 +317,288 @@ export default function BDTool() {
 
   const treeData = React.useMemo(() => buildTree(orgNodes), [orgNodes]);
 
+  const handleFetchAIInsight = async () => {
+    if (!selectedAccount) return;
+    setAiLoading(true);
+    try {
+      const prompt = `Phân tích Stakeholder Map của account ${selectedAccount.name}. 
+      Dữ liệu stakeholders: ${JSON.stringify(orgNodes.map(n => ({ name: n.name, title: n.title, dept: n.department, rel: n.relationship_status, influence: n.influence_score, notes: n.notes })))}
+      Hợp đồng/Deals: ${JSON.stringify(deals.map(d => ({ name: d.name, stage: d.stage, value: d.value })))}
+      Dữ liệu Đối thủ (Competitors): ${JSON.stringify(competitors.map(c => ({ name: c.name, strengths: c.strengths, weaknesses: c.weaknesses })))}
+      
+      Hãy đưa ra chiến lược "Path to Champion": 
+      1. Ai là nhân vật chìa khóa (Champion candidate)?
+      2. Cách trung lập hóa các Blocker hoặc Skeptic (đặc biệt nếu họ có liên quan đến đối thủ).
+      3. Đối thủ nào là mối đe dọa lớn nhất tại account này và 'Kill Switch' để loại bỏ họ.
+      4. Rủi ro lớn nhất và hành động tiếp theo trong 7 ngày tới.`;
+      
+      const res = await callAISalesCoach(prompt, { account: selectedAccount });
+      setAiInsight(res);
+    } catch (err) {
+      showToast('Lỗi khi gọi AI');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleOpenHistory = async (node) => {
+    setHistoryNode(node);
+    const { data } = await fetchOrgNodeHistory(node.id);
+    setNodeHistory(data || []);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-4 right-4 bg-indigo-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center">
-          <Save size={18} className="mr-2" />
+        <div className="fixed bottom-6 right-6 bg-primary text-surface-900 px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(105,246,184,0.3)] z-50 flex items-center font-bold animate-in fade-in slide-in-from-bottom-4">
+          <Zap size={18} className="mr-2" />
           {toast}
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-             <Network className="text-indigo-400" />
-             BD Tool
-          </h1>
-          <p className="text-slate-400 mt-1">Org Chart, Budget Intelligence & Stakeholder Map</p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+              <Network className="text-primary" size={24} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">BD Tool</h1>
+              <p className="text-slate-400 text-sm">Org Chart, Budget Intelligence & Stakeholder Map</p>
+            </div>
+          </div>
         </div>
         
         {/* Account Selector */}
-        <select
-          value={selectedAccountId}
-          onChange={(e) => setSelectedAccountId(e.target.value)}
-          className="input w-full lg:w-80 bg-slate-800 border-slate-700 text-slate-200"
-        >
-          <option value="">Chọn khách hàng...</option>
-          {accounts.map(acc => (
-            <option key={acc.id} value={acc.id}>
-              {acc.name} — {acc.type?.toUpperCase()} — {acc.region}
-            </option>
-          ))}
-        </select>
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-secondary/50 rounded-xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+          <select
+            value={selectedAccountId}
+            onChange={(e) => setSelectedAccountId(e.target.value)}
+            className="relative input w-full lg:w-96 bg-surface-800 border-surface-700 text-slate-200 h-12 px-4 font-medium appearance-none"
+          >
+            <option value="">Chọn khách hàng...</option>
+            {accounts.map(acc => (
+              <option key={acc.id} value={acc.id}>
+                {acc.name} — {acc.type?.toUpperCase()} — {acc.region}
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+             <ChevronRight size={18} className="rotate-90" />
+          </div>
+        </div>
       </div>
 
       {!selectedAccount ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-slate-800 rounded-xl border border-slate-700">
-          <Network size={48} className="text-slate-600 mb-4" />
-          <h2 className="text-xl font-semibold text-slate-300">Chọn một khách hàng để bắt đầu phân tích BD</h2>
+        <div className="flex flex-col items-center justify-center py-32 bg-surface-800/30 rounded-3xl border border-surface-700/50 border-dashed">
+          <div className="w-20 h-20 bg-surface-800 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
+            <Network size={40} className="text-slate-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-300">Phân tích BD chiến lược</h2>
+          <p className="text-slate-500 mt-2 max-w-sm text-center">Chọn một khách hàng từ danh sách phía trên để bắt đầu xây dựng bản đồ quan hệ và ngân sách.</p>
         </div>
       ) : (
         <>
           {/* Tabs Nav */}
-          <div className="flex border-b border-slate-700">
-            <button
-              onClick={() => setActiveTab('org_chart')}
-              className={`px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'org_chart' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'}`}
-            >
-              Org Chart
-            </button>
-            <button
-              onClick={() => setActiveTab('budget_intel')}
-              className={`px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'budget_intel' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'}`}
-            >
-              Budget Intelligence
-            </button>
-            <button
-              onClick={() => setActiveTab('stakeholder_map')}
-              className={`px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'stakeholder_map' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'}`}
-            >
-              Stakeholder Map
-            </button>
+          <div className="flex gap-2 p-1 bg-surface-800/50 rounded-xl border border-surface-700/50 w-fit">
+            {[
+              { id: 'org_chart', label: 'Org Chart', icon: Network },
+              { id: 'budget_intel', label: 'Budget Intel', icon: Calendar },
+              { id: 'stakeholder_map', label: 'Stakeholder Map', icon: Target }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === tab.id ? 'bg-primary text-surface-900 shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-slate-200 hover:bg-surface-700'}`}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          <div className="pt-2">
+          <div className="mt-6 animation-fade-in">
             {loading ? (
-               <div className="animate-pulse flex p-10 justify-center">Loading data...</div>
+               <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                  <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                  <p className="text-slate-500 font-medium animate-pulse">Đang đồng bộ dữ liệu...</p>
+               </div>
             ) : (
                <>
                  {/* TAB 1: ORG CHART */}
                  {activeTab === 'org_chart' && (
-                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 min-h-[500px] overflow-auto relative">
-                      <div className="absolute top-4 right-4 z-20">
-                        <button 
-                          onClick={() => { setEditingNode(null); setIsModalOpen(true); }}
-                          className="btn-primary flex items-center gap-2"
-                        >
-                          <Plus size={16} /> Thêm Người
-                        </button>
+                    <div className="space-y-4">
+                      {/* Controls Area */}
+                      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-800/40 p-4 rounded-2xl border border-surface-700/50">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2 text-sm text-slate-400">
+                            <Filter size={14} className="text-primary" />
+                            <span>Lọc phòng:</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                             {DEPARTMENTS.map(dept => (
+                               <button
+                                 key={dept}
+                                 onClick={() => {
+                                   if (selectedDepts.includes(dept)) setSelectedDepts(prev => prev.filter(d => d !== dept));
+                                   else setSelectedDepts(prev => [...prev, dept]);
+                                 }}
+                                 className={`px-3 py-1 text-xs rounded-full border transition-all ${selectedDepts.includes(dept) ? 'bg-primary/20 border-primary text-primary' : 'bg-surface-900/50 border-surface-700 text-slate-500 hover:border-slate-500'}`}
+                               >
+                                 {dept}
+                               </button>
+                             ))}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                           <button 
+                             onClick={() => setShowInfluences(!showInfluences)}
+                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-all ${showInfluences ? 'bg-secondary/20 border-secondary text-secondary' : 'bg-surface-900/50 border-surface-700 text-slate-400'}`}
+                           >
+                             <Zap size={14} /> {showInfluences ? 'Ẩn ảnh hưởng' : 'Hiện ảnh hưởng'}
+                           </button>
+                           <button className="btn-secondary text-xs h-9">
+                             <Share2 size={14} /> Xuất ảnh
+                           </button>
+                           <button 
+                             onClick={() => { setEditingNode(null); setIsModalOpen(true); }}
+                             className="btn-primary text-xs h-9"
+                           >
+                             <Plus size={14} /> Thêm người
+                           </button>
+                        </div>
                       </div>
 
-                      {treeData.length === 0 ? (
-                        <div className="flex justify-center items-center h-[400px] text-slate-500">
-                           Chưa có org chart. Bấm '+ Thêm Người' để bắt đầu.
-                        </div>
-                      ) : (
-                        <div className="pt-12 min-w-max flex justify-center">
-                           <div className="flex flex-row justify-center gap-8 items-start">
-                             {treeData.map(rootNode => (
-                               <TreeNode key={rootNode.id} node={rootNode} onEdit={(n) => { setEditingNode(n); setIsModalOpen(true); }} />
-                             ))}
-                           </div>
-                        </div>
-                      )}
+                      <div className="bg-surface-900/50 border border-surface-700/50 rounded-3xl p-8 min-h-[600px] overflow-auto relative glow-emerald">
+                        {showInfluences && <InfluenceOverlay links={influenceLinks} />}
+
+                        {treeData.length === 0 ? (
+                          <div className="flex flex-col justify-center items-center h-[500px] text-slate-500">
+                             <div className="w-16 h-16 bg-surface-800 rounded-full flex items-center justify-center mb-4 border border-surface-700">
+                               <Plus size={24} className="text-slate-600" />
+                             </div>
+                             <p className="font-medium">Chưa có org chart cho khách hàng này.</p>
+                             <button 
+                               onClick={() => { setEditingNode(null); setIsModalOpen(true); }}
+                               className="mt-4 text-primary font-bold hover:underline"
+                             >
+                               Bắt đầu xây dựng ngay
+                             </button>
+                          </div>
+                        ) : (
+                          <div className="pt-8 min-w-max flex justify-center">
+                             <div className="flex flex-row justify-center gap-12 items-start">
+                               {treeData.map(rootNode => (
+                                 <TreeNode 
+                                   key={rootNode.id} 
+                                   node={rootNode} 
+                                   onEdit={(n) => { setEditingNode(n); setIsModalOpen(true); }} 
+                                   filterDepts={selectedDepts}
+                                   influenceLinks={influenceLinks}
+                                 />
+                               ))}
+                             </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                  )}
 
                  {/* TAB 2: BUDGET INTEL */}
                  {activeTab === 'budget_intel' && (
                     <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="card p-5">
-                          <h3 className="font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                            <Calendar className="text-indigo-400" size={18} /> Chu kỳ ngân sách & thời điểm phê duyệt
-                          </h3>
-                          <textarea 
-                            className="input w-full min-h-[100px] bg-slate-900 resize-y"
-                            defaultValue={selectedAccount.budget_cycle || ''}
-                            placeholder="Chưa có thông tin. Ví dụ: Q4 hàng năm, tháng 10-11"
-                            onBlur={(e) => handleSaveAccountField('budget_cycle', e.target.value)}
-                          />
-                        </div>
-                        <div className="card p-5">
-                          <h3 className="font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                            <GitBranch className="text-indigo-400" size={18} /> Quy trình & người phê duyệt
-                          </h3>
-                          <textarea 
-                            className="input w-full min-h-[100px] bg-slate-900 resize-y"
-                            defaultValue={selectedAccount.buying_process || ''}
-                            placeholder="Ví dụ: QC đề xuất → Giám đốc duyệt → Procurement đấu thầu"
-                            onBlur={(e) => handleSaveAccountField('buying_process', e.target.value)}
-                          />
-                        </div>
-                        <div className="card p-5">
-                          <h3 className="font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                            <Target className="text-indigo-400" size={18} /> Nhu cầu & vấn đề hiện tại
-                          </h3>
-                          <textarea 
-                            className="input w-full min-h-[100px] bg-slate-900 resize-y"
-                            defaultValue={selectedAccount.current_needs || ''}
-                            placeholder="Ghi chú nhu cầu cấp bách..."
-                            onBlur={(e) => handleSaveAccountField('current_needs', e.target.value)}
-                          />
-                        </div>
-                        <div className="card p-5">
-                          <h3 className="font-semibold text-slate-200 flex items-center gap-2 mb-3">
-                            <AlertCircle className="text-indigo-400" size={18} /> Pain points & cơ hội
-                          </h3>
-                          <textarea 
-                            className="input w-full min-h-[100px] bg-slate-900 resize-y"
-                            defaultValue={selectedAccount.pain_points || ''}
-                            placeholder="Ví dụ: Đang dùng máy hãng X hay bị hỏng..."
-                            onBlur={(e) => handleSaveAccountField('pain_points', e.target.value)}
-                          />
-                        </div>
-                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="md:col-span-2 space-y-6">
+                          <div className="card p-6">
+                            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2 mb-6">
+                              <Calendar className="text-primary" size={20} /> Lịch trình ngân sách dự kiến
+                            </h3>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                               <div className="space-y-4">
+                                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Nhập lộ trình (mỗi dòng 1 mốc)</label>
+                                  <textarea 
+                                    className="input w-full min-h-[150px] bg-surface-900/50 border-surface-700 focus:border-primary/50 text-sm"
+                                    defaultValue={selectedAccount.budget_cycle || ''}
+                                    placeholder="Ví dụ:&#10;Tháng 10: Lập kế hoạch dự toán&#10;Tháng 11: Trình ban giám đốc duyệt&#10;Tháng 12: Đấu thầu tập trung"
+                                    onBlur={(e) => handleSaveAccountField('budget_cycle', e.target.value)}
+                                  />
+                               </div>
+                               <div>
+                                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 block">Visual Timeline</label>
+                                  {selectedAccount.budget_cycle ? (
+                                    <BudgetTimeline data={selectedAccount.budget_cycle} />
+                                  ) : (
+                                    <div className="flex items-center justify-center h-40 bg-surface-900/30 rounded-xl border border-surface-700/30 border-dashed text-slate-500 text-sm italic">
+                                       Nhập lộ trình bên trái để xem timeline
+                                    </div>
+                                  )}
+                               </div>
+                            </div>
+                          </div>
 
-                      <div className="card p-6 border-indigo-500/30">
-                        <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2 mb-4">
-                           Chiến lược tiếp cận
-                        </h3>
-                        <textarea 
-                          className="input w-full min-h-[200px] bg-slate-900 text-slate-200"
-                          defaultValue={selectedAccount.notes || ''}
-                          placeholder="Ghi chú chiến lược: ai là champion, cách tiếp cận, timeline, rủi ro..."
-                          onBlur={(e) => handleSaveAccountField('notes', e.target.value)}
-                        />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="card p-6">
+                              <h3 className="font-bold text-slate-200 flex items-center gap-2 mb-4">
+                                <GitBranch className="text-primary" size={18} /> Quy trình phê duyệt
+                              </h3>
+                              <textarea 
+                                className="input w-full min-h-[120px] bg-surface-900/50 border-surface-700 text-sm"
+                                defaultValue={selectedAccount.buying_process || ''}
+                                placeholder="Ghi chú quy trình: ai đề xuất, ai thẩm định, ai ký cuối..."
+                                onBlur={(e) => handleSaveAccountField('buying_process', e.target.value)}
+                              />
+                            </div>
+                            <div className="card p-6">
+                              <h3 className="font-bold text-slate-200 flex items-center gap-2 mb-4">
+                                <AlertCircle className="text-primary" size={18} /> Pain Points & Rào cản
+                              </h3>
+                              <textarea 
+                                className="input w-full min-h-[120px] bg-surface-900/50 border-surface-700 text-sm"
+                                defaultValue={selectedAccount.pain_points || ''}
+                                placeholder="Các vấn đề khách hàng đang gặp phải hoặc rào cản tài chính..."
+                                onBlur={(e) => handleSaveAccountField('pain_points', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-6">
+                           <div className="card p-6 bg-gradient-to-br from-surface-800 to-surface-900">
+                             <h3 className="font-bold text-slate-200 flex items-center justify-between mb-6">
+                               <span>Active Deals</span>
+                               <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">{deals.length}</span>
+                             </h3>
+                             <div className="space-y-4">
+                               {deals.length > 0 ? deals.map(deal => (
+                                 <div key={deal.id} className="p-3 bg-surface-900/50 rounded-xl border border-surface-700/50 hover:border-primary/30 transition-all group">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="font-bold text-slate-300 text-sm group-hover:text-primary transition-colors">{deal.name}</div>
+                                      <div className="text-[10px] py-0.5 px-1.5 bg-surface-700 text-slate-400 rounded uppercase font-bold">{deal.stage}</div>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-500">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(deal.value || 0)}</span>
+                                      <span className="text-slate-400 flex items-center gap-1"><Calendar size={10}/> {new Date(deal.close_date).toLocaleDateString('vi-VN')}</span>
+                                    </div>
+                                 </div>
+                               )) : (
+                                 <p className="text-center text-slate-500 py-10 text-sm italic">Không có deal đang thực hiện</p>
+                               )}
+                             </div>
+                           </div>
+
+                           <div className="card p-6 border-primary/20 bg-primary/5">
+                             <h3 className="font-bold text-primary flex items-center gap-2 mb-2">
+                               <Zap size={18} /> Budget Tips
+                             </h3>
+                             <p className="text-xs text-slate-400 leading-relaxed">
+                               Thường các khách hàng sản xuất sẽ chốt Budget vào cuối Q3. Hãy đảm bảo các buổi Demo diễn ra trước tháng 8 để kịp ghi nhận vào dự toán năm sau.
+                             </p>
+                           </div>
+                        </div>
                       </div>
                     </div>
                  )}
@@ -415,114 +607,187 @@ export default function BDTool() {
                  {activeTab === 'stakeholder_map' && (
                     <div className="space-y-6">
                       {/* Summary Banner */}
-                      <div className="flex flex-wrap gap-4 bg-slate-800 p-4 rounded-lg border border-slate-700 justify-center">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         {RELATIONSHIPS.map(rel => {
                            const count = orgNodes.filter(n => n.relationship_status === rel.value).length;
                            return (
-                             <div key={rel.value} className={`px-4 py-2 border rounded-full font-medium ${rel.color}`}>
-                                {count} {rel.label}
+                             <div key={rel.value} className={`p-4 rounded-2xl border bg-surface-800/40 backdrop-blur-md transition-all hover:scale-105 ${rel.color}`}>
+                                <div className="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">{rel.label}</div>
+                                <div className="text-2xl font-black">{count}</div>
                              </div>
                            )
                         })}
                       </div>
 
+                      {/* AI Strategy Advisor */}
+                      <div className="card p-8 border-secondary/30 bg-gradient-to-br from-surface-800 via-surface-900 to-secondary/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                           <Zap size={120} className="text-secondary" />
+                        </div>
+                        
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                              <div className="p-3 bg-secondary/20 rounded-2xl border border-secondary/30">
+                                <Zap className="text-secondary" size={24} />
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-slate-100">AI Sales Strategy Advisor</h3>
+                                <p className="text-slate-400 text-sm">Phân tích ma trận quan hệ & đề xuất chiến lược tiếp cận "Path to Champion"</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={handleFetchAIInsight}
+                              disabled={aiLoading}
+                              className="px-6 py-2.5 bg-secondary text-white rounded-xl font-bold text-sm shadow-lg shadow-secondary/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+                            >
+                              {aiLoading ? (
+                                <span className="flex items-center gap-2 italic"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Thinking...</span>
+                              ) : (
+                                <span className="flex items-center gap-2"><Zap size={16} /> Generate Strategy</span>
+                              )}
+                            </button>
+                          </div>
+
+                          {aiInsight ? (
+                            <div className="p-6 bg-surface-950/80 rounded-2xl border border-surface-700/50 text-slate-300 whitespace-pre-wrap text-sm leading-relaxed animate-in slide-in-from-top-4 duration-500">
+                               {aiInsight}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-4 text-slate-500 p-6 bg-surface-950/30 rounded-2xl border border-dashed border-surface-700">
+                               <Info size={20} />
+                               <p className="text-sm">Bấm "Generate Strategy" để AI phân tích cấu trúc nhân sự và đề xuất bước đi tiếp theo dựa trên dữ liệu hiện có.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Matrix */}
-                      <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 overflow-x-auto">
-                        <div className="min-w-[800px]">
-                            <div className="grid grid-cols-[120px_repeat(5,1fr)] gap-3 mb-4">
-                               <div className="font-bold flex items-end justify-end p-2 text-slate-400 text-sm border-r border-b border-transparent">
-                                 Ảnh hưởng \ Quan hệ
-                               </div>
-                               {RELATIONSHIPS.map(rel => (
-                                 <div key={rel.value} className="font-bold text-center p-2 text-slate-300 border-b border-slate-700">
-                                   {rel.label}
-                                 </div>
-                               ))}
-                               
-                               {[
-                                 { label: 'Cao (8-10)', check: s => (s||1) >= 8 },
-                                 { label: 'TB (4-7)', check: s => (s||1) >= 4 && (s||1) <= 7 },
-                                 { label: 'Thấp (1-3)', check: s => (s||1) <= 3 }
-                               ].map((row, idx) => (
-                                 <React.Fragment key={idx}>
-                                    <div className="font-bold flex items-center justify-end p-2 pr-4 text-slate-300 text-sm border-r border-slate-700">
-                                      {row.label}
-                                    </div>
-                                    {RELATIONSHIPS.map(rel => {
-                                      const bucketNodes = orgNodes.filter(n => n.relationship_status === rel.value && row.check(n.influence_score));
-                                      return (
-                                        <div key={rel.value} className="bg-slate-800/50 border border-slate-700/50 p-2 min-h-[100px] rounded flex flex-wrap gap-2 content-start hover:bg-slate-800 transition-colors">
-                                          {bucketNodes.map(bn => {
-                                            const bgClass = getDeptColor(bn.department).split(' ').find(c => c.startsWith('bg-'))?.replace('/10', '') || 'bg-slate-600';
-                                            return (
+                      <div className="card overflow-hidden">
+                        <div className="p-6 border-b border-surface-700/50 flex justify-between items-center">
+                          <h3 className="font-bold text-slate-200">Ma Trận Ảnh Hưởng & Mối Quan Hệ</h3>
+                          <div className="flex items-center gap-4 text-xs text-slate-500 uppercase tracking-widest font-bold">
+                             <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#69f6b8]"></span> Thấp</div>
+                             <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_#8b5cf6]"></span> Trung Bình</div>
+                             <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_#ffb148]"></span> Cao</div>
+                          </div>
+                        </div>
+                        <div className="p-6 overflow-x-auto bg-surface-900/20">
+                          <div className="min-w-[900px]">
+                              <div className="grid grid-cols-[140px_repeat(5,1fr)] gap-4">
+                                <div className="flex items-center justify-end pr-4 text-xs font-black text-slate-500 uppercase tracking-widest">
+                                  Influence
+                                </div>
+                                {RELATIONSHIPS.map(rel => (
+                                  <div key={rel.value} className="text-center pb-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-surface-700/50">
+                                    {rel.label}
+                                  </div>
+                                ))}
+                                
+                                {[
+                                  { label: 'High (8-10)', check: s => (s||1) >= 8, color: 'text-accent' },
+                                  { label: 'Medium (4-7)', check: s => (s||1) >= 4 && (s||1) <= 7, color: 'text-secondary' },
+                                  { label: 'Low (1-3)', check: s => (s||1) <= 3, color: 'text-primary' }
+                                ].map((row, idx) => (
+                                  <React.Fragment key={idx}>
+                                     <div className={`flex items-center justify-end pr-4 text-xs font-bold ${row.color}`}>
+                                       {row.label}
+                                     </div>
+                                     {RELATIONSHIPS.map(rel => {
+                                       const bucketNodes = orgNodes.filter(n => n.relationship_status === rel.value && row.check(n.influence_score));
+                                       return (
+                                         <div key={rel.value} className="bg-surface-800/20 border border-surface-700/30 p-3 min-h-[120px] rounded-2xl flex flex-wrap gap-2 content-start hover:bg-surface-800/40 transition-all border-dashed">
+                                           {bucketNodes.map(bn => (
                                               <div 
                                                 key={bn.id} 
                                                 onClick={() => { setEditingNode(bn); setIsModalOpen(true); }}
-                                                title={`${bn.name} - ${bn.title}\nPhòng: ${bn.department}`} 
-                                                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-lg cursor-pointer border-2 border-slate-900 ${bgClass} hover:opacity-80 hover:scale-110 transition-transform`}
+                                                className="group relative"
                                               >
-                                                {bn.name.split(' ').pop().charAt(0).toUpperCase()}
+                                                <div 
+                                                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black text-slate-100 shadow-xl cursor-pointer border-2 border-surface-900 bg-surface-700 hover:bg-primary hover:text-surface-900 hover:-translate-y-1 transition-all duration-300`}
+                                                >
+                                                  {bn.name.split(' ').pop().charAt(0).toUpperCase()}
+                                                </div>
+                                                {/* Tooltip on hover */}
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-surface-950 text-slate-200 text-[10px] rounded-lg border border-surface-700 w-32 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-2xl">
+                                                   <div className="font-bold border-b border-surface-700 pb-1 mb-1">{bn.name}</div>
+                                                   <div>{bn.title}</div>
+                                                   <div className="text-slate-500 mt-1">{bn.department}</div>
+                                                </div>
                                               </div>
-                                            )
-                                          })}
-                                        </div>
-                                      )
-                                    })}
-                                 </React.Fragment>
-                               ))}
-                            </div>
+                                           ))}
+                                         </div>
+                                       )
+                                     })}
+                                  </React.Fragment>
+                                ))}
+                              </div>
+                          </div>
                         </div>
                       </div>
 
                       {/* List */}
                       <div className="card overflow-hidden">
-                        <div className="p-4 border-b border-slate-700">
-                          <h3 className="font-bold text-slate-200">Danh sách Stakeholders</h3>
+                        <div className="p-6 border-b border-surface-700/50 flex justify-between items-center">
+                           <h3 className="font-bold text-slate-200">Stakeholder Inventory</h3>
+                           <div className="text-xs text-slate-500 italic">Sắp xếp theo thứ tự ưu tiên (Ảnh hưởng cao nhất)</div>
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left font-medium text-slate-300">
-                            <thead className="bg-slate-800 text-slate-400 text-sm uppercase tracking-wider">
+                            <thead className="bg-surface-800/50 text-slate-400 text-[10px] uppercase tracking-widest">
                               <tr>
-                                <th className="p-4 font-semibold w-1/5">Tên</th>
-                                <th className="p-4 font-semibold w-1/5">Chức danh</th>
-                                <th className="p-4 font-semibold">Phòng ban</th>
-                                <th className="p-4 font-semibold text-center w-24">Ảnh hưởng</th>
-                                <th className="p-4 font-semibold">Quan hệ</th>
-                                <th className="p-4 font-semibold w-1/3">Ghi chú (Bấm để sửa)</th>
+                                <th className="p-5 font-black border-b border-surface-700/50">Stakeholder</th>
+                                <th className="p-5 font-black border-b border-surface-700/50">Chức vụ & Phòng</th>
+                                <th className="p-5 font-black border-b border-surface-700/50 text-center">Score</th>
+                                <th className="p-5 font-black border-b border-surface-700/50">Mối quan hệ</th>
+                                <th className="p-5 font-black border-b border-surface-700/50">Ghi chú chiến lược</th>
+                                <th className="p-5 font-black border-b border-surface-700/50 text-right">Thao tác</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-700/50">
+                            <tbody className="divide-y divide-surface-700/30">
                               {[...orgNodes].sort((a,b) => (b.influence_score||0) - (a.influence_score||0)).map(node => (
-                                <tr key={node.id} className="hover:bg-slate-800/50">
-                                  <td className="p-4 cursor-pointer text-indigo-400 hover:underline" onClick={() => { setEditingNode(node); setIsModalOpen(true); }}>
-                                    {node.name}
+                                <tr key={node.id} className="hover:bg-surface-800/30 transition-colors group">
+                                  <td className="p-5">
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-8 h-8 rounded-lg bg-surface-700 flex items-center justify-center font-bold text-xs text-slate-300">{node.name.charAt(0)}</div>
+                                       <div>
+                                          <div className="font-bold text-slate-100">{node.name}</div>
+                                          <div className="text-[10px] text-slate-500">{node.reports_to ? 'Reports to leader' : 'Department Lead/C-Level'}</div>
+                                       </div>
+                                    </div>
                                   </td>
-                                  <td className="p-4 text-slate-400">{node.title}</td>
-                                  <td className="p-4"><span className={`px-2 py-1 text-xs rounded border ${getDeptColor(node.department)}`}>{node.department}</span></td>
-                                  <td className="p-4 text-center">{node.influence_score || 1}/10</td>
-                                  <td className="p-4 text-sm">{getRelLabel(node.relationship_status)}</td>
-                                  <td className="p-4 relative group">
-                                     <textarea 
-                                        className="w-full bg-transparent border-0 resize-none hover:bg-slate-800 focus:bg-slate-800 focus:ring-1 focus:ring-indigo-500 rounded p-1 text-sm text-slate-400 transition-colors"
-                                        defaultValue={node.notes || ''}
-                                        rows={2}
-                                        onBlur={(e) => {
-                                          if(e.target.value !== node.notes) {
-                                            updateOrgNode(node.id, { notes: e.target.value });
-                                            showToast('Đã lưu ghi chú');
-                                          }
-                                        }}
-                                     />
+                                  <td className="p-5">
+                                    <div className="text-sm text-slate-300">{node.title}</div>
+                                    <div className={`mt-1 inline-block px-1.5 py-0.5 text-[10px] rounded border ${getDeptColor(node.department)}`}>{node.department}</div>
+                                  </td>
+                                  <td className="p-5">
+                                     <div className="flex flex-col items-center">
+                                        <div className="text-lg font-black text-slate-200">{node.influence_score}/10</div>
+                                        {renderCircles(node.influence_score)}
+                                     </div>
+                                  </td>
+                                  <td className="p-5">
+                                     <span className={`px-3 py-1 text-xs rounded-full border font-bold ${getRelStyles(node.relationship_status)}`}>
+                                       {getRelLabel(node.relationship_status)}
+                                     </span>
+                                  </td>
+                                  <td className="p-5">
+                                     <div className="max-w-xs text-xs text-slate-400 line-clamp-2 hover:line-clamp-none transition-all cursor-default">
+                                        {node.notes || <span className="italic opacity-30">Chưa có ghi chú chiến lược...</span>}
+                                     </div>
+                                  </td>
+                                  <td className="p-5 text-right">
+                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleOpenHistory(node)} className="p-2 hover:bg-surface-700 rounded-lg text-slate-400 hover:text-primary" title="Lịch sử thay đổi">
+                                          <History size={16} />
+                                        </button>
+                                        <button onClick={() => { setEditingNode(node); setIsModalOpen(true); }} className="p-2 hover:bg-surface-700 rounded-lg text-slate-400 hover:text-primary">
+                                          <Edit2 size={16} />
+                                        </button>
+                                     </div>
                                   </td>
                                 </tr>
                               ))}
-                              {orgNodes.length === 0 && (
-                                <tr>
-                                  <td colSpan="6" className="p-8 text-center text-slate-500">
-                                    Chưa có stakeholder nào. Hãy thêm vào org chart để phân tích.
-                                  </td>
-                                </tr>
-                              )}
                             </tbody>
                           </table>
                         </div>
@@ -537,94 +802,143 @@ export default function BDTool() {
 
       {/* MODAL ADD/EDIT NODE */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-slate-700">
-              <h2 className="text-xl font-bold">{editingNode ? 'Sửa thông tin: ' + editingNode.name : 'Thêm Node Mới'}</h2>
-              <button className="text-slate-400 hover:text-white" onClick={() => setIsModalOpen(false)}>
+        <div className="fixed inset-0 bg-surface-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-surface-800 border border-surface-700/50 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col glow-emerald">
+            <div className="flex justify-between items-center p-6 border-b border-surface-700/50 bg-surface-900/50">
+              <div className="flex items-center gap-3">
+                 <div className="p-2 bg-primary/10 rounded-lg">
+                    <Edit2 className="text-primary" size={20} />
+                 </div>
+                 <h2 className="text-xl font-bold text-slate-100">{editingNode ? 'Sửa thông tin: ' + editingNode.name : 'Thêm Stakeholder Mới'}</h2>
+              </div>
+              <button className="text-slate-500 hover:text-white transition-colors" onClick={() => setIsModalOpen(false)}>
                 <X size={24} />
               </button>
             </div>
             
-            <form onSubmit={handleSaveNode} className="p-6 space-y-4">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-1">
-                   <label className="text-sm font-medium text-slate-300">Họ và tên *</label>
-                   <input required type="text" name="name" className="input w-full" defaultValue={editingNode?.name || ''} />
+            <form onSubmit={handleSaveNode} className="p-8 space-y-6 overflow-y-auto">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Họ và tên *</label>
+                   <input required type="text" name="name" className="input w-full bg-surface-900/50 border-surface-700 focus:border-primary/50" defaultValue={editingNode?.name || ''} />
                  </div>
-                 <div className="space-y-1">
-                   <label className="text-sm font-medium text-slate-300">Chức danh</label>
-                   <input type="text" name="title" className="input w-full" defaultValue={editingNode?.title || ''} />
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-1">
-                   <label className="text-sm font-medium text-slate-300">Phòng ban</label>
-                   <select name="department" className="input w-full" defaultValue={editingNode?.department || 'Khác'}>
-                     {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                   </select>
-                 </div>
-                 <div className="space-y-1">
-                   <label className="text-sm font-medium text-slate-300">Cấp bậc</label>
-                   <select name="level" className="input w-full" defaultValue={editingNode?.level || 4}>
-                     {LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                   </select>
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chức danh</label>
+                   <input type="text" name="title" className="input w-full bg-surface-900/50 border-surface-700 focus:border-primary/50" defaultValue={editingNode?.title || ''} />
                  </div>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-1">
-                   <label className="text-sm font-medium text-slate-300">Báo cáo cho (Reports To)</label>
-                   <select name="reports_to" className="input w-full" defaultValue={editingNode?.reports_to || ''}>
-                     <option value="">-- Không có (Root) --</option>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Phòng ban</label>
+                   <select name="department" className="input w-full bg-surface-900/50 border-surface-700 focus:border-primary/50" defaultValue={editingNode?.department || 'Khác'}>
+                     {DEPARTMENTS.map(d => <option key={d} value={d} className="bg-surface-900">{d}</option>)}
+                   </select>
+                 </div>
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Cấp bậc</label>
+                   <select name="level" className="input w-full bg-surface-900/50 border-surface-700 focus:border-primary/50" defaultValue={editingNode?.level || 4}>
+                     {LEVELS.map(l => <option key={l.value} value={l.value} className="bg-surface-900">{l.label}</option>)}
+                   </select>
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Báo cáo cho (Hierarchy)</label>
+                   <select name="reports_to" className="input w-full bg-surface-900/50 border-surface-700 focus:border-primary/50" defaultValue={editingNode?.reports_to || ''}>
+                     <option value="" className="bg-surface-900">-- Không có (Root) --</option>
                      {orgNodes.filter(n => n.id !== editingNode?.id).map(n => (
-                       <option key={n.id} value={n.id}>{n.name} ({n.title})</option>
+                       <option key={n.id} value={n.id} className="bg-surface-900">{n.name} ({n.title})</option>
                      ))}
                    </select>
                  </div>
-                 <div className="space-y-1">
-                   <label className="text-sm font-medium text-slate-300">Link với Contact (Tuỳ chọn)</label>
-                   <select name="contact_id" className="input w-full" defaultValue={editingNode?.contact_id || ''}>
-                     <option value="">-- Không --</option>
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Link với CRM Contact</label>
+                   <select name="contact_id" className="input w-full bg-surface-900/50 border-surface-700 focus:border-primary/50" defaultValue={editingNode?.contact_id || ''}>
+                     <option value="" className="bg-surface-900">-- Không link --</option>
                      {contacts.map(c => (
-                       <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                       <option key={c.id} value={c.id} className="bg-surface-900">{c.name} ({c.email})</option>
                      ))}
                    </select>
                  </div>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-1">
-                   <div className="flex justify-between items-center text-sm font-medium text-slate-300">
-                     <label>Điểm ảnh hưởng (1 Mờ nhạt - 10 Ra quyết định)</label>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                   <div className="flex justify-between items-center">
+                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Influence Score (1-10)</label>
                    </div>
-                   <input type="range" name="influence_score" min="1" max="10" defaultValue={editingNode?.influence_score || 5} className="w-full mt-2" />
+                   <input type="range" name="influence_score" min="1" max="10" defaultValue={editingNode?.influence_score || 5} className="w-full h-2 bg-surface-900 rounded-lg appearance-none cursor-pointer accent-primary" />
                  </div>
-                 <div className="space-y-1">
-                   <label className="text-sm font-medium text-slate-300">Mối quan hệ</label>
-                   <select name="relationship_status" className="input w-full" defaultValue={editingNode?.relationship_status || 'neutral'}>
-                     {RELATIONSHIPS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                 <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Quan hệ hiện tại</label>
+                   <select name="relationship_status" className="input w-full bg-surface-900/50 border-surface-700 focus:border-primary/50" defaultValue={editingNode?.relationship_status || 'neutral'}>
+                     {RELATIONSHIPS.map(r => <option key={r.value} value={r.value} className="bg-surface-900">{r.label}</option>)}
                    </select>
                  </div>
                </div>
 
-               <div className="space-y-1">
-                 <label className="text-sm font-medium text-slate-300">Ghi chú</label>
-                 <textarea name="notes" className="input w-full h-24 resize-y" defaultValue={editingNode?.notes || ''} />
+               <div className="space-y-2">
+                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Ghi chú chiến lược</label>
+                 <textarea name="notes" className="input w-full h-32 resize-none bg-surface-900/50 border-surface-700 focus:border-primary/50 text-sm" defaultValue={editingNode?.notes || ''} placeholder="Cách tiếp cận, thông tin cá nhân quan trọng, sở thích..." />
                </div>
 
-               <div className="pt-4 flex justify-between items-center border-t border-slate-700">
+               <div className="pt-6 flex justify-between items-center border-t border-surface-700/50">
                  {editingNode ? (
-                   <button type="button" onClick={handleDeleteNode} className="p-2 text-red-400 hover:bg-red-400/10 rounded">Xoá người này</button>
+                   <button type="button" onClick={handleDeleteNode} className="text-xs font-bold text-red-500 hover:underline">Xoá stakeholder</button>
                  ) : (<span></span>)}
-                 <div className="flex gap-3">
-                   <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Hủy</button>
-                   <button type="submit" className="btn-primary">Lưu</button>
+                 <div className="flex gap-4">
+                   <button type="button" className="btn-secondary h-11 px-8 rounded-xl" onClick={() => setIsModalOpen(false)}>Hủy</button>
+                   <button type="submit" className="btn-primary h-11 px-8 rounded-xl shadow-lg shadow-primary/20">Lưu thông tin</button>
                  </div>
                </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* HISTORY MODAL */}
+      {historyNode && (
+        <div className="fixed inset-0 bg-surface-950/80 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+           <div className="bg-surface-800 border border-surface-700/50 rounded-3xl shadow-2xl w-full max-w-lg glow-violet overflow-hidden">
+              <div className="flex justify-between items-center p-6 border-b border-surface-700/50 bg-surface-900/50">
+                 <div className="flex items-center gap-3">
+                    <div className="p-2 bg-secondary/10 rounded-lg">
+                       <History className="text-secondary" size={20} />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-100">Lịch sử quan hệ: {historyNode.name}</h2>
+                 </div>
+                 <button className="text-slate-500 hover:text-white" onClick={() => setHistoryNode(null)}>
+                    <X size={24} />
+                 </button>
+              </div>
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                 {nodeHistory.length > 0 ? (
+                    <div className="space-y-6 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-px before:bg-surface-700">
+                       {nodeHistory.map((h, i) => (
+                          <div key={h.id} className="relative pl-12">
+                             <div className="absolute left-0 top-1 w-10 h-10 rounded-full bg-surface-900 border-2 border-surface-700 flex items-center justify-center z-10 transition-colors hover:border-secondary">
+                                {h.new_status === 'champion' ? <TrendingUp size={16} className="text-primary" /> : h.new_status === 'blocker' ? <TrendingDown size={16} className="text-red-500" /> : <Minus size={16} className="text-slate-500" />}
+                             </div>
+                             <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                   <span className="text-xs font-bold text-slate-500">{new Date(h.changed_at).toLocaleString('vi-VN')}</span>
+                                   <span className="text-[10px] bg-surface-700 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black">{h.old_status} → {h.new_status}</span>
+                                </div>
+                                <p className="text-sm text-slate-300 font-medium">Trạng thái thay đổi sang <span className="text-slate-100 font-bold">{getRelLabel(h.new_status)}</span></p>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 ) : (
+                    <div className="py-12 text-center text-slate-500 italic">Chưa có lịch sử thay đổi trạng thái</div>
+                 )}
+              </div>
+              <div className="p-6 border-t border-surface-700/50 bg-surface-900/20 flex justify-end">
+                 <button onClick={() => setHistoryNode(null)} className="btn-secondary px-6">Đóng</button>
+              </div>
+           </div>
         </div>
       )}
     </div>

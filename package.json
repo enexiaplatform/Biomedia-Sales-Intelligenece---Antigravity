@@ -9,20 +9,22 @@
     "deploy": "vercel"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.12.1",
+    "@supabase/supabase-js": "^2.37.0",
+    "date-fns": "^3.0.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.263.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^6.20.0",
-    "@supabase/supabase-js": "^2.37.0",
-    "@anthropic-ai/sdk": "^0.12.1",
-    "recharts": "^2.10.3",
-    "lucide-react": "^0.263.1",
-    "date-fns": "^3.0.0"
+    "recharts": "^2.10.3"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.0.8",
-    "postcss": "^8.4.32",
     "autoprefixer": "^10.4.16",
-    "tailwindcss": "^3.4.1"
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.0.8"
   }
 }

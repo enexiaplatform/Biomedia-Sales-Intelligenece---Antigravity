@@ -1,18 +1,22 @@
 import { useState, useEffect } from "react";
 import { 
-  Package, Tag, Map, GitBranch, Plus, Search, Edit2, Trash2, X, PlusCircle, Save 
+  Package, Tag, Map, GitBranch, Plus, Search, Edit2, Trash2, X, PlusCircle, Save, FileText, Upload, BrainCircuit, ExternalLink, Download, Sparkles
 } from "lucide-react";
-import { PageLoader } from "../components/LoadingSpinner";
-import {
+import { 
   fetchProducts, createProduct, updateProduct, deleteProduct,
-  fetchMarketSizing, createMarketSizing, updateMarketSizing, deleteMarketSizing
+  fetchMarketSizing, createMarketSizing, updateMarketSizing, deleteMarketSizing,
+  uploadProductDoc, listProductDocs, getProductDocUrl, deleteProductDoc
 } from "../lib/supabase";
+import { callAISalesCoach } from "../lib/ai";
+import TenderAssistantModal from "../components/TenderAssistantModal";
+import AIProductSupportModal from "../components/AIProductSupportModal";
 
 const formatVND = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 const formatTienTy = (val) => `${(val / 1000000000).toFixed(1)} tỷ ₫`;
 
 const TABS = [
   { id: "catalog", label: "Danh Mục Sản Phẩm", icon: Tag },
+  { id: "docs", label: "Tài Liệu Kỹ Thuật", icon: FileText },
   { id: "market", label: "Thị Trường (TAM/SAM/SOM)", icon: Map },
   { id: "gtm", label: "GTM / RTM Strategy", icon: GitBranch },
 ];
@@ -27,12 +31,12 @@ export default function ProductManagement({ showToast }) {
           <Package size={24} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Sản Phẩm</h1>
-          <p className="text-sm text-gray-500">Danh mục & thông tin sản phẩm Biomedia</p>
+          <h1 className="text-2xl font-black tracking-tight text-slate-100 uppercase">Sản Phẩm</h1>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Danh mục & Tài liệu kỹ thuật Biomedia</p>
         </div>
       </div>
 
-      <div className="flex bg-white rounded-lg shadow-sm border border-gray-200 p-1 overflow-x-auto">
+      <div className="flex bg-surface-900 rounded-2xl shadow-xl border border-surface-700/50 p-1 overflow-x-auto scrollbar-hide">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -50,8 +54,10 @@ export default function ProductManagement({ showToast }) {
         })}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[500px]">
+      <div className="bg-surface-900 rounded-3xl shadow-2xl border border-surface-700/50 overflow-hidden min-h-[500px] relative">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[120px] -mr-48 -mt-48 pointer-events-none"></div>
         {activeTab === "catalog" && <ProductCatalog showToast={showToast} />}
+        {activeTab === "docs" && <ProductDocuments showToast={showToast} />}
         {activeTab === "market" && <MarketSizing showToast={showToast} />}
         {activeTab === "gtm" && <GTMStrategy />}
       </div>
@@ -194,6 +200,194 @@ function ProductCatalog({ showToast }) {
           onSave={() => { setModalOpen(false); showToast("Đã lưu sản phẩm"); loadProducts(); }} 
         />
       )}
+    </div>
+  );
+}
+
+function StatCard({ title, value }) {
+  return (
+    <div className="bg-surface-800 p-5 rounded-2xl border border-surface-700/30 group hover:border-primary/30 transition-all">
+      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-primary transition-colors">{title}</div>
+      <div className="text-2xl font-black text-slate-100 tracking-tight truncate">{value}</div>
+    </div>
+  );
+}
+
+// ── 1.5. PRODUCT DOCUMENTS ───────────────────────────────────────────────────
+function ProductDocuments({ showToast }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [docs, setDocs] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [tenderModal, setTenderModal] = useState(null);
+  const [aiSupportModal, setAiSupportModal] = useState(null);
+
+  useEffect(() => { loadProducts(); }, []);
+
+  async function loadProducts() {
+    setLoading(true);
+    const { data } = await fetchProducts();
+    setProducts(data || []);
+    if (data?.length > 0) handleSelectProduct(data[0]);
+    setLoading(false);
+  }
+
+  async function handleSelectProduct(product) {
+    setSelectedProduct(product);
+    const { data, error } = await listProductDocs(product.id);
+    if (!error) setDocs(data || []);
+  }
+
+  async function handleUpload(e) {
+    if (!selectedProduct || !e.target.files?.[0]) return;
+    const file = e.target.files[0];
+    const path = `${selectedProduct.id}/${Date.now()}_${file.name}`;
+    
+    setUploading(true);
+    const { error } = await uploadProductDoc(file, path);
+    setUploading(false);
+    
+    if (error) showToast(error.message, "error");
+    else {
+      showToast("Đã tải lên tài liệu");
+      handleSelectProduct(selectedProduct);
+    }
+  }
+
+  async function handleDeleteDoc(name) {
+    if (!confirm("Xác nhận xoá tài liệu này?")) return;
+    const path = `${selectedProduct.id}/${name}`;
+    const { error } = await deleteProductDoc(path);
+    if (error) showToast(error.message, "error");
+    else {
+      showToast("Đã xoá tài liệu");
+      handleSelectProduct(selectedProduct);
+    }
+  }
+
+  async function handleDownload(name) {
+    const path = `${selectedProduct.id}/${name}`;
+    const url = await getProductDocUrl(path);
+    if (url) window.open(url, "_blank");
+  }
+
+  if (loading) return <PageLoader />;
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 h-[700px]">
+       {/* Sidebar: Product List */}
+       <div className="border-r border-surface-700/50 bg-surface-950/20 flex flex-col">
+          <div className="p-4 border-b border-surface-700/50 bg-surface-900/50">
+             <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input type="text" placeholder="Tìm sản phẩm..." className="input pl-9 h-10 text-xs bg-surface-950 border-surface-700" />
+             </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-hide">
+             {products.map(p => (
+                <button 
+                  key={p.id}
+                  onClick={() => handleSelectProduct(p)}
+                  className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedProduct?.id === p.id ? 'bg-primary/10 text-primary border border-primary/20 shadow-glow-sm' : 'text-slate-400 hover:bg-surface-800'}`}
+                >
+                   <div className="text-xs font-black uppercase tracking-tight truncate">{p.name}</div>
+                   <div className="text-[10px] opacity-60 mt-0.5">{p.sku || 'No SKU'}</div>
+                </button>
+             ))}
+          </div>
+       </div>
+
+       {/* Content: Document List & AI Tools */}
+       <div className="lg:col-span-2 flex flex-col bg-surface-900/40 relative">
+          {selectedProduct ? (
+            <>
+              <div className="p-6 border-b border-surface-700/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-900/50">
+                 <div>
+                    <h2 className="text-xl font-black text-slate-100 tracking-tight">{selectedProduct.name}</h2>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Quản lý tài liệu & Hỗ trợ kỹ thuật</p>
+                 </div>
+                 <div className="flex gap-2">
+                    <button 
+                      onClick={() => setAiSupportModal(selectedProduct)}
+                      className="btn-primary h-10 px-4 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-glow-sm"
+                    >
+                       <BrainCircuit size={16} /> Technical Q&A
+                    </button>
+                    <button 
+                      onClick={() => setTenderModal(selectedProduct)}
+                      className="btn-secondary h-10 px-4 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border-primary/20 text-primary hover:bg-primary/5 shadow-inner"
+                    >
+                       <Sparkles size={16} className="text-primary" /> Tender Assist
+                    </button>
+                 </div>
+              </div>
+
+              <div className="p-8 flex-1 overflow-y-auto">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Upload Card */}
+                    <label className="border-2 border-dashed border-surface-700 hover:border-primary/50 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group bg-surface-950/20 active:scale-95">
+                       <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
+                       <div className="p-4 bg-surface-800 rounded-2xl group-hover:bg-primary/10 transition-colors">
+                          <Upload size={32} className={`text-slate-500 group-hover:text-primary transition-colors ${uploading ? 'animate-bounce' : ''}`} />
+                       </div>
+                       <div className="text-center">
+                          <div className="text-sm font-black text-slate-200 uppercase tracking-widest leading-loose">Tải lên Catalogue</div>
+                          <p className="text-[10px] text-slate-500 font-bold">PDF, JPG hoặc PNG (Max 10MB)</p>
+                       </div>
+                    </label>
+
+                    {/* Doc Cards */}
+                    {docs.map(doc => (
+                       <div key={doc.name} className="bg-surface-800/50 border border-surface-700/50 rounded-2xl p-5 flex flex-col group hover:border-primary/30 transition-all">
+                          <div className="flex items-start justify-between mb-4">
+                             <div className="p-2.5 bg-surface-950 rounded-xl">
+                                <FileText size={20} className="text-primary shadow-glow-lg" />
+                             </div>
+                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleDownload(doc.name)} className="p-2 bg-surface-950 rounded-lg text-slate-400 hover:text-primary"><Download size={14} /></button>
+                                <button onClick={() => handleDeleteDoc(doc.name)} className="p-2 bg-surface-950 rounded-lg text-slate-400 hover:text-red-500"><Trash2 size={14} /></button>
+                             </div>
+                          </div>
+                          <div className="flex-1">
+                             <div className="text-xs font-black text-slate-200 uppercase tracking-tight line-clamp-1 mb-1">{doc.name.split('_').slice(1).join('_')}</div>
+                             <div className="text-[10px] font-bold text-slate-500 uppercase">{(doc.metadata?.size / 1024 / 1024).toFixed(2)} MB • {new Date(doc.created_at).toLocaleDateString('vi-VN')}</div>
+                          </div>
+                          <button 
+                            onClick={() => handleDownload(doc.name)}
+                            className="mt-4 w-full h-9 bg-surface-950 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-primary hover:border-primary/50 border border-surface-700 transition-all flex items-center justify-center gap-2"
+                          >
+                             Xem tài liệu <ExternalLink size={12} />
+                          </button>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 gap-4 opacity-40 uppercase font-black text-sm tracking-widest">
+               <div className="p-6 bg-surface-800 rounded-full">
+                  <FileText size={48} />
+               </div>
+               Chọn một sản phẩm để quản lý tài liệu
+            </div>
+          )}
+       </div>
+
+       {tenderModal && (
+         <TenderAssistantModal 
+           product={tenderModal} 
+           onClose={() => setTenderModal(null)} 
+           showToast={showToast}
+         />
+       )}
+       {aiSupportModal && (
+         <AIProductSupportModal 
+           product={aiSupportModal} 
+           onClose={() => setAiSupportModal(null)} 
+           showToast={showToast}
+         />
+       )}
     </div>
   );
 }
