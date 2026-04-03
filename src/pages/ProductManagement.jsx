@@ -392,7 +392,7 @@ function ProductDocuments({ showToast }) {
   );
 }
 
-function StatCard({ title, value }) {
+function ProductStatCard({ title, value }) {
   return (
     <div className="card p-4">
       <div className="text-sm font-medium text-gray-500">{title}</div>

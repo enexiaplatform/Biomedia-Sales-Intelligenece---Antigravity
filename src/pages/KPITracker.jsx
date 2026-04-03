@@ -497,11 +497,11 @@ function KPIForecast() {
             <div className="card p-6 border-l-4 border-l-purple-500 relative overflow-hidden">
               <div className="text-sm font-medium text-gray-500 mb-1">Best Case</div>
               <div className="text-2xl font-bold text-gray-900">{formatVND(data.bestCase)}</div>
-              <p className="text-xs text-gray-400 mt-2">Deals ở vòng Proposal & Negotiation</p>
+              <p className="text-xs text-gray-400 mt-2">Deals ở vòng Proposal &amp; Negotiation</p>
             </div>
 
             <div className="card p-6 border-l-4 border-l-green-500 relative overflow-hidden bg-green-50/10">
-              <div className="text-sm font-medium text-gray-500 mb-1">Committed (>70% Win)</div>
+              <div className="text-sm font-medium text-gray-500 mb-1">Committed ({'>'}70% Win)</div>
               <div className="text-2xl font-bold text-green-700">{formatVND(data.committed)}</div>
               <p className="text-xs text-gray-400 mt-2">Tỉ lệ tự tin chốt siêu cao</p>
             </div>
