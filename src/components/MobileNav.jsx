@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, HeartHandshake, BrainCircuit, ScanSearch } from "lucide-react";
+import { LayoutDashboard, Users, HeartHandshake, BrainCircuit, Search } from "lucide-react";
 
 const NAV_ITEMS = [
   { path: "/", icon: LayoutDashboard, label: "Tổng quan" },
   { path: "/accounts", icon: Users, label: "Khách hàng" },
-  { path: "/market-scan", icon: ScanSearch, label: "Thị trường" },
+  { path: "/market-scan", icon: Search, label: "Thị trường" },
   { path: "/bd-tool", icon: HeartHandshake, label: "Chiến lược" },
   { path: "/ai-coach", icon: BrainCircuit, label: "AI Coach" },
 ];
