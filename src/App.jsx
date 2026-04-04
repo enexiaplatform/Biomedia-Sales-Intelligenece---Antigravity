@@ -48,12 +48,25 @@ const PageLoader = () => (
 );
 
 export default function App() {
+  const [theme, setTheme] = useState(localStorage.getItem("biomedia_theme") || "dark");
   const [isLogged, setIsLogged] = useState(localStorage.getItem("biomedia_auth") === "true");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const location = useLocation();
+
+  // Handle Theme Switching
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("biomedia_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
 
   const handleLogin = () => {
     localStorage.setItem("biomedia_auth", "true");
@@ -98,8 +111,14 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#020617] text-slate-200">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={handleLogout} />
+    <div className={`min-h-screen flex transition-colors duration-300 ${theme === 'dark' ? 'bg-[#020617] text-slate-200' : 'bg-slate-50 text-slate-900'}`}>
+      <Sidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        onLogout={handleLogout}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
       
       <main className="flex-1 lg:pl-64 transition-all duration-300">
         {/* Header - Optimized for Premium Look */}
