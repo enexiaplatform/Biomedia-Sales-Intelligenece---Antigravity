@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Brain } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Brain, GitBranch, X } from "lucide-react";
 import { PageLoader } from "../components/LoadingSpinner";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
@@ -11,7 +11,8 @@ import {
 import { callAISalesCoach } from "../lib/ai";
 
 const ADVANTAGE_CONFIG = {
-  biomedia: { label: "Biomedia", color: "bg-primary/10 text-primary border-primary/20 shadow-glow-sm", icon: Sparkles },
+// Using Brain instead of Sparkles to prevent ReferenceError
+  biomedia: { label: "Biomedia", color: "bg-primary/10 text-primary border-primary/20 shadow-glow-sm", icon: Brain },
   neutral: { label: "Ngang nhau", color: "bg-slate-500/10 text-slate-400 border-slate-500/20", icon: GitBranch },
   competitor: { label: "Đối thủ", color: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: X }
 };

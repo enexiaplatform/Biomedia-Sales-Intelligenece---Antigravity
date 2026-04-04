@@ -16,10 +16,11 @@ export default function LoadingSpinner({ size = "md", className = "" }) {
 
 export function PageLoader() {
   return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <LoadingSpinner size="lg" className="mx-auto mb-3" />
-        <p className="text-sm text-gray-500">Đang tải...</p>
+    <div className="flex items-center justify-center fixed inset-0 z-[100] bg-[#020617]">
+      <div className="text-center p-8 glass-panel border border-primary/20 shadow-glow-primary">
+        <LoadingSpinner size="lg" className="mx-auto mb-6" />
+        <h2 className="text-xl font-black text-slate-100 uppercase tracking-[0.3em] mb-2">Biomedia SI</h2>
+        <p className="text-xs text-primary font-bold uppercase tracking-widest animate-pulse">Đang tải dữ liệu...</p>
       </div>
     </div>
   );

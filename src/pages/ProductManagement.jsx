@@ -10,6 +10,7 @@ import {
 import { callAISalesCoach } from "../lib/ai";
 import TenderAssistantModal from "../components/TenderAssistantModal";
 import AIProductSupportModal from "../components/AIProductSupportModal";
+import { PageLoader } from "../components/LoadingSpinner";
 
 const formatVND = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 const formatTienTy = (val) => `${(val / 1000000000).toFixed(1)} tỷ ₫`;

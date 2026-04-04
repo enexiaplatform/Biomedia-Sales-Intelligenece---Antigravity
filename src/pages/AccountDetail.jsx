@@ -12,11 +12,13 @@ import {
   fetchContacts, createContact, updateContact, deleteContact,
   fetchInteractions, createInteraction, deleteInteraction,
   fetchDeals, createDeal, updateDeal, deleteDeal,
-  fetchWorkflows
+  fetchWorkflows,
+  fetchOrgNodes, fetchInfluenceLinks
 } from "../lib/supabase";
+import OrgChartView from "../components/OrgChart";
 import { callAISalesCoach } from "../lib/ai";
 
-const TABS = ["Tổng quan", "Liên hệ", "Tương tác", "Deals", "Quy trình"];
+const TABS = ["Tổng quan", "Liên hệ", "Sơ đồ tổ chức", "Tương tác", "Deals", "Quy trình"];
 
 const DEAL_STAGES = ["prospect", "qualified", "proposal", "negotiation", "closed_won", "closed_lost"];
 const STAGE_LABELS = { prospect: "Tiềm năng", qualified: "Đã xác nhận", proposal: "Báo giá", negotiation: "Đàm phán", closed_won: "Thắng", closed_lost: "Thua" };
@@ -38,6 +40,8 @@ export default function AccountDetail({ showToast }) {
   const [interactions, setInteractions] = useState([]);
   const [deals, setDeals] = useState([]);
   const [workflows, setWorkflows] = useState([]);
+  const [orgNodes, setOrgNodes] = useState([]);
+  const [influenceLinks, setInfluenceLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("Tổng quan");
   const [editOpen, setEditOpen] = useState(false);
@@ -54,18 +58,22 @@ export default function AccountDetail({ showToast }) {
 
   async function loadAll() {
     setLoading(true);
-    const [accRes, contRes, intRes, dealRes, wfRes] = await Promise.all([
+    const [accRes, contRes, intRes, dealRes, wfRes, orgRes, linkRes] = await Promise.all([
       fetchAccountById(id),
       fetchContacts(id),
       fetchInteractions(id),
       fetchDeals(id),
-      fetchWorkflows(id)
+      fetchWorkflows(id),
+      fetchOrgNodes(id),
+      fetchInfluenceLinks(id)
     ]);
     setAccount(accRes.data);
     setContacts(contRes.data || []);
     setInteractions(intRes.data || []);
     setDeals(dealRes.data || []);
     setWorkflows(wfRes.data || []);
+    setOrgNodes(orgRes.data || []);
+    setInfluenceLinks(linkRes.data || []);
     setLoading(false);
   }
 
@@ -240,6 +248,20 @@ export default function AccountDetail({ showToast }) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {tab === "Sơ đồ tổ chức" && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium text-gray-700">Bản đồ quan hệ (Stakeholder Map)</h3>
+            <Link to="/bd-tool" className="btn-secondary text-sm">Quản lý nâng cao</Link>
+          </div>
+          <OrgChartView 
+            nodes={orgNodes} 
+            links={influenceLinks} 
+            onEditNode={() => navigate("/bd-tool")} 
+          />
         </div>
       )}
 

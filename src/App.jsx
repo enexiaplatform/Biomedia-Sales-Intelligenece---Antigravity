@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { Menu, Plus, Search, Package, Network } from "lucide-react";
-import Sidebar from "./components/Sidebar";
+import { Menu, Plus, Search } from "lucide-react";
+import Sidebar from "./components/SidebarVFinal";
 import QuickLogModal from "./components/QuickLogModal";
 import GlobalSearchModal from "./components/GlobalSearchModal";
 import MobileNav from "./components/MobileNav";
@@ -19,6 +19,7 @@ import MarketScan from "./pages/MarketScan";
 import AICoach from "./pages/AICoach";
 import ProductManagement from "./pages/ProductManagement";
 import BDTool from "./pages/BDTool";
+import GMSimulator from "./pages/GMSimulator";
 
 const PAGE_TITLES = {
   "/": "Dashboard",
@@ -32,7 +33,8 @@ const PAGE_TITLES = {
   "/market-scan": "Market Scan",
   "/ai-coach": "AI Sales Coach",
   "/products": "Sản Phẩm",
-  "/bd-tool": "BD Tool"
+  "/bd-tool": "BD Tool",
+  "/gm-hub": "GM Simulator"
 };
 
 export default function App() {
@@ -76,81 +78,55 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-950 text-slate-100 font-inter">
+    <div style={{ background: '#020617', color: 'white', minHeight: '100vh', display: 'flex' }}>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Main content */}
-      <div className="flex flex-col flex-1 min-w-0 lg:ml-64">
+      
+      <main className="flex-1 lg:pl-64">
         {/* Header */}
-        <header className="flex items-center gap-4 px-4 py-3 bg-surface-900/50 backdrop-blur-md border-b border-surface-700/50 shrink-0 z-40">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-primary transition-colors"
-          >
+        <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-4 bg-surface-950/40 backdrop-blur-md border-b border-white/5 lg:hidden">
+          <div className="text-sm font-black uppercase tracking-widest text-slate-100">{pageTitle}</div>
+          <button onClick={() => setSidebarOpen(true)} className="p-2 text-slate-400">
             <Menu size={20} />
           </button>
-
-          <h1 className="font-bold text-slate-100 text-sm md:text-base flex-1 truncate">{pageTitle}</h1>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-surface-800 text-slate-400 rounded-lg text-xs hover:text-primary border border-surface-700 transition-all hover:border-primary/50"
-              title="Tìm kiếm (Ctrl+K)"
-            >
-              <Search size={14} />
-              <span className="hidden sm:inline">Tìm kiếm</span>
-              <kbd className="hidden sm:inline text-[10px] opacity-50 ml-1">⌘K</kbd>
-            </button>
-
-            <button
-              onClick={() => setQuickLogOpen(true)}
-              className="btn-primary text-xs h-8 px-3"
-              title="Ghi nhanh (Ctrl+L)"
-            >
-              <Plus size={14} />
-              <span className="hidden sm:inline">Ghi nhanh</span>
-            </button>
-          </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-24 md:pb-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Routes>
             <Route path="/" element={<Dashboard showToast={showToast} />} />
             <Route path="/accounts" element={<Accounts showToast={showToast} />} />
             <Route path="/accounts/:id" element={<AccountDetail showToast={showToast} />} />
             <Route path="/pipeline" element={<Pipeline showToast={showToast} />} />
             <Route path="/market-map" element={<MarketMap showToast={showToast} />} />
-            <Route path="/competitors" element={<Competitors showToast={showToast} />} />
-            <Route path="/workflows" element={<Workflows showToast={showToast} />} />
+            <Route path="/competitors" element={<Competitors />} />
+            <Route path="/workflows" element={<Workflows />} />
             <Route path="/pricing" element={<PricingTool showToast={showToast} />} />
-            <Route path="/kpi" element={<KPITracker showToast={showToast} />} />
-            <Route path="/market-scan" element={<MarketScan showToast={showToast} />} />
+            <Route path="/kpi" element={<KPITracker />} />
+            <Route path="/market-scan" element={<MarketScan />} />
             <Route path="/ai-coach" element={<AICoach />} />
-            <Route path="/products" element={<ProductManagement showToast={showToast} />} />
+            <Route path="/products" element={<ProductManagement />} />
             <Route path="/bd-tool" element={<BDTool />} />
+            <Route path="/gm-hub" element={<GMSimulator />} />
+            <Route path="*" element={<Dashboard showToast={showToast} />} />
           </Routes>
-        </main>
-      </div>
+        </div>
+      </main>
 
-      <MobileNav />
-
-      {/* Modals */}
-      <QuickLogModal
-        open={quickLogOpen}
-        onClose={() => setQuickLogOpen(false)}
-        onSuccess={() => showToast("Đã ghi tương tác thành công!")}
+      <MobileNav 
+        onMenuClick={() => setSidebarOpen(true)}
+        onSearchClick={() => setSearchOpen(true)}
+        onAddClick={() => setQuickLogOpen(true)}
       />
-      <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      {/* Toast */}
+      <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <QuickLogModal open={quickLogOpen} onClose={() => setQuickLogOpen(false)} />
+
       {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium text-white transition-all
-            ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}
-        >
-          {toast.message}
+        <div className={`fixed bottom-24 right-6 z-50 px-6 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300
+          ${toast.type === 'success' ? 'bg-primary/20 border-primary/20 text-primary' : 'bg-red-500/20 border-red-500/20 text-red-400'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-primary animate-pulse' : 'bg-red-400'}`} />
+            <span className="text-xs font-black uppercase tracking-widest">{toast.message}</span>
+          </div>
         </div>
       )}
     </div>

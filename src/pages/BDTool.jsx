@@ -20,6 +20,7 @@ import {
   fetchDeals
 } from '../lib/supabase';
 import { callAISalesCoach } from '../lib/ai';
+import OrgChartView, { buildTree } from '../components/OrgChart';
 
 const DEPARTMENTS = ['QC', 'R&D', 'Procurement', 'Management', 'Production', 'Finance', 'Khác'];
 const LEVELS = [
@@ -87,95 +88,10 @@ const BudgetTimeline = ({ data }) => {
   );
 };
 
-const InfluenceOverlay = ({ nodes, links }) => {
-  if (!links || links.length === 0) return null;
-  // This is a simplified version - in a real app, we'd need to calculate coordinates
-  // For now, we'll show a list of relationship links above the chart
-  return (
-    <div className="flex flex-wrap gap-2 mb-4">
-      {links.map(link => (
-        <div key={link.id} className="text-xs px-2 py-1 bg-secondary/10 border border-secondary/30 rounded-full text-secondary flex items-center gap-1">
-          <Zap size={10} />
-          <span>{link.source?.name} → {link.target?.name}: {link.influence_type}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const buildTree = (nodes, parentId = null) => {
-  return nodes
-    .filter(n => n.reports_to === parentId)
-    .map(n => ({ ...n, children: buildTree(nodes, n.id) }));
-};
-
-const TreeNode = ({ node, onEdit, filterDepts, influenceLinks }) => {
-  const isHidden = filterDepts?.length > 0 && !filterDepts.includes(node.department);
-  const hasChildren = node.children && node.children.length > 0;
-  const filteredChildren = node.children?.filter(c => 
-    filterDepts?.length === 0 || filterDepts.includes(c.department) || (c.children && c.children.length > 0)
-  );
-
-  return (
-    <div className={`flex flex-col items-center transition-all duration-300 ${isHidden ? 'opacity-30 grayscale blur-[1px]' : ''}`}>
-      <div 
-        onClick={() => onEdit(node)}
-        className="w-56 p-3 bg-surface-800 border border-surface-700 rounded-xl shadow-2xl cursor-pointer hover:border-primary hover:bg-surface-700 transition-all z-10 mx-2 glass-panel"
-      >
-        <div className="flex justify-between items-start mb-1">
-          <div className="font-bold text-slate-100 truncate flex-1">{node.name}</div>
-          {node.level === 1 && <span className="text-[10px] bg-red-500/20 text-red-400 px-1 rounded border border-red-500/30">C-Suite</span>}
-        </div>
-        <div className="text-xs text-slate-400 truncate mb-2">{node.title || 'Chưa rõ chức danh'}</div>
-        <div className="flex flex-wrap gap-1 mt-2">
-          <span className={`px-2 py-0.5 text-[10px] rounded border ${getDeptColor(node.department)}`}>
-            {node.department || 'Khác'}
-          </span>
-          <span className={`px-2 py-0.5 text-[10px] rounded border ${getRelStyles(node.relationship_status)}`}>
-            {getRelLabel(node.relationship_status)}
-          </span>
-        </div>
-        <div className="mt-3 text-[10px] flex justify-between items-center bg-surface-900/50 p-1.5 rounded border border-surface-700/30">
-          <span className="text-slate-500 uppercase tracking-tighter font-bold">Influence</span>
-          <span>{renderCircles(node.influence_score)}</span>
-        </div>
-      </div>
-
-      {hasChildren && filteredChildren.length > 0 && (
-        <div className="flex flex-col items-center w-full">
-          <div className="w-px h-6 bg-surface-700"></div>
-          <div className="flex relative items-start justify-center">
-             {filteredChildren.map((child, index) => {
-                const isFirst = index === 0;
-                const isLast = index === filteredChildren.length - 1;
-                const onlyChild = filteredChildren.length === 1;
-
-                return (
-                  <div key={child.id} className="flex flex-col items-center relative">
-                     {!onlyChild && (
-                        <div 
-                           className={`absolute top-0 h-px bg-surface-700`}
-                           style={{ 
-                              width: isFirst || isLast ? '50%' : '100%',
-                              left: isFirst ? '50%' : 0,
-                              right: isLast ? '50%' : 0
-                           }}
-                        ></div>
-                     )}
-                     <div className="w-px h-6 bg-surface-700 relative z-0"></div>
-                     <TreeNode node={child} onEdit={onEdit} filterDepts={filterDepts} influenceLinks={influenceLinks} />
-                  </div>
-                )
-             })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default function BDTool() {
-  const [accounts, setAccounts] = useState([]);
+  const [orgNodes, setOrgNodes] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [selectedAccount, setSelectedAccount] = useState(null);
   
@@ -186,7 +102,9 @@ export default function BDTool() {
   const [loading, setLoading] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState(null);
+  const chartContainerRef = React.useRef(null);
   
   // New States
   const [selectedDepts, setSelectedDepts] = useState([]);
@@ -202,6 +120,8 @@ export default function BDTool() {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   };
+
+  const [accounts, setAccounts] = useState([]);
 
   useEffect(() => {
     loadAccounts();
@@ -312,6 +232,46 @@ export default function BDTool() {
       loadAccountData(selectedAccount.id);
     } else {
       showToast('Lỗi khi xoá');
+    }
+  };
+
+  const handleSaveLink = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const linkData = {
+      account_id: selectedAccount.id,
+      source_node_id: formData.get('source_node_id'),
+      target_node_id: formData.get('target_node_id'),
+      influence_type: formData.get('influence_type'),
+      strength: parseInt(formData.get('strength'), 10),
+    };
+
+    if (linkData.source_node_id === linkData.target_node_id) {
+      showToast('Không thể tạo link tới chính mình');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await createInfluenceLink(linkData);
+    setLoading(false);
+
+    if (!error) {
+      showToast('Đã thêm liên kết ảnh hưởng');
+      setIsLinkModalOpen(false);
+      loadAccountData(selectedAccount.id);
+    } else {
+      showToast('Lỗi khi lưu liên kết');
+    }
+  };
+
+  const handleDeleteLink = async (linkId) => {
+    if (!confirm('Xoá liên kết này?')) return;
+    setLoading(true);
+    const { error } = await deleteInfluenceLink(linkId);
+    setLoading(false);
+    if (!error) {
+      showToast('Đã xoá liên kết');
+      loadAccountData(selectedAccount.id);
     }
   };
 
@@ -461,8 +421,11 @@ export default function BDTool() {
                            >
                              <Zap size={14} /> {showInfluences ? 'Ẩn ảnh hưởng' : 'Hiện ảnh hưởng'}
                            </button>
-                           <button className="btn-secondary text-xs h-9">
-                             <Share2 size={14} /> Xuất ảnh
+                           <button 
+                             onClick={() => setIsLinkModalOpen(true)}
+                             className="btn-secondary text-xs h-9"
+                           >
+                             <Share2 size={14} /> Tạo liên kết
                            </button>
                            <button 
                              onClick={() => { setEditingNode(null); setIsModalOpen(true); }}
@@ -473,37 +436,12 @@ export default function BDTool() {
                         </div>
                       </div>
 
-                      <div className="bg-surface-900/50 border border-surface-700/50 rounded-3xl p-8 min-h-[600px] overflow-auto relative glow-emerald">
-                        {showInfluences && <InfluenceOverlay links={influenceLinks} />}
-
-                        {treeData.length === 0 ? (
-                          <div className="flex flex-col justify-center items-center h-[500px] text-slate-500">
-                             <div className="w-16 h-16 bg-surface-800 rounded-full flex items-center justify-center mb-4 border border-surface-700">
-                               <Plus size={24} className="text-slate-600" />
-                             </div>
-                             <p className="font-medium">Chưa có org chart cho khách hàng này.</p>
-                             <button 
-                               onClick={() => { setEditingNode(null); setIsModalOpen(true); }}
-                               className="mt-4 text-primary font-bold hover:underline"
-                             >
-                               Bắt đầu xây dựng ngay
-                             </button>
-                          </div>
-                        ) : (
-                          <div className="pt-8 min-w-max flex justify-center">
-                             <div className="flex flex-row justify-center gap-12 items-start">
-                               {treeData.map(rootNode => (
-                                 <TreeNode 
-                                   key={rootNode.id} 
-                                   node={rootNode} 
-                                   onEdit={(n) => { setEditingNode(n); setIsModalOpen(true); }} 
-                                   filterDepts={selectedDepts}
-                                   influenceLinks={influenceLinks}
-                                 />
-                               ))}
-                             </div>
-                          </div>
-                        )}
+                      <div className="bg-surface-900/30 border border-surface-700/30 rounded-3xl p-12 min-h-[700px] overflow-auto relative">
+                        <OrgChartView 
+                          nodes={orgNodes} 
+                          links={influenceLinks} 
+                          onEditNode={(n) => { setEditingNode(n); setIsModalOpen(true); }}
+                        />
                       </div>
                     </div>
                  )}
@@ -938,6 +876,59 @@ export default function BDTool() {
               <div className="p-6 border-t border-surface-700/50 bg-surface-900/20 flex justify-end">
                  <button onClick={() => setHistoryNode(null)} className="btn-secondary px-6">Đóng</button>
               </div>
+           </div>
+        </div>
+      )}
+      {/* RELATIONSHIP LINK MODAL */}
+      {isLinkModalOpen && (
+        <div className="fixed inset-0 bg-surface-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+           <div className="bg-surface-800 border border-surface-700/50 rounded-3xl shadow-2xl w-full max-w-lg glow-emerald overflow-hidden">
+              <div className="flex justify-between items-center p-6 border-b border-surface-700/50 bg-surface-900/50">
+                 <div className="flex items-center gap-3">
+                    <div className="p-2 bg-secondary/10 rounded-lg">
+                       <Share2 className="text-secondary" size={20} />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-100">Tạo Liên Kết Ảnh Hưởng</h2>
+                 </div>
+                 <button className="text-slate-500 hover:text-white" onClick={() => setIsLinkModalOpen(false)}>
+                    <X size={24} />
+                 </button>
+              </div>
+              <form onSubmit={handleSaveLink} className="p-8 space-y-6">
+                 <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Nguồn ảnh hưởng (Source)</label>
+                    <select name="source_node_id" required className="input w-full bg-surface-900/50 border-surface-700">
+                       <option value="">Chọn stakeholder...</option>
+                       {orgNodes.map(n => <option key={n.id} value={n.id}>{n.name} ({n.title})</option>)}
+                    </select>
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Đối tượng bị ảnh hưởng (Target)</label>
+                    <select name="target_node_id" required className="input w-full bg-surface-900/50 border-surface-700">
+                       <option value="">Chọn stakeholder...</option>
+                       {orgNodes.map(n => <option key={n.id} value={n.id}>{n.name} ({n.title})</option>)}
+                    </select>
+                 </div>
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Loại ảnh hưởng</label>
+                       <select name="influence_type" className="input w-full bg-surface-900/50 border-surface-700">
+                          <option value="supportive">Supportive (Hỗ trợ)</option>
+                          <option value="antagonistic">Antagonistic (Cản trở)</option>
+                          <option value="mentor">Mentor (Dẫn dắt)</option>
+                          <option value="peer">Peer (Ngang hàng)</option>
+                       </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mức độ (1-5)</label>
+                       <input type="number" name="strength" min="1" max="5" defaultValue="3" className="input w-full bg-surface-900/50 border-surface-700" />
+                    </div>
+                 </div>
+                 <div className="pt-6 flex justify-end gap-4 border-t border-surface-700/50">
+                    <button type="button" className="btn-secondary px-6" onClick={() => setIsLinkModalOpen(false)}>Hủy</button>
+                    <button type="submit" className="btn-primary px-8 shadow-lg shadow-primary/20">Tạo Liên Kết</button>
+                 </div>
+              </form>
            </div>
         </div>
       )}

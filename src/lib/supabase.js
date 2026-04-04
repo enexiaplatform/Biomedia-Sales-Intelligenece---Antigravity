@@ -3,7 +3,48 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseKey) {
+  console.warn("Supabase configuration is missing. The app will run in offline mode.");
+}
+
+const mockResult = { data: null, error: { message: "Supabase connection not configured. Running in offline mode." } };
+const mockQuery = {
+  select: () => mockQuery,
+  order: () => mockQuery,
+  limit: () => mockQuery,
+  eq: () => mockQuery,
+  gte: () => mockQuery,
+  lte: () => mockQuery,
+  ilike: () => mockQuery,
+  or: () => mockQuery,
+  in: () => mockQuery,
+  single: () => Promise.resolve(mockResult),
+  then: (resolve) => resolve(Promise.resolve(mockResult)),
+  insert: () => mockQuery,
+  update: () => mockQuery,
+  delete: () => mockQuery,
+  upsert: () => mockQuery,
+  status: 200,
+  statusText: "OK"
+};
+
+export const supabase = (supabaseUrl && supabaseKey) 
+  ? createClient(supabaseUrl, supabaseKey) 
+  : { 
+      from: () => mockQuery,
+      auth: { 
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      },
+      storage: {
+        from: () => ({
+          upload: () => Promise.resolve(mockResult),
+          list: () => Promise.resolve({ data: [], error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: "" } }),
+          remove: () => Promise.resolve(mockResult)
+        })
+      }
+    };
 
 // ── Accounts ──────────────────────────────────────────────────────────────────
 export async function fetchAccounts(filters = {}) {

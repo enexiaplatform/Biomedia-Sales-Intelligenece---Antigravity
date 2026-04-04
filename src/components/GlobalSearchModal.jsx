@@ -47,22 +47,22 @@ export default function GlobalSearchModal({ open, onClose }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b">
-          <Search size={18} className="text-gray-400" />
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-surface-950/60 backdrop-blur-sm">
+      <div className="bg-surface-900/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-lg border border-white/5 overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-white/5 bg-white/5">
+          <Search size={18} className="text-primary drop-shadow-glow" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm kiếm tài khoản, liên hệ, deal, đối thủ..."
-            className="flex-1 text-sm outline-none"
+            className="flex-1 text-sm bg-transparent outline-none text-slate-100 placeholder:text-slate-500 font-medium"
           />
           {loading && (
-            <div className="w-4 h-4 border-2 border-gray-200 border-t-blue-500 rounded-full spinner" />
+            <div className="w-4 h-4 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
           )}
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="p-1.5 text-slate-500 hover:text-white transition-colors hover:bg-white/5 rounded-xl">
             <X size={18} />
           </button>
         </div>
@@ -133,9 +133,9 @@ export default function GlobalSearchModal({ open, onClose }) {
           )}
         </div>
 
-        <div className="px-4 py-2 border-t bg-gray-50 text-xs text-gray-400 flex gap-4">
-          <span>↵ Mở</span>
-          <span>Esc Đóng</span>
+        <div className="px-6 py-3 border-t border-white/5 bg-white/5 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex gap-6">
+          <span className="flex items-center gap-1.5"><span className="text-slate-300">↵</span> Mở</span>
+          <span className="flex items-center gap-1.5"><span className="text-slate-300">Esc</span> Đóng</span>
         </div>
       </div>
     </div>
@@ -144,12 +144,14 @@ export default function GlobalSearchModal({ open, onClose }) {
 
 function ResultSection({ title, icon, children }) {
   return (
-    <div>
-      <div className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-gray-400 uppercase">
+    <div className="px-2">
+      <div className="flex items-center gap-2 px-4 py-2 text-[10px] font-black text-primary/60 uppercase tracking-widest border-b border-white/5 mb-1">
         {icon}
         {title}
       </div>
-      {children}
+      <div className="space-y-1">
+        {children}
+      </div>
     </div>
   );
 }
@@ -158,10 +160,10 @@ function ResultItem({ primary, secondary, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors"
+      className="w-full text-left px-4 py-3 hover:bg-white/5 rounded-xl transition-all group border border-transparent hover:border-white/5"
     >
-      <div className="text-sm font-medium text-gray-900">{primary}</div>
-      {secondary && <div className="text-xs text-gray-500 mt-0.5">{secondary}</div>}
+      <div className="text-sm font-bold text-slate-200 group-hover:text-primary transition-colors">{primary}</div>
+      {secondary && <div className="text-[10px] text-slate-500 font-bold uppercase tracking-tight mt-1">{secondary}</div>}
     </button>
   );
 }

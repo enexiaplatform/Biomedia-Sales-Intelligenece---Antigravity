@@ -14,7 +14,8 @@ import {
   Radar,
   Package,
   Network,
-  FlaskConical
+  Activity as Flask,
+  Briefcase
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -27,8 +28,9 @@ const NAV_ITEMS = [
   { to: "/competitors", label: "Đối thủ", icon: Target },
   { to: "/workflows", label: "Quy trình", icon: GitBranch },
   { to: "/pricing", label: "Báo giá & Giá", icon: Tag },
-  { to: "/lab-tools", label: "Công cụ Lab", icon: FlaskConical },
+  { to: "/lab-tools", label: "Công cụ Lab", icon: Flask },
   { to: "/kpi", label: "KPI & Hiệu suất", icon: BarChart2 },
+  { to: "/gm-hub", label: "GM Simulator", icon: Briefcase },
   { to: "/market-scan", label: "Market Scan", icon: Radar },
   { to: "/ai-coach", label: "AI Coach", icon: Brain }
 ];
@@ -46,29 +48,30 @@ export default function Sidebar({ open, onClose }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full z-50 w-64 bg-surface-900 border-r border-surface-700/50 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl
+        className={`fixed top-0 left-0 h-full z-50 w-64 border-r border-white/5 flex flex-col transition-transform duration-300 ease-in-out shadow-[10px_0_30px_rgba(0,0,0,0.5)]
           ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+        style={{ backgroundColor: '#020617' }} /* surface-950 hex */
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-6 py-6 border-b border-surface-700/50 bg-surface-950/20">
+        <div className="flex items-center justify-between px-6 py-8 border-b border-white/5 bg-surface-950/40">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl shadow-glow-sm">
-              <Activity className="text-primary" size={20} />
+            <div className="p-2.5 bg-primary/10 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.2)] border border-primary/20">
+              <Activity className="text-primary drop-shadow-glow" size={20} />
             </div>
             <div>
-              <div className="font-black text-slate-100 text-sm tracking-tight uppercase">Biomedia SI</div>
-              <div className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">Intelligence</div>
+              <div className="font-black text-slate-100 text-sm tracking-tighter uppercase leading-none">Biomedia SI</div>
+              <div className="text-primary/60 text-[9px] uppercase font-black tracking-[0.2em] mt-1">Intelligence</div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden text-slate-500 hover:text-white transition-colors"
+            className="lg:hidden text-slate-500 hover:text-white transition-colors p-1"
           >
             <X size={20} />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto scrollbar-hide">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -76,15 +79,19 @@ export default function Sidebar({ open, onClose }) {
               end={to === "/"}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300
+                `flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 group
                 ${isActive
-                  ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_rgba(105,246,184,0.1)] border border-primary/20"
-                  : "text-slate-400 hover:bg-surface-800 hover:text-slate-100 border border-transparent"
+                  ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_rgba(16,185,129,0.05)] border border-primary/20 shadow-glow-sm"
+                  : "text-slate-500 hover:bg-white/5 hover:text-slate-200 border border-transparent"
                 }`
               }
             >
-              <Icon size={18} className={({ isActive }) => isActive ? "drop-shadow-glow" : ""} />
-              {label}
+              {({ isActive }) => (
+                <>
+                  <Icon size={18} className={`transition-all duration-500 ${isActive ? "drop-shadow-glow scale-110" : "group-hover:scale-110 group-hover:text-slate-300"}`} />
+                  <span>{label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>

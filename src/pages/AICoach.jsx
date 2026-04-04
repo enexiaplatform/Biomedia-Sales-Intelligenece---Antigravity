@@ -184,21 +184,42 @@ export default function AICoach() {
 
           {/* Context Summary */}
           {(selectedAccount || selectedDeal || selectedCompetitor) && (
-            <div className="mt-3 space-y-1.5 border-t pt-3">
+            <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
               {selectedAccount && (
-                <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                  🏢 {selectedAccount.name} · Điểm: {selectedAccount.score}/10
+                <div className="text-[11px] bg-blue-50/50 text-blue-700 px-3 py-2 rounded-xl border border-blue-100 flex items-center gap-2">
+                  <User size={12} />
+                  <span className="font-bold truncate">{selectedAccount.name}</span>
                 </div>
               )}
               {selectedDeal && (
-                <div className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                  💼 {selectedDeal.name} · {selectedDeal.probability}%
+                <div className="text-[11px] bg-emerald-50/50 text-emerald-700 px-3 py-2 rounded-xl border border-emerald-100 flex items-center gap-2">
+                  <Bot size={12} />
+                  <span className="font-bold truncate">{selectedDeal.name} · {selectedDeal.probability}%</span>
                 </div>
               )}
               {selectedCompetitor && (
-                <div className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">
-                  🎯 {selectedCompetitor.name}
+                <div className="text-[11px] bg-red-50/50 text-red-700 px-3 py-2 rounded-xl border border-red-100 flex items-center gap-2">
+                  <Trash2 size={12} />
+                  <span className="font-bold truncate">{selectedCompetitor.name}</span>
                 </div>
+              )}
+
+              {selectedAccount && selectedDeal && (
+                <button
+                  onClick={() => {
+                    const prompt = `Phân tích chiến lược chuyên sâu cho deal "${selectedDeal.name}" tại khách hàng "${selectedAccount.name}". 
+                    Hãy phân tích theo cấu trúc: 
+                    1. ĐÁNH GIÁ SỨC MẠNH: Điểm tựa của chúng ta tại đây là gì? (Champions, Technical Fit).
+                    2. RỦI RO & RÀO CẢN: Ai là Blockers? Điều gì khiến deal này có thể thất bại?
+                    3. KỊCH BẢN ĐỐI THỦ: Nếu ${selectedCompetitor?.name || "đối thủ"} nhảy vào, chúng ta nên phản ứng ra sao?
+                    4. CHIẾN THUẬT 7 NGÀY TỚI: Hành động cụ thể để thắng deal này.`;
+                    sendMessage(prompt);
+                  }}
+                  className="w-full mt-2 btn-primary !bg-purple-600 !border-purple-500 shadow-lg shadow-purple-500/20 text-[10px] font-black uppercase tracking-widest h-10 flex items-center justify-center gap-2"
+                >
+                  <Brain size={14} />
+                  Phân tích Chiến Lược
+                </button>
               )}
             </div>
           )}

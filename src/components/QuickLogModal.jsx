@@ -82,14 +82,19 @@ export default function QuickLogModal({ open, onClose, onSuccess }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <div className="flex items-center gap-2">
-            <Zap size={18} className="text-blue-600" />
-            <h2 className="font-semibold text-gray-900">Ghi nhanh tương tác</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-950/60 backdrop-blur-sm">
+      <div className="bg-surface-900/90 backdrop-blur-xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-md border border-white/5 overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-xl border border-primary/20 shadow-glow-sm">
+              <Zap size={18} className="text-primary drop-shadow-glow" />
+            </div>
+            <div>
+              <h2 className="font-black text-slate-100 uppercase tracking-widest text-xs">Ghi nhanh tương tác</h2>
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Quick Intelligence Log</p>
+            </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="p-2 text-slate-500 hover:text-white transition-colors hover:bg-white/5 rounded-xl">
             <X size={18} />
           </button>
         </div>

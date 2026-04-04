@@ -74,75 +74,115 @@ export default function MarketMap({ showToast }) {
   if (loading) return <PageLoader />;
 
   return (
-    <div className="space-y-5">
-      <div className="flex gap-2">
-        <button
-          onClick={() => setActiveTab("matrix")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === "matrix" ? "bg-blue-600 text-white" : "bg-white border border-gray-300 text-gray-700"}`}
-        >
-          Ma trận thị trường
-        </button>
-        <button
-          onClick={() => setActiveTab("trends")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === "trends" ? "bg-blue-600 text-white" : "bg-white border border-gray-300 text-gray-700"}`}
-        >
-          Xu hướng thị trường
-        </button>
-      </div>
+    <div className="flex flex-col h-full bg-surface-950 relative overflow-hidden">
+      {/* Background accents */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full -z-10" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full -z-10" />
 
-      {activeTab === "matrix" && (
-        <div className="card overflow-x-auto">
-          <div className="px-5 py-4 border-b flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Ma trận phân khúc × khu vực</h3>
-            <div className="flex items-center gap-3 text-xs">
-              {Object.entries(PENETRATION_CONFIG).map(([k, v]) => (
-                <span key={k} className={`badge ${v.color}`}>{v.label}</span>
-              ))}
-            </div>
+      {/* Navigation Header */}
+      <div className="px-10 py-8 border-b border-white/5 bg-surface-900/40 backdrop-blur-2xl flex justify-between items-center shrink-0 shadow-2xl">
+        <div className="flex items-center gap-8">
+          <div>
+            <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tighter italic">Market Pulse Matrix</h2>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1">Strategic Coverage & Competitiveness</p>
           </div>
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 w-40">Phân khúc</th>
-                {MATRIX_REGIONS.map((r) => (
-                  <th key={r} className="px-4 py-3 text-center text-xs font-semibold text-gray-500">{r}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {MATRIX_SEGMENTS.map((seg) => (
-                <tr key={seg}>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{seg}</td>
-                  {MATRIX_REGIONS.map((region) => {
-                    const cell = getMatrixCell(seg, region);
-                    const config = PENETRATION_CONFIG[cell.penetration];
-                    return (
-                      <td key={region} className={`px-4 py-3 text-center ${cell.isWhitespace ? "bg-orange-50" : ""}`}>
-                        <div className={`inline-block px-2 py-1 rounded-lg text-xs ${cell.isWhitespace ? "border-2 border-dashed border-orange-300" : ""}`}>
-                          {cell.isWhitespace ? (
-                            <div className="text-orange-500 font-medium">💡 Cơ hội</div>
-                          ) : (
-                            <>
-                              <div className="font-semibold text-gray-900">{cell.count} TK</div>
-                              {cell.dealValue > 0 && (
-                                <CurrencyDisplay value={cell.dealValue} className="text-xs text-gray-500" />
-                              )}
-                            </>
-                          )}
-                          <span className={`badge mt-1 ${config.color}`}>{config.label}</span>
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="px-4 py-2 bg-orange-50 border-t text-xs text-orange-700 flex items-center gap-1">
-            <AlertCircle size={13} /> Ô màu cam là vùng trắng — cơ hội chưa khai thác
+          <div className="h-10 w-px bg-white/5 hidden md:block" />
+          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 shadow-inner">
+            <button
+              onClick={() => setActiveTab("matrix")}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                ${activeTab === "matrix" ? "bg-primary text-slate-900 shadow-glow shadow-primary/40" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}
+            >
+              Ma trận thị trường
+            </button>
+            <button
+              onClick={() => setActiveTab("trends")}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                ${activeTab === "trends" ? "bg-primary text-slate-900 shadow-glow shadow-primary/40" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}
+            >
+              Xu hướng thị trường
+            </button>
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-12 scrollbar-hide animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-7xl mx-auto space-y-12">
+          {activeTab === "matrix" && (
+            <div className="space-y-10">
+              <div className="flex flex-wrap items-center justify-between gap-6 bg-white/5 p-10 rounded-[3rem] border border-white/5 shadow-inner">
+                <div>
+                  <h3 className="text-xl font-black text-slate-100 uppercase tracking-tighter flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-primary rounded-full shadow-glow-sm" />
+                    Phân tích mật độ bao phủ
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 ml-4">Account Density × Regional Distribution</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  {Object.entries(PENETRATION_CONFIG).map(([k, v]) => (
+                    <span key={k} className={`badge text-[9px] font-black uppercase tracking-widest py-1.5 px-4 shadow-glow-sm ${v.color}`}>{v.label}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="table-container rounded-[3.5rem] border border-white/5 bg-surface-950/30 overflow-hidden shadow-2xl">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th className="w-64">Phân khúc khách hàng</th>
+                      {MATRIX_REGIONS.map((r) => (
+                        <th key={r} className="text-center">{r}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {MATRIX_SEGMENTS.map((seg) => (
+                      <tr key={seg} className="group hover:bg-white/5 transition-all">
+                        <td className="px-8 py-10 font-black text-slate-100 uppercase text-xs tracking-widest bg-white/[0.02] border-r border-white/5">{seg}</td>
+                        {MATRIX_REGIONS.map((region) => {
+                          const cell = getMatrixCell(seg, region);
+                          const config = PENETRATION_CONFIG[cell.penetration];
+                          return (
+                            <td key={region} className={`px-4 py-8 text-center transition-all ${cell.isWhitespace ? "relative overflow-hidden" : ""}`}>
+                              {cell.isWhitespace && <div className="absolute inset-0 bg-orange-500/[0.03] animate-pulse pointer-events-none" />}
+                              
+                              <div className={`p-5 rounded-3xl transition-all duration-500 border ${cell.isWhitespace ? "border-orange-500/20 bg-orange-500/5 shadow-glow shadow-orange-500/5 group-hover:scale-105" : "border-white/5 bg-white/[0.02] group-hover:bg-white/5 group-hover:-translate-y-1"}`}>
+                                {cell.isWhitespace ? (
+                                  <div className="space-y-1.5">
+                                    <div className="text-orange-500 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-1.5">
+                                      <AlertCircle size={12}/>
+                                      White Space
+                                    </div>
+                                    <div className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Cơ hội vàng</div>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-3">
+                                    <div className="font-black text-slate-100 text-lg tracking-tighter mb-1">
+                                      {cell.count} <span className="text-[8px] text-slate-600 uppercase tracking-widest font-bold">Accounts</span>
+                                    </div>
+                                    {cell.dealValue > 0 && (
+                                      <div className="px-3 py-1 bg-primary/10 rounded-xl border border-primary/20 inline-block font-black text-primary text-[10px] drop-shadow-glow-sm">
+                                        {formatVND(cell.dealValue)}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                <div className={`badge mt-4 text-[8px] font-black uppercase tracking-widest py-1 px-3 shadow-glow-sm ${config.color}`}>{config.label}</div>
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex items-center gap-3 px-8 py-5 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-400 text-[10px] font-black uppercase tracking-widest italic w-fit mx-auto shadow-glow shadow-orange-500/10">
+                <AlertCircle size={14} className="animate-pulse" />
+                Dữ liệu chỉ ra cơ hội thâm nhập tại các vùng trắng kinh tế
+              </div>
+            </div>
+          )}
 
       {activeTab === "trends" && (
         <div className="space-y-4">
@@ -227,6 +267,8 @@ export default function MarketMap({ showToast }) {
           </div>
         </div>
       )}
+      </div>
+      </div>
     </div>
   );
 }

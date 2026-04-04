@@ -343,7 +343,11 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
     type: intel.category === "fnb_factory" ? "fnb" : "pharma",
     region: intel.region || "North",
     status: "active",
-    score: intel.relevance_score || 50
+    score: intel.relevance_score || 50,
+    createDeal: true,
+    dealName: intel.title || "",
+    dealValue: 0,
+    dealDate: format(new Date(), "yyyy-MM-dd")
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -352,12 +356,32 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
     setSubmitting(true);
     
     // Create explicitly through direct query if standard method has complex requirements
-    const { data: accData, error: accError } = await supabase.from("accounts").insert([form]).select().single();
+    const { data: accData, error: accError } = await supabase.from("accounts").insert([{
+      name: form.name,
+      type: form.type,
+      region: form.region,
+      status: form.status,
+      score: form.score
+    }]).select().single();
     
     if (accError) {
       showToast(accError.message, "error");
       setSubmitting(false);
       return;
+    }
+
+    // Create Deal if requested
+    if (form.createDeal) {
+      const { error: dealError } = await supabase.from("deals").insert([{
+        account_id: accData.id,
+        name: form.dealName,
+        value: form.dealValue,
+        expected_close: form.dealDate,
+        stage: "prospect",
+        probability: 10,
+        notes: `Tự động tạo từ Market Scan: ${intel.title}`
+      }]);
+      if (dealError) showToast("Lỗi khi tạo deal: " + dealError.message, "error");
     }
 
     // Link market_intel
@@ -408,7 +432,54 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
               </select>
             </div>
           </div>
-          <div className="pt-4 flex gap-3">
+
+          <div className="border-t pt-4 space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={form.createDeal} 
+                onChange={e => setForm({...form, createDeal: e.target.checked})}
+                className="rounded text-primary" 
+              />
+              <span className="text-sm font-bold text-gray-700">Tạo kèm một Deal (Cơ hội)</span>
+            </label>
+
+            {form.createDeal && (
+              <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-100 animate-in fade-in duration-300">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-gray-500">Tên Deal</label>
+                  <input 
+                    type="text" 
+                    className="input h-9 text-sm" 
+                    value={form.dealName} 
+                    onChange={e => setForm({...form, dealName: e.target.value})} 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-gray-500">Giá trị dự kiến</label>
+                    <input 
+                      type="number" 
+                      className="input h-9 text-sm" 
+                      value={form.dealValue} 
+                      onChange={e => setForm({...form, dealValue: parseInt(e.target.value) || 0})} 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-gray-500">Ngày dự kiến chốt</label>
+                    <input 
+                      type="date" 
+                      className="input h-9 text-sm" 
+                      value={form.dealDate} 
+                      onChange={e => setForm({...form, dealDate: e.target.value})} 
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2 flex gap-3">
             <button type="button" onClick={onClose} className="btn-secondary flex-1">Hủy</button>
             <button type="submit" disabled={submitting} className="btn-primary flex-1">
               {submitting ? "Đang tạo..." : "Xác nhận tạo"}

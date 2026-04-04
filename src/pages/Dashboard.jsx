@@ -27,12 +27,12 @@ const STAGE_LABELS = {
 };
 
 const STAGE_COLORS = {
-  prospect: "#6b7280",
-  qualified: "#3b82f6",
-  proposal: "#f59e0b",
-  negotiation: "#8b5cf6",
-  closed_won: "#10b981",
-  closed_lost: "#ef4444"
+  prospect: "#94a3b8",
+  qualified: "#38bdf8",
+  proposal: "#fbbf24",
+  negotiation: "#a78bfa",
+  closed_won: "#34d399",
+  closed_lost: "#fb7185"
 };
 
 const INTERACTION_TYPE_LABELS = {
@@ -61,6 +61,13 @@ export default function Dashboard({ showToast }) {
   async function loadAll() {
     setLoading(true);
     try {
+      const timeout = setTimeout(() => {
+        if (loading) {
+          setError("Kết nối dữ liệu chậm. Vui lòng tải lại trang.");
+          setLoading(false);
+        }
+      }, 10000);
+
       const [statsRes, topRes, stageRes, interactionsRes, dealsRes] = await Promise.all([
         getAccountStats(),
         getTopAccountsByScore(5),
@@ -68,6 +75,8 @@ export default function Dashboard({ showToast }) {
         fetchRecentInteractions(10),
         fetchDeals()
       ]);
+      
+      clearTimeout(timeout);
 
       if (statsRes.error) throw new Error(statsRes.error.message);
       setStats(statsRes.data);
@@ -106,27 +115,31 @@ export default function Dashboard({ showToast }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Tổng pipeline"
-          value={<CurrencyDisplay value={stats?.totalPipelineValue} className="text-2xl font-bold text-gray-900" />}
-          icon={<DollarSign size={20} className="text-blue-600" />}
-          bg="bg-blue-50"
+          value={<CurrencyDisplay value={stats?.totalPipelineValue} className="text-2xl font-black text-slate-100 tracking-tight" />}
+          icon={<DollarSign size={20} className="text-blue-400" />}
+          bg="bg-blue-500/10 border-blue-500/20"
+          glow="shadow-blue-500/10"
         />
         <StatCard
           title="Deal đang mở"
-          value={<span className="text-2xl font-bold text-gray-900">{stats?.activeDeals ?? 0}</span>}
-          icon={<TrendingUp size={20} className="text-green-600" />}
-          bg="bg-green-50"
+          value={<span className="text-2xl font-black text-slate-100 tracking-tight">{stats?.activeDeals ?? 0}</span>}
+          icon={<TrendingUp size={20} className="text-primary" />}
+          bg="bg-primary/10 border-primary/20"
+          glow="shadow-primary/10"
         />
         <StatCard
           title="Tỷ lệ thắng"
-          value={<span className="text-2xl font-bold text-gray-900">{stats?.winRate ?? 0}%</span>}
-          icon={<Target size={20} className="text-purple-600" />}
-          bg="bg-purple-50"
+          value={<span className="text-2xl font-black text-slate-100 tracking-tight">{stats?.winRate ?? 0}%</span>}
+          icon={<Target size={20} className="text-purple-400" />}
+          bg="bg-purple-500/10 border-purple-500/20"
+          glow="shadow-purple-500/10"
         />
         <StatCard
           title="Tổng tài khoản"
-          value={<span className="text-2xl font-bold text-gray-900">{stats?.totalAccounts ?? 0}</span>}
-          icon={<Users size={20} className="text-orange-600" />}
-          bg="bg-orange-50"
+          value={<span className="text-2xl font-black text-slate-100 tracking-tight">{stats?.totalAccounts ?? 0}</span>}
+          icon={<Users size={20} className="text-orange-400" />}
+          bg="bg-orange-500/10 border-orange-500/20"
+          glow="shadow-orange-500/10"
         />
       </div>
 
@@ -145,8 +158,11 @@ export default function Dashboard({ showToast }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pipeline by Stage */}
-        <div className="card p-5">
-          <h3 className="font-semibold text-gray-900 mb-4">Pipeline theo giai đoạn</h3>
+        <div className="card p-5 bg-surface-800/20 backdrop-blur-md border-surface-700/50">
+          <h3 className="font-bold text-slate-100 mb-6 flex items-center gap-2">
+            <TrendingUp size={18} className="text-primary" />
+            Pipeline theo giai đoạn
+          </h3>
           {stageData.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">Chưa có deal nào</p>
           ) : (
@@ -176,10 +192,10 @@ export default function Dashboard({ showToast }) {
         </div>
 
         {/* Deals Closing This Month */}
-        <div className="card p-5">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <AlertCircle size={16} className="text-amber-500" />
-            Deal đóng trong tháng này ({closingDeals.length})
+        <div className="card p-5 bg-surface-800/20 backdrop-blur-md border-surface-700/50">
+          <h3 className="font-bold text-slate-100 mb-6 flex items-center gap-2">
+            <AlertCircle size={18} className="text-amber-500" />
+            Deal đóng tháng này ({closingDeals.length})
           </h3>
           {closingDeals.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">Không có deal nào đóng tháng này</p>
@@ -188,8 +204,8 @@ export default function Dashboard({ showToast }) {
               {closingDeals.slice(0, 5).map((deal) => (
                 <div
                   key={deal.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border
-                    ${deal.probability >= 60 ? "border-green-200 bg-green-50" : deal.probability >= 30 ? "border-yellow-200 bg-yellow-50" : "border-red-200 bg-red-50"}`}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-default
+                    ${deal.probability >= 60 ? "border-green-500/20 bg-green-500/5" : deal.probability >= 30 ? "border-yellow-500/20 bg-yellow-500/5" : "border-red-500/20 bg-red-500/5"}`}
                 >
                   <div>
                     <div className="text-sm font-medium text-gray-900">{deal.name}</div>
@@ -301,14 +317,17 @@ export default function Dashboard({ showToast }) {
   );
 }
 
-function StatCard({ title, value, icon, bg }) {
+function StatCard({ title, value, icon, bg, glow }) {
   return (
-    <div className="card p-5">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`p-2 rounded-lg ${bg}`}>{icon}</div>
-        <span className="text-sm text-gray-500 font-medium">{title}</span>
+    <div className={`card p-6 relative overflow-hidden group hover:-translate-y-1 ${glow}`}>
+      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        {icon}
       </div>
-      {value}
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2 rounded-xl border ${bg}`}>{icon}</div>
+        <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">{title}</span>
+      </div>
+      <div className="relative z-10">{value}</div>
     </div>
   );
 }
