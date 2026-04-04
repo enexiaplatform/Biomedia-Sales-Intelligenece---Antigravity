@@ -3,12 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from "recharts";
-import { DollarSign, TrendingUp, Users, Target, Plus, AlertCircle } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Plus, AlertCircle, ChevronRight } from "lucide-react";
 import { format, isThisMonth, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import CurrencyDisplay from "../components/CurrencyDisplay";
 import ScoreBadge from "../components/ScoreBadge";
-import { PageLoader } from "../components/LoadingSpinner";
 import {
   getAccountStats,
   getTopAccountsByScore,
@@ -27,12 +26,12 @@ const STAGE_LABELS = {
 };
 
 const STAGE_COLORS = {
-  prospect: "#94a3b8",
-  qualified: "#38bdf8",
-  proposal: "#fbbf24",
-  negotiation: "#a78bfa",
-  closed_won: "#34d399",
-  closed_lost: "#fb7185"
+  prospect: "#475569",
+  qualified: "#0EA5E9",
+  proposal: "#F59E0B",
+  negotiation: "#8B5CF6",
+  closed_won: "#10B981",
+  closed_lost: "#EF4444"
 };
 
 const INTERACTION_TYPE_LABELS = {
@@ -61,13 +60,6 @@ export default function Dashboard({ showToast }) {
   async function loadAll() {
     setLoading(true);
     try {
-      const timeout = setTimeout(() => {
-        if (loading) {
-          setError("Kết nối dữ liệu chậm. Vui lòng tải lại trang.");
-          setLoading(false);
-        }
-      }, 10000);
-
       const [statsRes, topRes, stageRes, interactionsRes, dealsRes] = await Promise.all([
         getAccountStats(),
         getTopAccountsByScore(5),
@@ -76,8 +68,6 @@ export default function Dashboard({ showToast }) {
         fetchDeals()
       ]);
       
-      clearTimeout(timeout);
-
       if (statsRes.error) throw new Error(statsRes.error.message);
       setStats(statsRes.data);
       setTopAccounts(topRes.data || []);
@@ -97,91 +87,101 @@ export default function Dashboard({ showToast }) {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
+        <div className="spinner mb-4" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Đang khởi tạo Dashboard...</span>
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="text-center py-16">
-        <AlertCircle size={32} className="mx-auto text-red-400 mb-3" />
-        <p className="text-red-600 mb-4">{error}</p>
-        <button onClick={loadAll} className="btn-secondary">Thử lại</button>
+      <div className="text-center py-16 card max-w-md mx-auto">
+        <AlertCircle size={32} className="mx-auto text-red-500 mb-4" />
+        <p className="text-red-400 font-bold mb-6">{error}</p>
+        <button onClick={loadAll} className="btn-secondary w-full">Thử lại</button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Tổng pipeline"
-          value={<CurrencyDisplay value={stats?.totalPipelineValue} className="text-2xl font-black text-slate-100 tracking-tight" />}
+          value={<CurrencyDisplay value={stats?.totalPipelineValue} className="text-2xl font-black text-white tracking-tight" />}
           icon={<DollarSign size={20} className="text-blue-400" />}
-          bg="bg-blue-500/10 border-blue-500/20"
-          glow="shadow-blue-500/10"
+          color="blue"
         />
         <StatCard
           title="Deal đang mở"
-          value={<span className="text-2xl font-black text-slate-100 tracking-tight">{stats?.activeDeals ?? 0}</span>}
-          icon={<TrendingUp size={20} className="text-primary" />}
-          bg="bg-primary/10 border-primary/20"
-          glow="shadow-primary/10"
+          value={<span className="text-2xl font-black text-white tracking-tight">{stats?.activeDeals ?? 0}</span>}
+          icon={<TrendingUp size={20} className="text-red-500" />}
+          color="red"
         />
         <StatCard
           title="Tỷ lệ thắng"
-          value={<span className="text-2xl font-black text-slate-100 tracking-tight">{stats?.winRate ?? 0}%</span>}
+          value={<span className="text-2xl font-black text-white tracking-tight">{stats?.winRate ?? 0}%</span>}
           icon={<Target size={20} className="text-purple-400" />}
-          bg="bg-purple-500/10 border-purple-500/20"
-          glow="shadow-purple-500/10"
+          color="purple"
         />
         <StatCard
           title="Tổng tài khoản"
-          value={<span className="text-2xl font-black text-slate-100 tracking-tight">{stats?.totalAccounts ?? 0}</span>}
+          value={<span className="text-2xl font-black text-white tracking-tight">{stats?.totalAccounts ?? 0}</span>}
           icon={<Users size={20} className="text-orange-400" />}
-          bg="bg-orange-500/10 border-orange-500/20"
-          glow="shadow-orange-500/10"
+          color="orange"
         />
       </div>
 
       {/* Quick actions */}
-      <div className="flex flex-wrap gap-3">
-        <button onClick={() => navigate("/accounts")} className="btn-primary">
-          <Plus size={14} /> Thêm tài khoản
-        </button>
-        <button onClick={() => navigate("/pipeline")} className="btn-secondary">
-          <Plus size={14} /> Thêm deal
-        </button>
-        <Link to="/pipeline" className="btn-secondary">
-          Xem pipeline
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate("/accounts")} className="btn-primary">
+            <Plus size={16} /> Thêm tài khoản
+          </button>
+          <button onClick={() => navigate("/pipeline")} className="btn-secondary">
+            <Plus size={16} /> Thêm deal
+          </button>
+        </div>
+        <Link to="/pipeline" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-red-500 flex items-center gap-2 transition-colors">
+          Xem toàn bộ pipeline <ChevronRight size={14} />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Pipeline by Stage */}
-        <div className="card p-5 bg-surface-800/20 backdrop-blur-md border-surface-700/50">
-          <h3 className="font-bold text-slate-100 mb-6 flex items-center gap-2">
-            <TrendingUp size={18} className="text-primary" />
-            Pipeline theo giai đoạn
-          </h3>
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-glow-red" />
+              Pipeline theo giai đoạn
+            </h3>
+          </div>
           {stageData.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">Chưa có deal nào</p>
+            <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-12">Chưa có deal nào</div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={stageData} layout="vertical">
-                <XAxis type="number" tick={{ fontSize: 11 }} />
+              <BarChart data={stageData} layout="vertical" margin={{ left: -10 }}>
+                <XAxis type="number" hide />
                 <YAxis
                   type="category"
                   dataKey="stage"
                   tickFormatter={(v) => STAGE_LABELS[v] || v}
-                  tick={{ fontSize: 11 }}
-                  width={80}
+                  tick={{ fontSize: 10, fill: '#64748b', fontWeight: 900 }}
+                  width={90}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <Tooltip
-                  formatter={(val, name) =>
-                    name === "count" ? [`${val} deal`, "Số deal"] : [val, "Giá trị"]
-                  }
+                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                  contentStyle={{ backgroundColor: '#0F172A', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}
+                  labelStyle={{ fontSize: '10px', color: '#94A3B8', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}
+                  itemStyle={{ fontSize: '12px', fontWeight: 700 }}
                 />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
                   {stageData.map((entry) => (
                     <Cell key={entry.stage} fill={STAGE_COLORS[entry.stage] || "#6b7280"} />
                   ))}
@@ -192,28 +192,28 @@ export default function Dashboard({ showToast }) {
         </div>
 
         {/* Deals Closing This Month */}
-        <div className="card p-5 bg-surface-800/20 backdrop-blur-md border-surface-700/50">
-          <h3 className="font-bold text-slate-100 mb-6 flex items-center gap-2">
-            <AlertCircle size={18} className="text-amber-500" />
-            Deal đóng tháng này ({closingDeals.length})
-          </h3>
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-glow-red" />
+              Deal đóng tháng này ({closingDeals.length})
+            </h3>
+          </div>
           {closingDeals.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">Không có deal nào đóng tháng này</p>
+            <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-12">Không có deal sắp đóng</div>
           ) : (
             <div className="space-y-3">
               {closingDeals.slice(0, 5).map((deal) => (
-                <div
-                  key={deal.id}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-default
-                    ${deal.probability >= 60 ? "border-green-500/20 bg-green-500/5" : deal.probability >= 30 ? "border-yellow-500/20 bg-yellow-500/5" : "border-red-500/20 bg-red-500/5"}`}
-                >
+                <div key={deal.id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{deal.name}</div>
-                    <div className="text-xs text-gray-500">{deal.accounts?.name}</div>
+                    <div className="text-sm font-bold text-slate-200 group-hover:text-red-500 transition-colors">{deal.name}</div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mt-1">{deal.accounts?.name}</div>
                   </div>
                   <div className="text-right">
-                    <CurrencyDisplay value={deal.value} className="text-sm font-semibold text-gray-900" />
-                    <div className="text-xs text-gray-500">{deal.probability}% · {deal.expected_close}</div>
+                    <CurrencyDisplay value={deal.value} className="text-sm font-black text-white" />
+                    <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${deal.probability >= 60 ? "text-emerald-500" : "text-amber-500"}`}>
+                      {deal.probability}% Prob
+                    </div>
                   </div>
                 </div>
               ))}
@@ -222,112 +222,109 @@ export default function Dashboard({ showToast }) {
         </div>
       </div>
 
-      {/* Top Accounts */}
-      <div className="card">
-        <div className="px-5 py-4 border-b">
-          <h3 className="font-semibold text-gray-900">Top 5 tài khoản theo điểm</h3>
-        </div>
-        {topAccounts.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-400">Chưa có tài khoản nào</div>
-        ) : (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Top Accounts */}
+        <div className="card overflow-hidden">
+          <div className="px-6 py-5 border-b border-white/5 bg-white/[0.01]">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Top 5 tài khoản tiềm năng</h3>
+          </div>
           <div className="table-container">
             <table className="table">
               <thead>
                 <tr>
-                  <th>Tên tài khoản</th>
-                  <th>Khu vực</th>
+                  <th>Tài khoản</th>
                   <th>Loại</th>
                   <th>Điểm</th>
-                  <th>Hoạt động gần đây</th>
+                  <th>Hoạt động</th>
                 </tr>
               </thead>
               <tbody>
-                {topAccounts.map((acc) => {
-                  const lastDate = acc.interactions?.[0]?.date;
-                  return (
-                    <tr key={acc.id}>
-                      <td>
-                        <Link to={`/accounts/${acc.id}`} className="font-medium text-blue-600 hover:underline">
-                          {acc.name}
-                        </Link>
-                      </td>
-                      <td>{acc.region || "—"}</td>
-                      <td>
-                        <span className="badge bg-gray-100 text-gray-700">{acc.type}</span>
-                      </td>
-                      <td><ScoreBadge score={acc.score} /></td>
-                      <td className="text-gray-500">
-                        {lastDate ? format(parseISO(lastDate), "dd/MM/yyyy", { locale: vi }) : "Chưa có"}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {topAccounts.map((acc) => (
+                  <tr key={acc.id} className="group">
+                    <td>
+                      <Link to={`/accounts/${acc.id}`} className="font-bold text-slate-200 group-hover:text-red-500 transition-colors">
+                        {acc.name}
+                      </Link>
+                      <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest mt-1">{acc.region}</div>
+                    </td>
+                    <td><span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{acc.type}</span></td>
+                    <td><ScoreBadge score={acc.score} /></td>
+                    <td className="text-[10px] text-slate-600 font-black uppercase tracking-widest">
+                      {acc.interactions?.[0]?.date ? format(parseISO(acc.interactions[0].date), "dd/MM/yy") : "—"}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
-
-      {/* Recent Interactions */}
-      <div className="card">
-        <div className="px-5 py-4 border-b">
-          <h3 className="font-semibold text-gray-900">10 tương tác gần đây</h3>
         </div>
-        {recentInteractions.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-400">Chưa có tương tác nào</div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {recentInteractions.map((interaction) => (
-              <div key={interaction.id} className="px-5 py-3 hover:bg-gray-50">
+
+        {/* Recent Interactions */}
+        <div className="card overflow-hidden">
+          <div className="px-6 py-5 border-b border-white/5 bg-white/[0.01]">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tương tác chiến lược</h3>
+          </div>
+          <div className="divide-y divide-white/5">
+            {recentInteractions.slice(0, 6).map((interaction) => (
+              <div key={interaction.id} className="px-6 py-4 hover:bg-white/[0.02] transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Link
-                        to={`/accounts/${interaction.account_id}`}
-                        className="font-medium text-blue-600 hover:underline text-sm"
-                      >
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <Link to={`/accounts/${interaction.account_id}`} className="text-xs font-black text-slate-300 hover:text-red-500 transition-colors uppercase tracking-widest">
                         {interaction.accounts?.name}
                       </Link>
-                      <span className="badge bg-gray-100 text-gray-600 text-xs">
+                      <span className="w-1 h-1 rounded-full bg-slate-700" />
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em]">
                         {INTERACTION_TYPE_LABELS[interaction.type] || interaction.type}
                       </span>
-                      {interaction.contacts?.name && (
-                        <span className="text-xs text-gray-500">· {interaction.contacts.name}</span>
-                      )}
                     </div>
-                    <p className="text-sm text-gray-700 mt-1 line-clamp-2">{interaction.summary}</p>
+                    <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">{interaction.summary}</p>
                     {interaction.buying_signal && (
-                      <p className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded mt-1 inline-block">
-                        🎯 {interaction.buying_signal}
-                      </p>
+                      <div className="mt-2 text-[9px] font-black text-red-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <Target size={10} /> {interaction.buying_signal}
+                      </div>
                     )}
                   </div>
-                  <div className="text-xs text-gray-400 whitespace-nowrap">
-                    {interaction.date
-                      ? format(parseISO(interaction.date), "dd/MM/yy HH:mm")
-                      : ""}
+                  <div className="text-[10px] text-slate-700 font-black uppercase tracking-widest">
+                    {interaction.date ? format(parseISO(interaction.date), "dd/MM") : ""}
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 }
 
-function StatCard({ title, value, icon, bg, glow }) {
+function StatCard({ title, value, icon, color }) {
+  const getStyles = () => {
+    switch(color) {
+      case 'red': return 'text-red-500 bg-red-500/10 border-red-500/20';
+      case 'blue': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+      case 'purple': return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
+      case 'orange': return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
+      default: return 'text-slate-500 bg-slate-500/10 border-slate-500/20';
+    }
+  };
+
   return (
-    <div className={`card p-6 relative overflow-hidden group hover:-translate-y-1 ${glow}`}>
-      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-        {icon}
+    <div className="card p-6 card-hover relative overflow-hidden group">
+      <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-[40px] opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${getStyles().split(' ')[0].replace('text', 'bg')}`} />
+      
+      <div className="flex items-center gap-x-4 mb-4">
+        <div className={`p-2.5 rounded-xl border transition-transform duration-500 group-hover:scale-110 ${getStyles()}`}>
+          {icon}
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-400 transition-colors">
+          {title}
+        </span>
       </div>
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`p-2 rounded-xl border ${bg}`}>{icon}</div>
-        <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">{title}</span>
+      
+      <div className="relative z-10 flex items-baseline gap-2">
+        {value}
       </div>
-      <div className="relative z-10">{value}</div>
     </div>
   );
 }
