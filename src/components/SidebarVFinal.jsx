@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import {
   BarChart3,
   Users,
@@ -18,27 +19,77 @@ import {
   Briefcase,
   LogOut,
   Sun,
-  Moon
+  Moon,
+  ChevronDown
 } from "lucide-react";
 
-const NAV_ITEMS = [
-  { to: "/", label: "Dashboard", icon: BarChart3 },
-  { to: "/accounts", label: "Tài khoản", icon: Users },
-  { to: "/products", label: "Sản Phẩm", icon: Package },
-  { to: "/bd-tool", label: "BD Tool", icon: Network },
-  { to: "/pipeline", label: "Pipeline", icon: TrendingUp },
-  { to: "/market-map", label: "Bản đồ thị trường", icon: Map },
-  { to: "/competitors", label: "Đối thủ", icon: Target },
-  { to: "/workflows", label: "Quy trình", icon: GitBranch },
-  { to: "/pricing", label: "Báo giá & Giá", icon: Tag },
-  { to: "/lab-tools", label: "Công cụ Lab", icon: Flask },
-  { to: "/kpi", label: "KPI & Hiệu suất", icon: BarChart2 },
-  { to: "/gm-hub", label: "GM Simulator", icon: Briefcase },
-  { to: "/market-scan", label: "Market Scan", icon: Radar },
-  { to: "/ai-coach", label: "AI Coach", icon: Brain }
+// Step 1: Modify Navigation Data Structure
+const navigationGroups = [
+  {
+    id: 'CRM_CORE',
+    label: 'CRM CORE',
+    items: [
+      { label: 'Dashboard', to: '/', icon: BarChart3 },
+      { label: 'Tài khoản', to: '/accounts', icon: Users },
+      { label: 'Pipeline', to: '/pipeline', icon: TrendingUp },
+      { label: 'BD Tool', to: '/bd-tool', icon: Network },
+    ],
+  },
+  {
+    id: 'MARKET_INTEL',
+    label: 'MARKET INTEL',
+    items: [
+      { label: 'Bản đồ thị trường', to: '/market-map', icon: Map },
+      { label: 'Đối thủ', to: '/competitors', icon: Target },
+      { label: 'Market Scan', to: '/market-scan', icon: Radar },
+    ],
+  },
+  {
+    id: 'PRODUCT_PRICING',
+    label: 'PRODUCT & PRICING',
+    items: [
+      { label: 'Quy trình', to: '/workflows', icon: GitBranch },
+      { label: 'Sản Phẩm', to: '/products', icon: Package },
+      { label: 'Báo giá & Giá', to: '/pricing', icon: Tag },
+    ],
+  },
+  {
+    id: 'PERFORMANCE',
+    label: 'PERFORMANCE',
+    items: [
+      { label: 'KPI & Hiệu suất', to: '/kpi', icon: BarChart2 },
+      { label: 'GM Simulator', to: '/gm-hub', icon: Briefcase },
+    ],
+  },
+  {
+    id: 'AI_HUB',
+    label: 'AI HUB',
+    items: [
+      { label: 'AI Coach', to: '/ai-coach', icon: Brain },
+      { label: 'Công cụ Lab', to: '/lab-tools', icon: Flask },
+    ],
+  },
 ];
 
 export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme }) {
+  // Step 2: Add Collapsed State
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sidebarGroups_collapsed');
+      return stored ? JSON.parse(stored) : {}; // Default all expanded
+    } catch {
+      return {};
+    }
+  });
+
+  const toggleGroup = (groupId) => {
+    setCollapsedGroups((prev) => {
+      const updated = { ...prev, [groupId]: !prev[groupId] };
+      localStorage.setItem('sidebarGroups_collapsed', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -73,48 +124,78 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
           </button>
         </div>
 
-        <nav className="flex-1 px-3 py-8 space-y-1 overflow-y-auto scrollbar-hide">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === "/"}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 group
-                ${isActive
-                  ? "bg-[#8B0000]/10 text-white dark:text-white"
-                  : "text-slate-500 dark:text-[#4B535D] hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#8B0000] rounded-r-full shadow-[0_0_10px_rgba(139,0,0,0.5)]" />
-                  )}
-                  <Icon size={18} className={`transition-all duration-300 group-hover:scale-110 ${isActive ? 'text-[#8B0000]' : 'opacity-60 group-hover:opacity-100'}`} />
-                  <span className={isActive ? "font-black" : ""}>{label}</span>
-                </>
-              )}
-            </NavLink>
+        {/* Step 3: Replace Navigation Rendering */}
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto scrollbar-hide">
+          {navigationGroups.map((group) => (
+            <div key={group.id} className="mb-4">
+              {/* Group Header */}
+              <button
+                onClick={() => toggleGroup(group.id)}
+                className="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#161B22] transition-colors text-left group-btn"
+              >
+                <span className="text-[10px] font-black text-slate-500 dark:text-[#8B949E] uppercase tracking-widest transition-colors">
+                  {group.label}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`text-slate-400 dark:text-[#8B949E] transition-transform duration-300 ${
+                    collapsedGroups[group.id] ? '-rotate-90' : 'rotate-0'
+                  }`}
+                />
+              </button>
+
+              {/* Group Items (Collapsible) */}
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  collapsedGroups[group.id] ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
+                }`}
+              >
+                <div className="space-y-1 mt-1">
+                  {group.items.map(({ to, label, icon: Icon }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={to === "/"}
+                      onClick={onClose}
+                      className={({ isActive }) =>
+                        `relative flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 group
+                        ${isActive
+                          ? "bg-[#8B0000]/10 text-slate-900 dark:text-white"
+                          : "text-slate-500 dark:text-[#4B535D] hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200"
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          {isActive && (
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#8B0000] rounded-r-full shadow-[0_0_10px_rgba(139,0,0,0.5)]" />
+                          )}
+                          <Icon size={16} className={`transition-all duration-300 group-hover:scale-110 ${isActive ? 'text-[#8B0000]' : 'opacity-60 group-hover:opacity-100'}`} />
+                          <span className={isActive ? "font-black" : ""}>{label}</span>
+                        </>
+                      )}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            </div>
           ))}
         </nav>
 
         {/* Footer with Theme Toggle and Logout */}
-        <div className="p-4 border-t border-black/5 dark:border-white/5 bg-slate-50/50 dark:bg-surface-950/40 space-y-4">
+        <div className="p-4 border-t border-black/5 dark:border-[#30363D] bg-slate-50/50 dark:bg-surface-950/40 space-y-4">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-3 min-w-0">
-               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 border border-black/5 dark:border-white/10 flex items-center justify-center text-[10px] font-black text-red-600 dark:text-red-500">AD</div>
+               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-[#161B22] border border-black/5 dark:border-[#30363D] flex items-center justify-center text-[10px] font-black text-red-600 dark:text-[#8B0000]">AD</div>
                <div className="flex-1 min-w-0">
                  <div className="text-[11px] font-black text-slate-900 dark:text-slate-200 uppercase tracking-wide truncate">Admin User</div>
-                 <div className="text-[9px] font-bold text-slate-500 uppercase">Administrator</div>
+                 <div className="text-[9px] font-bold text-slate-500 dark:text-[#8B949E] uppercase">Administrator</div>
                </div>
             </div>
             
             <button 
               onClick={onToggleTheme}
-              className="p-2 rounded-xl border border-black/5 dark:border-white/10 text-slate-500 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-95"
+              className="p-2 rounded-xl border border-black/5 dark:border-[#30363D] text-slate-500 dark:text-[#8B949E] hover:text-[#8B0000] dark:hover:text-[#8B0000] hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-95"
               title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -123,7 +204,7 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
           
           <button 
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-red-500/10 hover:text-red-500 transition-all border border-transparent hover:border-red-500/20"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-[#8B949E] hover:bg-[#8B0000]/10 hover:text-[#8B0000] dark:hover:text-[#8B0000] transition-all border border-transparent dark:hover:border-[#8B0000]/20 hover:shadow-[0_0_15px_rgba(139,0,0,0.2)]"
           >
             <LogOut size={16} />
             <span>Đăng xuất</span>
