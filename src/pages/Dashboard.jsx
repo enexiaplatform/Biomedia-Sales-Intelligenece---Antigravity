@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from "recharts";
-import { DollarSign, TrendingUp, Users, Target, Plus, AlertCircle, ChevronRight } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, Plus, AlertCircle, ChevronRight, Inbox } from "lucide-react";
 import { format, isThisMonth, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import CurrencyDisplay from "../components/CurrencyDisplay";
@@ -111,28 +111,24 @@ export default function Dashboard({ showToast }) {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Tổng pipeline"
-          value={<CurrencyDisplay value={stats?.totalPipelineValue} className="text-[32px] font-bold text-white tracking-tight" />}
-          icon={<DollarSign size={20} className="text-blue-400" />}
-          color="blue"
+          title="TỔNG PIPELINE"
+          value={<CurrencyDisplay value={stats?.totalPipelineValue} />}
+          icon={<DollarSign className="w-5 h-5 text-[#8B0000]" />}
         />
         <StatCard
-          title="Deal đang mở"
-          value={<span className="text-[32px] font-bold text-white tracking-tight">{stats?.activeDeals ?? 0}</span>}
-          icon={<TrendingUp size={20} className="text-[#8B0000]" />}
-          color="red"
+          title="DEAL ĐANG MỞ"
+          value={stats?.activeDeals ?? 0}
+          icon={<TrendingUp className="w-5 h-5 text-[#8B0000]" />}
         />
         <StatCard
-          title="Tỷ lệ thắng"
-          value={<span className="text-[32px] font-bold text-white tracking-tight">{stats?.winRate ?? 0}%</span>}
-          icon={<Target size={20} className="text-emerald-500" />}
-          color="green"
+          title="TỶ LỆ THẮNG"
+          value={`${stats?.winRate ?? 0}%`}
+          icon={<Target className="w-5 h-5 text-[#8B0000]" />}
         />
         <StatCard
-          title="Tổng tài khoản"
-          value={<span className="text-[32px] font-bold text-white tracking-tight">{stats?.totalAccounts ?? 0}</span>}
-          icon={<Users size={20} className="text-blue-400" />}
-          color="blue"
+          title="TỔNG TÀI KHOẢN"
+          value={stats?.totalAccounts ?? 0}
+          icon={<Users className="w-5 h-5 text-[#8B0000]" />}
         />
       </div>
 
@@ -154,14 +150,20 @@ export default function Dashboard({ showToast }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Pipeline by Stage */}
         <div className="card p-6">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-glow-red" />
-              Pipeline theo giai đoạn
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
+            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
+              PIPELINE THEO GIAI ĐOẠN
             </h3>
           </div>
           {stageData.length === 0 ? (
-            <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-12">Chưa có deal nào</div>
+            <div className="flex flex-col items-center justify-center h-40 gap-2">
+              <div className="w-10 h-10 rounded-full bg-[#1E1E1E] flex items-center justify-center">
+                <Inbox className="w-5 h-5 text-[#404040]" />
+              </div>
+              <p className="text-sm text-[#707070]">Chưa có dữ liệu</p>
+              <p className="text-xs text-[#404040]">Thêm deal để xem pipeline</p>
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={stageData} layout="vertical" margin={{ left: -10 }}>
@@ -193,14 +195,20 @@ export default function Dashboard({ showToast }) {
 
         {/* Deals Closing This Month */}
         <div className="card p-6">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-600 shadow-glow-red" />
-              Deal đóng tháng này ({closingDeals.length})
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
+            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
+              DEAL ĐỐNG THÁNG NÀY ({closingDeals.length})
             </h3>
           </div>
           {closingDeals.length === 0 ? (
-            <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest text-center py-12">Không có deal sắp đóng</div>
+            <div className="flex flex-col items-center justify-center h-40 gap-2">
+              <div className="w-10 h-10 rounded-full bg-[#1E1E1E] flex items-center justify-center">
+                <Inbox className="w-5 h-5 text-[#404040]" />
+              </div>
+              <p className="text-sm text-[#707070]">Chưa có dữ liệu</p>
+              <p className="text-xs text-[#404040]">Không có deal sắp đóng tháng này</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {closingDeals.slice(0, 5).map((deal) => (
@@ -225,8 +233,11 @@ export default function Dashboard({ showToast }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Top Accounts */}
         <div className="card overflow-hidden">
-          <div className="px-6 py-5 border-b border-white/5 bg-white/[0.01]">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Top 5 tài khoản tiềm năng</h3>
+          <div className="px-6 py-5 border-b border-[#2A2A2A] bg-white/[0.01] flex items-center gap-2">
+            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
+            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
+              TOP 5 TÀI KHOẢN TIỀM NĂNG
+            </h3>
           </div>
           <div className="table-container">
             <table className="table table-zebra">
@@ -261,8 +272,11 @@ export default function Dashboard({ showToast }) {
 
         {/* Recent Interactions */}
         <div className="card overflow-hidden">
-          <div className="px-6 py-5 border-b border-white/5 bg-white/[0.01]">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tương tác chiến lược</h3>
+          <div className="px-6 py-5 border-b border-[#2A2A2A] bg-white/[0.01] flex items-center gap-2">
+            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
+            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
+              TƯƠNG TÁC CHIẾN LƯỢC
+            </h3>
           </div>
           <div className="divide-y divide-white/5">
             {recentInteractions.slice(0, 6).map((interaction) => (
@@ -298,31 +312,21 @@ export default function Dashboard({ showToast }) {
   );
 }
 
-function StatCard({ title, value, icon, color }) {
-  const getStyles = () => {
-    switch(color) {
-      case 'red': return 'text-[#8B0000] bg-[#8B0000]/10 border-[#8B0000]/20';
-      case 'blue': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
-      case 'green': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
-      case 'purple': return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
-      default: return 'text-slate-500 bg-slate-500/10 border-slate-500/20';
-    }
-  };
-
+function StatCard({ title, value, icon }) {
   return (
-    <div className="card p-6 card-hover relative overflow-hidden group">
-      <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-[40px] opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${getStyles().split(' ')[0].replace('text', 'bg')}`} />
-      
-      <div className="flex items-center gap-x-4 mb-3">
-        <div className={`p-2 rounded-lg border transition-transform duration-500 group-hover:scale-110 ${getStyles()}`}>
-          {icon}
-        </div>
-        <span className="text-[12px] font-bold uppercase tracking-[1px] text-[#8B949E] group-hover:text-slate-200 transition-colors">
-          {title}
-        </span>
+    <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl p-5 hover:border-[#8B0000]/50 transition-colors group">
+      {/* Icon — use SINGLE color per semantic meaning */}
+      <div className="w-9 h-9 rounded-lg bg-[#8B000020] flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+        {icon}
       </div>
-      
-      <div className="relative z-10 flex items-baseline gap-2">
+
+      {/* Label */}
+      <p className="kpi-label mb-1">
+        {title}
+      </p>
+
+      {/* Value */}
+      <div className="kpi-value">
         {value}
       </div>
     </div>

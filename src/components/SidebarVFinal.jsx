@@ -112,8 +112,8 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
               <Activity className="text-[#8B0000] drop-shadow-red" size={20} />
             </div>
             <div>
-              <div className="font-black text-slate-900 dark:text-white text-sm tracking-tighter uppercase leading-none">Biomedia SI</div>
-              <div className="text-red-700 dark:text-[#8B0000]/80 text-[9px] uppercase font-black tracking-[0.2em] mt-1">Intelligence</div>
+              <div className="font-bold text-[#F0F0F0] text-sm tracking-tight uppercase leading-none">Biomedia SI</div>
+              <div className="text-[#8B0000] text-[9px] uppercase font-bold tracking-[0.2em] mt-1">Intelligence</div>
             </div>
           </div>
           <button
@@ -133,7 +133,7 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
                 onClick={() => toggleGroup(group.id)}
                 className="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#161B22] transition-colors text-left group-btn"
               >
-                <span className="text-[10px] font-black text-slate-500 dark:text-[#8B949E] uppercase tracking-widest transition-colors">
+                <span className="text-[9px] font-bold text-[#404040] uppercase tracking-[0.2em]">
                   {group.label}
                 </span>
                 <ChevronDown
@@ -160,8 +160,8 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
                       className={({ isActive }) =>
                         `relative flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 group
                         ${isActive
-                          ? "bg-[#8B0000]/10 text-slate-900 dark:text-white"
-                          : "text-slate-500 dark:text-[#4B535D] hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200"
+                          ? "bg-[#8B0000]/15 text-[#F0F0F0]"
+                          : "text-[#B0B0B0] hover:text-[#F0F0F0] hover:bg-[#1E1E1E]"
                         }`
                       }
                     >

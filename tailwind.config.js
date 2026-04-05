@@ -7,25 +7,30 @@ export default {
         sans: ["'Plus Jakarta Sans'", "Inter", "sans-serif"]
       },
       colors: {
-        primary: "#8B0000", // Brand Dark Red
-        secondary: "#A50000", // Slightly Brighter Red
-        accent: "#FACC15",
-        "deep-gray": "#0D1117", // Main background
-        "surface-dark": "#161B22", // Card background
-        "border-muted": "#30363D", // Border color
-        surface: {
-          50: "#F8FAFC",
-          100: "#F1F5F9",
-          200: "#E2E8F0",
-          300: "#CBD5E1",
-          400: "#94A3B8",
-          500: "#64748B",
-          600: "#475569",
-          700: "#334155",
-          800: "#1E293B",
-          900: "#0F172A",
-          950: "#0D1117" // Updated Background
+        brand: {
+          primary: '#8B0000',
+          hover: '#A50000',
+          muted: '#8B000020',
         },
+        bg: {
+          base: '#0D0D0D',
+          surface: '#161616',
+          elevated: '#1E1E1E',
+          border: '#2A2A2A',
+          "border-subtle": '#1F1F1F',
+        },
+        text: {
+          primary: '#F0F0F0',
+          secondary: '#B0B0B0',
+          tertiary: '#707070',
+          disabled: '#404040',
+        },
+        status: {
+          success: '#22C55E',
+          warning: '#F59E0B',
+          error: '#EF4444',
+          info: '#3B82F6',
+        }
       },
       boxShadow: {
         "glow": "0 0 20px rgba(139, 0, 0, 0.15)",

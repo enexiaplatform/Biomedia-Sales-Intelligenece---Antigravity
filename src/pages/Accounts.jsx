@@ -305,8 +305,8 @@ export default function Accounts({ showToast }) {
             <Users className="text-[#8B0000]" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Tài Khoản</h1>
-            <p className="text-[12px] font-bold text-[#8B949E] uppercase tracking-widest">{filteredAndSorted.length} tài khoản</p>
+            <h1 className="text-xl font-semibold text-[#F0F0F0] tracking-tight">Tài Khoản</h1>
+            <p className="text-[12px] font-medium text-[#B0B0B0] uppercase tracking-wide">{filteredAndSorted.length} tài khoản</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -380,23 +380,23 @@ export default function Accounts({ showToast }) {
         <table className="table table-zebra w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr>
-              <th className="w-[220px] cursor-pointer hover:bg-white/5" onClick={() => handleSort("name")}>
+              <th className="w-[220px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("name")}>
                 Tên tài khoản {sortConfig.key === "name_asc" ? "▲" : sortConfig.key === "name_desc" ? "▼" : ""}
               </th>
-              <th className="w-[100px]">Loại</th>
-              <th className="w-[140px]">Phân khúc</th>
-              <th className="w-[120px]">Khu vực</th>
-              <th className="w-[80px] cursor-pointer hover:bg-white/5" onClick={() => handleSort("score")}>
+              <th className="w-[100px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Loại</th>
+              <th className="w-[140px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Phân khúc</th>
+              <th className="w-[120px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Khu vực</th>
+              <th className="w-[80px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("score")}>
                 Điểm {sortConfig.key === "score_asc" ? "▲" : sortConfig.key === "score_desc" ? "▼" : ""}
               </th>
-              <th className="w-[140px] cursor-pointer hover:bg-white/5" onClick={() => handleSort("pipeline")}>
+              <th className="w-[140px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("pipeline")}>
                 Pipeline (VND) {sortConfig.key === "pipeline_asc" ? "▲" : sortConfig.key === "pipeline_desc" ? "▼" : ""}
               </th>
-              <th className="w-[80px]">Liên hệ</th>
-              <th className="w-[140px] cursor-pointer hover:bg-white/5" onClick={() => handleSort("interaction")}>
+              <th className="w-[80px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Liên hệ</th>
+              <th className="w-[140px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("interaction")}>
                 Tương tác gần nhất {sortConfig.key === "interaction_asc" ? "▲" : sortConfig.key === "interaction_desc" ? "▼" : ""}
               </th>
-              <th className="w-[80px] text-right">Actions</th>
+              <th className="w-[80px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="flex-1">
@@ -425,8 +425,8 @@ export default function Accounts({ showToast }) {
               currentData.map(acc => {
                 const daysInactive = acc.last_interaction ? differenceInDays(new Date(), new Date(acc.last_interaction)) : 999;
                 return (
-                  <tr key={acc.id} onClick={(e) => handleRowClick(e, acc.id)} className="cursor-pointer group">
-                    <td className="font-bold text-white group-hover:text-[#8B0000] transition-colors relative">
+                  <tr key={acc.id} onClick={(e) => handleRowClick(e, acc.id)} className="border-b border-[#1F1F1F] hover:bg-[#1E1E1E] transition-colors cursor-pointer group">
+                    <td className="text-sm font-medium text-[#F0F0F0] px-4 py-3 relative">
                       <EditableCell account={acc} field="name" />
                     </td>
                     <td>
@@ -447,16 +447,16 @@ export default function Accounts({ showToast }) {
                     <td className="font-bold text-[#8B949E]">
                        {acc.contacts_count > 0 ? acc.contacts_count : "—"}
                     </td>
-                    <td>
-                       <span className={`font-bold ${daysInactive > 30 ? "text-red-500" : "text-[#8B949E]"}`}>
+                    <td className="px-4 py-3">
+                       <span className={`text-xs ${daysInactive > 30 ? "text-red-400 font-bold" : "text-[#B0B0B0]"}`}>
                          {acc.last_interaction ? format(new Date(acc.last_interaction), "dd/MM/yyyy") : "Chưa có"}
                        </span>
                     </td>
-                    <td className="text-right flex items-center justify-end gap-2 pr-4 pt-4">
-                      <button onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${acc.id}`); }} className="text-[#8B949E] hover:text-white transition-colors" title="Xem chi tiết">
+                    <td className="text-right flex items-center justify-end gap-2 pr-4 py-3">
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${acc.id}`); }} className="text-[#707070] hover:text-[#F0F0F0] transition-colors" title="Xem chi tiết">
                         <Eye size={16} />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(acc); }} className="text-[#8B949E] hover:text-red-500 transition-colors" title="Xóa tài khoản">
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(acc); }} className="text-[#707070] hover:text-red-500 transition-colors" title="Xóa tài khoản">
                         <Trash2 size={16} />
                       </button>
                     </td>
