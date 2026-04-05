@@ -51,18 +51,18 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full z-50 w-64 border-r border-black/5 dark:border-white/5 flex flex-col transition-all duration-300 ease-in-out shadow-xl dark:shadow-[20px_0_40px_rgba(0,0,0,0.6)]
-          ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 bg-white dark:bg-[#020617]`}
+        className={`fixed top-0 left-0 h-full z-50 w-64 border-r border-[#30363D] flex flex-col transition-all duration-300 ease-in-out shadow-xl dark:shadow-[20px_0_40px_rgba(0,0,0,0.6)]
+          ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 bg-white dark:bg-[#0D1117]`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-6 py-8 border-b border-black/5 dark:border-white/5 bg-slate-50/50 dark:bg-surface-950/40">
+        <div className="flex items-center justify-between px-6 py-8 border-b border-black/5 dark:border-[#30363D] bg-slate-50/50 dark:bg-[#161B22]/40">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-red-900/20 rounded-xl shadow-[0_0_15px_rgba(153,27,27,0.2)] border border-red-500/20">
-              <Activity className="text-red-500 drop-shadow-red" size={20} />
+            <div className="p-2.5 bg-red-900/10 rounded-xl shadow-[0_0_15px_rgba(139,0,0,0.1)] border border-red-500/20">
+              <Activity className="text-[#8B0000] drop-shadow-red" size={20} />
             </div>
             <div>
-              <div className="font-black text-slate-900 dark:text-slate-100 text-sm tracking-tighter uppercase leading-none">Biomedia SI</div>
-              <div className="text-red-600 dark:text-red-500/60 text-[9px] uppercase font-black tracking-[0.2em] mt-1">Intelligence</div>
+              <div className="font-black text-slate-900 dark:text-white text-sm tracking-tighter uppercase leading-none">Biomedia SI</div>
+              <div className="text-red-700 dark:text-[#8B0000]/80 text-[9px] uppercase font-black tracking-[0.2em] mt-1">Intelligence</div>
             </div>
           </div>
           <button
@@ -73,7 +73,7 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-8 space-y-1.5 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-3 py-8 space-y-1 overflow-y-auto scrollbar-hide">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -81,15 +81,22 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
               end={to === "/"}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 group
+                `relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 group
                 ${isActive
-                  ? "bg-red-900/10 text-red-600 dark:text-red-500 border border-red-900/10 dark:border-red-900/30 shadow-sm dark:shadow-[0_0_20px_rgba(153,27,27,0.05)]"
-                  : "text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent"
+                  ? "bg-[#8B0000]/10 text-white dark:text-white"
+                  : "text-slate-500 dark:text-[#4B535D] hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200"
                 }`
               }
             >
-              <Icon size={18} className="transition-all duration-300 group-hover:scale-110" />
-              <span>{label}</span>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#8B0000] rounded-r-full shadow-[0_0_10px_rgba(139,0,0,0.5)]" />
+                  )}
+                  <Icon size={18} className={`transition-all duration-300 group-hover:scale-110 ${isActive ? 'text-[#8B0000]' : 'opacity-60 group-hover:opacity-100'}`} />
+                  <span className={isActive ? "font-black" : ""}>{label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>

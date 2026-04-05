@@ -4,11 +4,11 @@
 
 @layer base {
   :root {
-    --primary: #991B1B;
-    --primary-light: #B91C1C;
-    --primary-dark: #7F1D1D;
+    --primary: #8B0000;
+    --primary-light: #A50000;
+    --primary-dark: #660000;
     
-    /* Light Mode Variables */
+    /* Light Mode Variables (Enterprise Feel) */
     --bg-main: #F8FAFC;
     --bg-surface: #FFFFFF;
     --bg-surface-elevated: #F1F5F9;
@@ -19,18 +19,22 @@
   }
 
   .dark {
-    /* Dark Mode Variables */
-    --bg-main: #020617;
-    --bg-surface: #0F172A;
-    --bg-surface-elevated: #1E293B;
-    --text-main: #F1F5F9;
-    --text-muted: #94A3B8;
-    --border-main: rgba(255,255,255,0.05);
-    --ring-glow: rgba(0,0,0,0.4);
+    /* Modern Enterprise Dark Mode Variables */
+    --bg-main: #0D1117;
+    --bg-surface: #161B22;
+    --bg-surface-elevated: #1F242C;
+    --text-main: #FFFFFF;
+    --text-muted: #8B949E;
+    --border-main: #30363D;
+    --ring-glow: rgba(139, 0, 0, 0.1);
+    
+    --success: #2EA043;
+    --warning: #D29922;
+    --info: #58A6FF;
   }
 
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
     background-color: var(--bg-main);
     color: var(--text-main);
     -webkit-font-smoothing: antialiased;
@@ -45,68 +49,72 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-red-800 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed border border-white/5;
-    box-shadow: 0 4px 14px 0 rgba(153, 27, 27, 0.3);
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8B0000] to-[#A50000] text-white rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10;
+    box-shadow: 0 4px 14px 0 rgba(139, 0, 0, 0.3);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-slate-500 dark:text-slate-200 border border-black/5 dark:border-white/10 rounded-xl font-medium text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md;
-    background-color: var(--border-main);
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-slate-500 dark:text-[#8B949E] border border-black/5 dark:border-[#30363D] rounded-xl font-bold text-sm hover:bg-black/5 dark:hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md;
+    background-color: var(--bg-surface-elevated);
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-medium text-sm hover:bg-red-600 hover:text-white transition-all active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-bold text-sm hover:bg-red-600 hover:text-white transition-all active:scale-95;
   }
 
   .card {
-     @apply border rounded-2xl shadow-sm dark:shadow-xl backdrop-blur-md transition-all duration-300;
+     @apply border rounded-2xl shadow-sm dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300;
      background-color: var(--bg-surface);
      border-color: var(--border-main);
   }
 
   .card-hover {
-    @apply hover:border-red-900/30 hover:shadow-lg dark:hover:shadow-red-900/10;
+    @apply hover:border-[#8B0000]/40 hover:shadow-[0_0_20px_rgba(139,0,0,0.15)] dark:hover:shadow-[0_0_30px_rgba(139,0,0,0.1)];
   }
 
   .glass-panel {
      @apply backdrop-blur-2xl border rounded-2xl;
      background-color: var(--bg-surface);
      border-color: var(--border-main);
-     box-shadow: 0 8px 32px 0 var(--ring-glow);
+     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   }
 
   .input {
-    @apply w-full px-4 py-3 border rounded-xl text-sm transition-all duration-300 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/50;
+    @apply w-full px-4 py-3 border rounded-xl text-sm transition-all duration-300 outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]/50;
     background-color: var(--bg-surface-elevated);
     border-color: var(--border-main);
     color: var(--text-main);
   }
 
   .label {
-    @apply block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-widest;
+    @apply block text-[12px] font-bold text-slate-500 dark:text-[#8B949E] mb-2 uppercase tracking-[0.1em];
   }
 
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-current;
   }
 
   .table {
-    @apply min-w-full divide-y;
-    border-color: var(--border-main);
+    @apply min-w-full;
   }
 
   .table th {
-    @apply px-4 py-4 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest bg-black/[0.02] dark:bg-white/[0.02];
+    @apply px-4 py-5 text-left text-[11px] font-black text-slate-500 dark:text-[#8B949E] uppercase tracking-widest bg-black/[0.02] dark:bg-white/[0.01] border-b;
+    border-color: var(--border-main);
   }
 
   .table td {
-    @apply px-4 py-4 text-sm;
+    @apply px-4 py-5 text-sm border-b;
     color: var(--text-muted);
     border-color: var(--border-main);
   }
 
+  .table-zebra tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.015);
+  }
+
   .table tr:hover td {
-    @apply bg-black/[0.01] dark:bg-white/[0.01];
+    @apply bg-black/[0.01] dark:bg-white/[0.02];
   }
 }
 

@@ -1,0 +1,40 @@
+{
+  "theme": "Modern Enterprise Dark Mode",
+  "tokens": {
+    "colors": {
+      "primary": "#8B0000",
+      "primary_gradient": "linear-gradient(to right, #8B0000, #A50000)",
+      "background": "#0D1117",
+      "card_surface": "#161B22",
+      "border": "#30363D",
+      "text": {
+        "heading": "#FFFFFF",
+        "body": "#8B949E"
+      },
+      "semantic": {
+        "success": "#2EA043",
+        "warning": "#D29922",
+        "info": "#58A6FF"
+      }
+    },
+    "typography": {
+      "font_family": "Plus Jakarta Sans, Inter, sans-serif",
+      "kpi_value_size": "32px",
+      "kpi_value_weight": "700",
+      "label_size": "12px",
+      "label_transform": "uppercase",
+      "letter_spacing": "1px"
+    },
+    "components": {
+      "border_radius": "12px",
+      "table_zebra": "rgba(255, 255, 255, 0.015)"
+    }
+  },
+  "rules": [
+    "Use CSS variables for all theme-dependent colors.",
+    "KPI cards must have clear visual hierarchy with prominent values.",
+    "Sidebar active state must include a left border indicator and primary highlight.",
+    "Maintain WCAG AA contrast standards for all text elements.",
+    "Use subtle glassmorphism and glow effects for premium interactive elements."
+  ]
+}

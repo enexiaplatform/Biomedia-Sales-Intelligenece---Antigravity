@@ -4,12 +4,15 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "sans-serif"]
+        sans: ["'Plus Jakarta Sans'", "Inter", "sans-serif"]
       },
       colors: {
-        primary: "#991B1B", // Biomedia Red
-        secondary: "#B91C1C", // Lighter Red
-        accent: "#FACC15", // Warm Yellow (Gold) for accents
+        primary: "#8B0000", // Brand Dark Red
+        secondary: "#A50000", // Slightly Brighter Red
+        accent: "#FACC15",
+        "deep-gray": "#0D1117", // Main background
+        "surface-dark": "#161B22", // Card background
+        "border-muted": "#30363D", // Border color
         surface: {
           50: "#F8FAFC",
           100: "#F1F5F9",
@@ -21,19 +24,19 @@ export default {
           700: "#334155",
           800: "#1E293B",
           900: "#0F172A",
-          950: "#020617"
+          950: "#0D1117" // Updated Background
         },
       },
       boxShadow: {
-        "glow": "0 0 20px rgba(153, 27, 27, 0.15)",
-        "glow-sm": "0 0 10px rgba(153, 27, 27, 0.1)",
-        "glow-lg": "0 0 40px rgba(153, 27, 27, 0.25)",
-        "glow-primary": "0 0 15px rgba(153, 27, 27, 0.3)",
-        "glow-red": "0 0 20px rgba(153, 27, 27, 0.3)",
+        "glow": "0 0 20px rgba(139, 0, 0, 0.15)",
+        "glow-sm": "0 0 10px rgba(139, 0, 0, 0.1)",
+        "glow-lg": "0 0 40px rgba(139, 0, 0, 0.25)",
+        "glow-primary": "0 0 15px rgba(139, 0, 0, 0.3)",
+        "glow-red": "0 0 20px rgba(139, 0, 0, 0.3)",
       },
       dropShadow: {
-        "glow": "0 0 10px rgba(153, 27, 27, 0.3)",
-        "glow-sm": "0 0 5px rgba(153, 27, 27, 0.2)",
+        "glow": "0 0 10px rgba(139, 0, 0, 0.3)",
+        "glow-sm": "0 0 5px rgba(139, 0, 0, 0.2)",
       }
     }
   },

@@ -111,7 +111,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${theme === 'dark' ? 'bg-[#020617] text-slate-200' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen flex transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0D1117] text-white' : 'bg-slate-50 text-slate-900'}`}>
       <Sidebar 
         open={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
@@ -122,8 +122,8 @@ export default function App() {
       
       <main className="flex-1 lg:pl-64 transition-all duration-300">
         {/* Header - Optimized for Premium Look */}
-        <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-5 bg-surface-950/60 backdrop-blur-xl border-b border-white/5 lg:hidden shadow-lg">
-          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500">{pageTitle}</div>
+        <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-5 bg-[#161B22]/60 backdrop-blur-xl border-b border-[#30363D] lg:hidden shadow-lg">
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8B0000]">{pageTitle}</div>
           <button onClick={() => setSidebarOpen(true)} className="p-2 text-slate-400 hover:text-white transition-colors">
             <Menu size={20} />
           </button>

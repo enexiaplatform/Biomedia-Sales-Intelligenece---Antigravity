@@ -112,27 +112,27 @@ export default function Dashboard({ showToast }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Tổng pipeline"
-          value={<CurrencyDisplay value={stats?.totalPipelineValue} className="text-2xl font-black text-white tracking-tight" />}
+          value={<CurrencyDisplay value={stats?.totalPipelineValue} className="text-[32px] font-bold text-white tracking-tight" />}
           icon={<DollarSign size={20} className="text-blue-400" />}
           color="blue"
         />
         <StatCard
           title="Deal đang mở"
-          value={<span className="text-2xl font-black text-white tracking-tight">{stats?.activeDeals ?? 0}</span>}
-          icon={<TrendingUp size={20} className="text-red-500" />}
+          value={<span className="text-[32px] font-bold text-white tracking-tight">{stats?.activeDeals ?? 0}</span>}
+          icon={<TrendingUp size={20} className="text-[#8B0000]" />}
           color="red"
         />
         <StatCard
           title="Tỷ lệ thắng"
-          value={<span className="text-2xl font-black text-white tracking-tight">{stats?.winRate ?? 0}%</span>}
-          icon={<Target size={20} className="text-purple-400" />}
-          color="purple"
+          value={<span className="text-[32px] font-bold text-white tracking-tight">{stats?.winRate ?? 0}%</span>}
+          icon={<Target size={20} className="text-emerald-500" />}
+          color="green"
         />
         <StatCard
           title="Tổng tài khoản"
-          value={<span className="text-2xl font-black text-white tracking-tight">{stats?.totalAccounts ?? 0}</span>}
-          icon={<Users size={20} className="text-orange-400" />}
-          color="orange"
+          value={<span className="text-[32px] font-bold text-white tracking-tight">{stats?.totalAccounts ?? 0}</span>}
+          icon={<Users size={20} className="text-blue-400" />}
+          color="blue"
         />
       </div>
 
@@ -229,7 +229,7 @@ export default function Dashboard({ showToast }) {
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Top 5 tài khoản tiềm năng</h3>
           </div>
           <div className="table-container">
-            <table className="table">
+            <table className="table table-zebra">
               <thead>
                 <tr>
                   <th>Tài khoản</th>
@@ -301,10 +301,10 @@ export default function Dashboard({ showToast }) {
 function StatCard({ title, value, icon, color }) {
   const getStyles = () => {
     switch(color) {
-      case 'red': return 'text-red-500 bg-red-500/10 border-red-500/20';
+      case 'red': return 'text-[#8B0000] bg-[#8B0000]/10 border-[#8B0000]/20';
       case 'blue': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+      case 'green': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
       case 'purple': return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
-      case 'orange': return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
       default: return 'text-slate-500 bg-slate-500/10 border-slate-500/20';
     }
   };
@@ -313,11 +313,11 @@ function StatCard({ title, value, icon, color }) {
     <div className="card p-6 card-hover relative overflow-hidden group">
       <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-[40px] opacity-0 group-hover:opacity-20 transition-opacity duration-700 ${getStyles().split(' ')[0].replace('text', 'bg')}`} />
       
-      <div className="flex items-center gap-x-4 mb-4">
-        <div className={`p-2.5 rounded-xl border transition-transform duration-500 group-hover:scale-110 ${getStyles()}`}>
+      <div className="flex items-center gap-x-4 mb-3">
+        <div className={`p-2 rounded-lg border transition-transform duration-500 group-hover:scale-110 ${getStyles()}`}>
           {icon}
         </div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-400 transition-colors">
+        <span className="text-[12px] font-bold uppercase tracking-[1px] text-[#8B949E] group-hover:text-slate-200 transition-colors">
           {title}
         </span>
       </div>
