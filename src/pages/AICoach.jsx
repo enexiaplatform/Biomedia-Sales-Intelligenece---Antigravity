@@ -132,8 +132,8 @@ export default function AICoach() {
       {/* Left Panel - Context */}
       <div className="w-72 shrink-0 flex flex-col gap-4 overflow-y-auto">
         <div className="card p-4">
-          <h3 className="font-semibold text-[#F0F0F0] text-sm mb-3 flex items-center gap-2">
-            <Brain size={15} className="text-[#8B0000]" />
+          <h3 className="font-semibold text-sm mb-3 flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
+            <Brain size={15} style={{ color: 'var(--brand)' }} />
             Ngữ cảnh AI
           </h3>
 
@@ -184,15 +184,32 @@ export default function AICoach() {
 
           {/* Context Summary */}
           {(selectedAccount || selectedDeal || selectedCompetitor) && (
-            <div className="mt-4 space-y-2 border-t border-[#2A2A2A] pt-4">
+            <div
+              className="mt-4 space-y-2 border-t pt-4"
+              style={{ borderColor: 'var(--border)' }}
+            >
               {selectedAccount && (
-                <div className="text-[11px] bg-[#8B0000]/10 text-[#F0F0F0] px-3 py-2 rounded-xl border border-[#8B0000]/20 flex items-center gap-2">
+                <div
+                  className="text-[11px] px-3 py-2 rounded-xl flex items-center gap-2"
+                  style={{
+                    background: 'var(--brand-bg)',
+                    color: 'var(--text-1)',
+                    border: '1px solid var(--brand-border)',
+                  }}
+                >
                   <User size={12} />
                   <span className="font-bold truncate">{selectedAccount.name}</span>
                 </div>
               )}
               {selectedDeal && (
-                <div className="text-[11px] bg-[#1E1E1E] text-[#F0F0F0] px-3 py-2 rounded-xl border border-[#2A2A2A] flex items-center gap-2">
+                <div
+                  className="text-[11px] px-3 py-2 rounded-xl flex items-center gap-2"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    color: 'var(--text-1)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
                   <Bot size={12} />
                   <span className="font-bold truncate">{selectedDeal.name} · {selectedDeal.probability}%</span>
                 </div>
@@ -207,15 +224,15 @@ export default function AICoach() {
               {selectedAccount && selectedDeal && (
                 <button
                   onClick={() => {
-                    const prompt = `Phân tích chiến lược chuyên sâu cho deal "${selectedDeal.name}" tại khách hàng "${selectedAccount.name}". 
-                    Hãy phân tích theo cấu trúc: 
+                    const prompt = `Phân tích chiến lược chuyên sâu cho deal "${selectedDeal.name}" tại khách hàng "${selectedAccount.name}".
+                    Hãy phân tích theo cấu trúc:
                     1. ĐÁNH GIÁ SỨC MẠNH: Điểm tựa của chúng ta tại đây là gì? (Champions, Technical Fit).
                     2. RỦI RO & RÀO CẢN: Ai là Blockers? Điều gì khiến deal này có thể thất bại?
                     3. KỊCH BẢN ĐỐI THỦ: Nếu ${selectedCompetitor?.name || "đối thủ"} nhảy vào, chúng ta nên phản ứng ra sao?
                     4. CHIẾN THUẬT 7 NGÀY TỚI: Hành động cụ thể để thắng deal này.`;
                     sendMessage(prompt);
                   }}
-                  className="w-full mt-2 btn-primary !bg-[#8B0000] !border-[#8B0000]/50 shadow-lg shadow-[#8B0000]/20 text-[10px] font-black uppercase tracking-widest h-10 flex items-center justify-center gap-2"
+                  className="w-full mt-2 btn-primary text-[10px] font-black uppercase tracking-widest h-10 flex items-center justify-center gap-2"
                 >
                   <Brain size={14} />
                   Phân tích Chiến Lược
@@ -227,7 +244,7 @@ export default function AICoach() {
 
         {/* Quick Prompts */}
         <div className="card p-4">
-          <h3 className="font-semibold text-[#F0F0F0] text-sm mb-3">Câu hỏi nhanh</h3>
+          <h3 className="font-semibold text-sm mb-3" style={{ color: 'var(--text-1)' }}>Câu hỏi nhanh</h3>
           <div className="space-y-2">
             {QUICK_PROMPTS.map((qp) => (
               <button
@@ -237,7 +254,16 @@ export default function AICoach() {
                   sendMessage(msg);
                 }}
                 disabled={loading}
-                className="w-full text-left px-3 py-2 text-sm bg-[#1E1E1E] text-[#B0B0B0] hover:bg-[#8B0000]/10 hover:text-[#F0F0F0] rounded-lg transition-colors disabled:opacity-50"
+                className="w-full text-left px-3 py-2 text-sm rounded-lg transition-colors disabled:opacity-50"
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-2)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--brand-bg)';
+                  e.currentTarget.style.color = 'var(--text-1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--bg-elevated)';
+                  e.currentTarget.style.color = 'var(--text-2)';
+                }}
               >
                 {qp.icon} {qp.label}
               </button>
@@ -249,14 +275,30 @@ export default function AICoach() {
       {/* Chat Area */}
       <div className="flex-1 flex flex-col card overflow-hidden">
         {/* Chat Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div
+          className="flex items-center justify-between px-4 py-3 border-b"
+          style={{ borderColor: 'var(--border)' }}
+        >
           <div className="flex items-center gap-2">
-            <Brain size={18} className="text-[#8B0000]" />
-            <span className="font-semibold text-[#F0F0F0]">AI Sales Coach</span>
-            <span className="badge bg-[#8B0000]/10 text-[#8B0000] border-[#8B0000]/20 text-xs">Claude</span>
+            <Brain size={18} style={{ color: 'var(--brand)' }} />
+            <span className="font-semibold" style={{ color: 'var(--text-1)' }}>AI Sales Coach</span>
+            <span
+              className="badge text-xs"
+              style={{
+                background: 'var(--brand-bg)',
+                color: 'var(--brand)',
+                border: '1px solid var(--brand-border)',
+              }}
+            >
+              Claude
+            </span>
           </div>
           {messages.length > 0 && (
-            <button onClick={clearConversation} className="text-xs text-[#707070] hover:text-red-500 flex items-center gap-1">
+            <button
+              onClick={clearConversation}
+              className="text-xs flex items-center gap-1 hover:text-red-500 transition-colors"
+              style={{ color: 'var(--text-2)' }}
+            >
               <Trash2 size={13} /> Xóa hội thoại
             </button>
           )}
@@ -266,9 +308,9 @@ export default function AICoach() {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-16">
-              <Brain size={40} className="mx-auto text-[#404040] mb-3" />
-              <h3 className="font-medium text-[#B0B0B0] mb-2">Xin chào Henry!</h3>
-              <p className="text-sm text-[#B0B0B0] max-w-sm mx-auto">
+              <Brain size={40} className="mx-auto mb-3" style={{ color: 'var(--text-3)' }} />
+              <h3 className="font-medium mb-2" style={{ color: 'var(--text-2)' }}>Xin chào Henry!</h3>
+              <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--text-2)' }}>
                 Tôi là AI Sales Coach của bạn. Chọn ngữ cảnh ở bên trái và hỏi tôi bất cứ điều gì về tài khoản, deal hay chiến lược.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
@@ -276,7 +318,16 @@ export default function AICoach() {
                   <button
                     key={qp.label}
                     onClick={() => sendMessage(qp.prompt(selectedAccount, selectedDeal, selectedCompetitor))}
-                    className="px-3 py-1.5 bg-[#1E1E1E] text-[#B0B0B0] hover:bg-[#8B0000]/10 hover:text-[#F0F0F0] rounded-full text-sm transition-colors"
+                    className="px-3 py-1.5 rounded-full text-sm transition-colors"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-2)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--brand-bg)';
+                      e.currentTarget.style.color = 'var(--text-1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'var(--bg-elevated)';
+                      e.currentTarget.style.color = 'var(--text-2)';
+                    }}
                   >
                     {qp.icon} {qp.label}
                   </button>
@@ -291,25 +342,34 @@ export default function AICoach() {
               className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role === "assistant" && (
-                <div className="w-7 h-7 rounded-full bg-[#1E1E1E] flex items-center justify-center shrink-0 mt-1">
-                  <Bot size={14} className="text-[#707070]" />
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1"
+                  style={{ background: 'var(--bg-elevated)' }}
+                >
+                  <Bot size={14} style={{ color: 'var(--text-3)' }} />
                 </div>
               )}
 
               <div className={`max-w-[80%] group relative`}>
+                {msg.isError ? (
+                  <div className="rounded-xl px-4 py-3 text-sm bg-red-500/10 text-red-400 border border-red-500/20">
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  </div>
+                ) : (
+                  <div
+                    className="rounded-xl px-4 py-3 text-sm"
+                    style={
+                      msg.role === "user"
+                        ? { background: 'var(--brand)', color: '#ffffff' }
+                        : { background: 'var(--bg-elevated)', color: 'var(--text-1)' }
+                    }
+                  >
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  </div>
+                )}
                 <div
-                  className={`rounded-xl px-4 py-3 text-sm
-                    ${msg.role === "user"
-                      ? "bg-[#8B0000] text-white"
-                      : msg.isError
-                        ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                        : "bg-[#1E1E1E] text-[#F0F0F0]"
-                    }`}
-                >
-                  <div className="whitespace-pre-wrap">{msg.content}</div>
-                </div>
-                <div className={`flex items-center gap-2 mt-1 text-xs text-[#707070]
-                  ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex items-center gap-2 mt-1 text-xs ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  style={{ color: 'var(--text-2)' }}
                 >
                   {msg.ts && format(msg.ts, "HH:mm")}
                   {msg.role === "assistant" && !msg.isError && (
@@ -324,8 +384,11 @@ export default function AICoach() {
               </div>
 
               {msg.role === "user" && (
-                <div className="w-7 h-7 rounded-full bg-[#1E1E1E] flex items-center justify-center shrink-0 mt-1">
-                  <User size={14} className="text-[#B0B0B0]" />
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1"
+                  style={{ background: 'var(--bg-elevated)' }}
+                >
+                  <User size={14} style={{ color: 'var(--text-2)' }} />
                 </div>
               )}
             </div>
@@ -333,12 +396,18 @@ export default function AICoach() {
 
           {loading && (
             <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center">
-                <Bot size={14} className="text-purple-700" />
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center"
+                style={{ background: 'var(--bg-elevated)' }}
+              >
+                <Bot size={14} style={{ color: 'var(--text-3)' }} />
               </div>
-              <div className="bg-[#1E1E1E] rounded-xl px-4 py-3 flex items-center gap-2">
+              <div
+                className="rounded-xl px-4 py-3 flex items-center gap-2"
+                style={{ background: 'var(--bg-elevated)' }}
+              >
                 <LoadingSpinner size="sm" />
-                <span className="text-sm text-[#B0B0B0]">Đang suy nghĩ...</span>
+                <span className="text-sm" style={{ color: 'var(--text-2)' }}>Đang suy nghĩ...</span>
               </div>
             </div>
           )}
@@ -347,7 +416,7 @@ export default function AICoach() {
         </div>
 
         {/* Input */}
-        <div className="border-t p-3">
+        <div className="border-t p-3" style={{ borderColor: 'var(--border)' }}>
           <div className="flex gap-2 items-end">
             <textarea
               ref={textareaRef}
@@ -371,7 +440,7 @@ export default function AICoach() {
               <Send size={15} />
             </button>
           </div>
-          <div className="text-xs text-[#707070] mt-1.5 text-center">
+          <div className="text-xs mt-1.5 text-center" style={{ color: 'var(--text-2)' }}>
             Trả lời bằng tiếng Việt · Claude claude-sonnet-4-20250514 · Phản hồi giới hạn 2-3 đoạn
           </div>
         </div>

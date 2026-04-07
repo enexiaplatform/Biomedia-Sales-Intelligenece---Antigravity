@@ -63,14 +63,14 @@ export default function Competitors({ showToast }) {
     setAiLoading((prev) => ({ ...prev, [competitor.id]: true }));
     try {
       const bcs = battlecards[competitor.id] || [];
-      const message = `PHÂN TÍCH CHIẾN THUẬT: Đối thủ ${competitor.name}. 
+      const message = `PHÂN TÍCH CHIẾN THUẬT: Đối thủ ${competitor.name}.
       Dựa trên thông tin: Điểm mạnh (${competitor.strengths}), Điểm yếu (${competitor.weaknesses}), Thị phần (${competitor.market_share}).
       Hãy cung cấp một bản kế hoạch tác chiến gồm 3 phần:
       1. DEFEND: Henry nên trả lời thế nào khi khách hàng khen điểm mạnh của họ?
       2. ATTACK: Henry nên đặt câu hỏi 'xoáy' nào vào điểm yếu của họ?
       3. KILL SWITCH: Một lập luận hoặc câu hỏi duy nhất có thể loại bỏ đối thủ này ngay lập tức.
       Phản hồi bằng tiếng Việt, ngắn gọn, tactical (như lính đặc nhiệm sales).`;
-      
+
       const reply = await callAISalesCoach(message, { competitor });
       setAiInsight((prev) => ({ ...prev, [competitor.id]: reply }));
     } catch (err) {
@@ -93,16 +93,16 @@ export default function Competitors({ showToast }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-2 bg-surface-900 p-1 rounded-2xl border border-surface-700/50 w-fit shadow-xl">
-        <button 
-          onClick={() => setActiveTab("competitors")} 
+      <div className="flex gap-2 p-1 rounded-2xl border border-surface-700/50 w-fit shadow-xl" style={{ background: 'var(--bg-elevated)' }}>
+        <button
+          onClick={() => setActiveTab("competitors")}
           className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
             ${activeTab === "competitors" ? "bg-primary text-surface-950 shadow-glow-sm" : "text-slate-500 hover:text-slate-300"}`}
         >
           Battlecenter
         </button>
-        <button 
-          onClick={() => setActiveTab("winloss")} 
+        <button
+          onClick={() => setActiveTab("winloss")}
           className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
             ${activeTab === "winloss" ? "bg-primary text-surface-950 shadow-glow-sm" : "text-slate-500 hover:text-slate-300"}`}
         >
@@ -119,7 +119,7 @@ export default function Competitors({ showToast }) {
           </div>
 
           {competitors.length === 0 ? (
-            <div className="text-center py-16 text-sm text-[#707070]">Chưa có đối thủ nào được theo dõi</div>
+            <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Chưa có đối thủ nào được theo dõi</div>
           ) : (
             <div className="space-y-3">
               {competitors.map((comp) => (
@@ -144,9 +144,9 @@ export default function Competitors({ showToast }) {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleGenerateAI(comp)} 
-                        disabled={aiLoading[comp.id]} 
+                      <button
+                        onClick={() => handleGenerateAI(comp)}
+                        disabled={aiLoading[comp.id]}
                         className="h-10 px-4 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-surface-950 transition-all flex items-center gap-2 shadow-glow-sm"
                       >
                         {aiLoading[comp.id] ? <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div> : <Brain size={14} />}
@@ -290,8 +290,8 @@ export default function Competitors({ showToast }) {
                    {winLoss.length > 0 ? (winLoss.filter(wl => wl.outcome === 'won').length / winLoss.length * 100).toFixed(0) : 0}%
                 </div>
                 <div className="mt-4 h-1.5 w-full bg-surface-950 rounded-full overflow-hidden">
-                   <div 
-                     className="h-full bg-primary shadow-glow-sm transition-all duration-1000" 
+                   <div
+                     className="h-full bg-primary shadow-glow-sm transition-all duration-1000"
                      style={{ width: `${winLoss.length > 0 ? (winLoss.filter(wl => wl.outcome === 'won').length / winLoss.length * 100) : 0}%` }}
                    ></div>
                 </div>
@@ -301,8 +301,8 @@ export default function Competitors({ showToast }) {
                 <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/40"></div>
                 <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Lý do thua phổ biến nhất</div>
                 <div className="text-xl font-black text-slate-100 tracking-tight mt-1 line-clamp-1">
-                   {winLoss.filter(wl => wl.outcome === 'lost').length > 0 
-                     ? "Giá cạnh tranh & Support" 
+                   {winLoss.filter(wl => wl.outcome === 'lost').length > 0
+                     ? "Giá cạnh tranh & Support"
                      : "—"}
                 </div>
                 <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Dựa trên {winLoss.length} hồ sơ dự thầu</p>
@@ -319,7 +319,7 @@ export default function Competitors({ showToast }) {
           </div>
 
           {winLoss.length === 0 ? (
-            <div className="text-center py-16 text-sm text-[#707070]">Chưa có kết quả W/L nào</div>
+            <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Chưa có kết quả W/L nào</div>
           ) : (
             <div className="card table-container">
               <table className="table">
@@ -346,10 +346,10 @@ export default function Competitors({ showToast }) {
                         </span>
                       </td>
                       <td className="max-w-xs">
-                        <p className="text-sm text-[#B0B0B0] line-clamp-2">{wl.reason || "—"}</p>
+                        <p className="text-sm line-clamp-2" style={{ color: 'var(--text-2)' }}>{wl.reason || "—"}</p>
                       </td>
                       <td className="max-w-xs">
-                        <p className="text-sm text-[#B0B0B0] line-clamp-2">{wl.lessons || "—"}</p>
+                        <p className="text-sm line-clamp-2" style={{ color: 'var(--text-2)' }}>{wl.lessons || "—"}</p>
                       </td>
                       <td>
                         <button
@@ -358,7 +358,8 @@ export default function Competitors({ showToast }) {
                             setWinLoss((p) => p.filter((w) => w.id !== wl.id));
                             showToast("Đã xóa");
                           }}
-                          className="text-[#707070] hover:text-red-500"
+                          style={{ color: 'var(--text-3)' }}
+                          className="hover:text-red-500"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -420,9 +421,9 @@ export default function Competitors({ showToast }) {
       {/* Delete Confirm */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl p-6 max-w-sm w-full">
-            <h3 className="font-semibold mb-2">Xóa đối thủ?</h3>
-            <p className="text-sm text-[#B0B0B0] mb-5">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
+          <div className="rounded-xl shadow-2xl p-6 max-w-sm w-full" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <h3 className="font-semibold mb-2" style={{ color: 'var(--text-1)' }}>Xóa đối thủ?</h3>
+            <p className="text-sm mb-5" style={{ color: 'var(--text-2)' }}>Xóa "<strong>{deleteTarget.name}</strong>"?</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1">Hủy</button>
               <button onClick={() => handleDeleteCompetitor(deleteTarget.id)} className="btn-danger flex-1">Xóa</button>
@@ -457,10 +458,10 @@ function CompetitorModal({ competitor, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="font-semibold">{competitor ? "Sửa đối thủ" : "Thêm đối thủ"}</h2>
-          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
+      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>{competitor ? "Sửa đối thủ" : "Thêm đối thủ"}</h2>
+          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
@@ -525,10 +526,10 @@ function BattlecardModal({ competitorId, competitorName, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="font-semibold">Thêm tiêu chí vs {competitorName}</h2>
-          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
+      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>Thêm tiêu chí vs {competitorName}</h2>
+          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
@@ -588,10 +589,10 @@ function WinLossModal({ competitors, deals, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="font-semibold">Thêm kết quả Thắng/Thua</h2>
-          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
+      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>Thêm kết quả Thắng/Thua</h2>
+          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">

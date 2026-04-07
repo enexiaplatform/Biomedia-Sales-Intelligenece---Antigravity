@@ -30,40 +30,68 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Background glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-900 opacity-10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-red-800 opacity-10 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative w-full max-w-md px-4">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Top accent bar */}
-          <div className="h-2 bg-gradient-to-r from-red-900 to-red-700" />
-
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: 'var(--bg-base)' }}
+    >
+      <div className="w-full max-w-md px-4">
+        <div
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '20px',
+            overflow: 'hidden',
+          }}
+        >
           <div className="p-8">
             {/* Logo */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-red-900 rounded-xl mb-4 shadow-lg">
+              <div
+                className="inline-flex items-center justify-center w-14 h-14 mb-4"
+                style={{
+                  background: 'var(--brand)',
+                  borderRadius: '14px',
+                }}
+              >
                 <span className="text-white font-bold text-xl">B</span>
               </div>
-              <h1 className="text-2xl font-bold text-slate-900">Biomedia SI</h1>
-              <p className="text-slate-500 text-sm mt-1">Sales Intelligence Platform</p>
+              <h1
+                className="text-2xl font-bold"
+                style={{ color: 'var(--text-1)' }}
+              >
+                Biomedia SI
+              </h1>
+              <p
+                className="text-sm mt-1"
+                style={{ color: 'var(--text-2)' }}
+              >
+                Sales Intelligence Platform
+              </p>
             </div>
 
             {/* Error */}
             {error && (
-              <div className="mb-5 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-red-700">{error}</p>
+              <div
+                className="mb-5 flex items-start gap-3 p-4 rounded-lg"
+                style={{
+                  background: 'var(--brand-bg)',
+                  border: '1px solid var(--brand-border)',
+                }}
+              >
+                <AlertCircle
+                  className="w-4 h-4 mt-0.5 flex-shrink-0"
+                  style={{ color: 'var(--brand)' }}
+                />
+                <p className="text-sm" style={{ color: 'var(--text-1)' }}>
+                  {error}
+                </p>
               </div>
             )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                <label className="label">Email</label>
                 <input
                   type="email"
                   value={email}
@@ -71,12 +99,12 @@ const Login = () => {
                   placeholder="your@email.com"
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent transition-all"
+                  className="input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Mật khẩu</label>
+                <label className="label">Mật khẩu</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -85,12 +113,13 @@ const Login = () => {
                     placeholder="••••••••"
                     required
                     autoComplete="current-password"
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent transition-all"
+                    className="input w-full pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                    style={{ color: 'var(--text-2)' }}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -100,7 +129,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isSubmitting || !email || !password}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-900 hover:bg-red-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors shadow-sm"
+                className="btn-primary w-full flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -117,12 +146,22 @@ const Login = () => {
             </form>
           </div>
 
-          <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 text-center">
-            <p className="text-xs text-slate-400">Biomedia Group · Internal Use Only</p>
+          <div
+            className="px-8 py-4 text-center"
+            style={{
+              borderTop: '1px solid var(--border)',
+              background: 'var(--bg-elevated)',
+            }}
+          >
+            <p className="text-xs" style={{ color: 'var(--text-2)' }}>
+              Biomedia Group · Internal Use Only
+            </p>
           </div>
         </div>
 
-        <p className="text-center text-slate-500 text-xs mt-6">Secured by Supabase Auth</p>
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-3)' }}>
+          Secured by Supabase Auth
+        </p>
       </div>
     </div>
   )

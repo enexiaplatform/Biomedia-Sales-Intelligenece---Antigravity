@@ -139,7 +139,7 @@ export default function Workflows({ showToast }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-20 text-sm text-gray-400">
+        <div className="text-center py-20 text-sm" style={{ color: 'var(--text-2)' }}>
           Chưa có quy trình nào.
           <button onClick={() => setEditingWorkflow({})} className="block mx-auto mt-3 btn-primary text-sm">
             Tạo quy trình đầu tiên
@@ -151,15 +151,15 @@ export default function Workflows({ showToast }) {
             <div key={wf.id} className="card p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="font-semibold text-gray-900 text-sm">{wf.name}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{wf.type}</div>
+                  <div className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>{wf.name}</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>{wf.type}</div>
                   {wf.accounts?.name && (
                     <div className="text-xs text-blue-600 mt-0.5">{wf.accounts.name}</div>
                   )}
                 </div>
               </div>
 
-              <div className="mt-3 text-xs text-gray-500">
+              <div className="mt-3 text-xs" style={{ color: 'var(--text-2)' }}>
                 {(wf.steps || []).length} bước
               </div>
 
@@ -172,7 +172,8 @@ export default function Workflows({ showToast }) {
                 </button>
                 <button
                   onClick={() => handleDelete(wf.id)}
-                  className="p-1.5 text-gray-400 hover:text-red-600"
+                  className="p-1.5 hover:text-red-600"
+                  style={{ color: 'var(--text-2)' }}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -249,10 +250,10 @@ function WorkflowEditor({ workflow, accounts, onBack, onSave }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <button onClick={onBack} className="text-gray-400 hover:text-gray-700">
+        <button onClick={onBack} className="hover:text-red-500 transition-colors" style={{ color: 'var(--text-2)' }}>
           <ArrowLeft size={20} />
         </button>
-        <h2 className="font-semibold text-gray-900">
+        <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>
           {workflow ? "Sửa quy trình" : "Tạo quy trình mới"}
         </h2>
       </div>
@@ -303,29 +304,39 @@ function WorkflowEditor({ workflow, accounts, onBack, onSave }) {
         {/* Steps */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">Các bước ({form.steps.length})</h3>
+            <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>Các bước ({form.steps.length})</h3>
             <button onClick={addStep} className="btn-secondary text-sm">
               <Plus size={13} /> Thêm bước
             </button>
           </div>
 
           {form.steps.length === 0 ? (
-            <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400">
+            <div className="text-center py-10 border-2 border-dashed rounded-xl text-sm" style={{ borderColor: 'var(--border)', color: 'var(--text-2)' }}>
               Chưa có bước nào. Chọn loại quy trình để tải template hoặc thêm thủ công.
             </div>
           ) : (
             <div className="space-y-3">
               {form.steps.map((step, idx) => (
-                <div key={step.id} className="border border-gray-200 rounded-lg p-4">
+                <div key={step.id} className="rounded-lg p-4" style={{ border: '1px solid var(--border)' }}>
                   <div className="flex items-start gap-3">
                     <div className="flex flex-col items-center gap-1 mt-1">
                       <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
                         {idx + 1}
                       </div>
-                      <button onClick={() => moveStep(step.id, -1)} disabled={idx === 0} className="text-[#707070] hover:text-[#B0B0B0] disabled:opacity-30">
+                      <button
+                        onClick={() => moveStep(step.id, -1)}
+                        disabled={idx === 0}
+                        className="hover:text-red-500 disabled:opacity-30 transition-colors"
+                        style={{ color: 'var(--text-2)' }}
+                      >
                         <ChevronUp size={14} />
                       </button>
-                      <button onClick={() => moveStep(step.id, 1)} disabled={idx === form.steps.length - 1} className="text-[#707070] hover:text-[#B0B0B0] disabled:opacity-30">
+                      <button
+                        onClick={() => moveStep(step.id, 1)}
+                        disabled={idx === form.steps.length - 1}
+                        className="hover:text-red-500 disabled:opacity-30 transition-colors"
+                        style={{ color: 'var(--text-2)' }}
+                      >
                         <ChevronDown size={14} />
                       </button>
                     </div>
@@ -344,7 +355,7 @@ function WorkflowEditor({ workflow, accounts, onBack, onSave }) {
                         placeholder="Mô tả chi tiết bước này..."
                       />
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Sản phẩm liên kết</label>
+                        <label className="text-xs mb-1 block" style={{ color: 'var(--text-2)' }}>Sản phẩm liên kết</label>
                         <input
                           value={(step.products || []).join(", ")}
                           onChange={(e) =>
@@ -360,7 +371,11 @@ function WorkflowEditor({ workflow, accounts, onBack, onSave }) {
                         </div>
                       </div>
                     </div>
-                    <button onClick={() => removeStep(step.id)} className="text-gray-400 hover:text-red-500 mt-1">
+                    <button
+                      onClick={() => removeStep(step.id)}
+                      className="hover:text-red-500 mt-1 transition-colors"
+                      style={{ color: 'var(--text-2)' }}
+                    >
                       <Trash2 size={15} />
                     </button>
                   </div>

@@ -30,8 +30,8 @@ const TYPE_COLORS = {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#161B22] border border-[#30363D] p-3 rounded-xl shadow-xl">
-        <p className="text-[#FFFFFF] font-bold text-sm mb-1">{payload[0].payload.name || label}</p>
+      <div className="p-3 rounded-xl shadow-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+        <p className="font-bold text-sm mb-1" style={{ color: 'var(--text-1)' }}>{payload[0].payload.name || label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-[12px] font-bold" style={{ color: entry.color || '#8B949E' }}>
             {entry.name}: {entry.name.includes("Pipeline") || entry.dataKey === "pipeline_value" ? `${(entry.value / 1000000).toLocaleString('vi-VN')} tr ₫` : entry.value}
@@ -248,7 +248,7 @@ export default function Accounts({ showToast }) {
     if (!isEditing) {
       return (
         <div 
-          className="editable-cell cursor-pointer hover:bg-white/5 border border-transparent hover:border-[#30363D] px-2 py-1 -ml-2 rounded transition-colors w-full h-full min-h-[24px] flex items-center"
+          className="editable-cell cursor-pointer hover:bg-white/5 border border-transparent px-2 py-1 -ml-2 rounded transition-colors w-full h-full min-h-[24px] flex items-center"
           onClick={() => setEditingCell({ rowId: account.id, field })}
         >
           {field === 'type' ? (
@@ -270,7 +270,7 @@ export default function Accounts({ showToast }) {
       return (
         <select 
           autoFocus
-          className="editable-cell input py-1 px-2 h-auto text-sm w-full bg-[#1F242C] border-[#8B0000]/50"
+          className="editable-cell input py-1 px-2 h-auto text-sm w-full"
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={onSave}
@@ -285,7 +285,7 @@ export default function Accounts({ showToast }) {
       <input 
         autoFocus
         type={type}
-        className="editable-cell input py-1 px-2 h-auto text-sm w-full bg-[#1F242C] border-[#8B0000]/50"
+        className="editable-cell input py-1 px-2 h-auto text-sm w-full"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={onSave}
@@ -301,12 +301,12 @@ export default function Accounts({ showToast }) {
       {/* Section 1 - Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#8B0000]/10 rounded-xl border border-[#8B0000]/20">
-            <Users className="text-[#8B0000]" size={24} />
+          <div className="p-2 rounded-xl" style={{ background: 'var(--brand-bg)', border: '1px solid var(--brand-border)' }}>
+            <Users style={{ color: 'var(--brand)' }} size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-[#F0F0F0] tracking-tight">Tài Khoản</h1>
-            <p className="text-[12px] font-medium text-[#B0B0B0] uppercase tracking-wide">{filteredAndSorted.length} tài khoản</p>
+            <h1 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--text-1)' }}>Tài Khoản</h1>
+            <p className="text-[12px] font-medium uppercase tracking-wide" style={{ color: 'var(--text-2)' }}>{filteredAndSorted.length} tài khoản</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -320,46 +320,46 @@ export default function Accounts({ showToast }) {
       </div>
 
       {/* Section 2 - Filter Bar (Sticky) */}
-      <div className="sticky top-[73px] lg:top-0 z-20 bg-[#0D1117]/90 backdrop-blur-xl border border-[#30363D] rounded-2xl p-4 shadow-lg flex flex-wrap items-center gap-3">
+      <div className="sticky top-[73px] lg:top-0 z-20 backdrop-blur-xl rounded-2xl p-4 shadow-lg flex flex-wrap items-center gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B949E]" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-2)' }} />
           <input
             type="text"
             placeholder="Tìm kiếm tên..."
-            className="input pl-9 bg-[#161B22]"
+            className="input pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         
-        <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="input w-auto bg-[#161B22] min-w-[120px]">
+        <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="input w-auto min-w-[120px]">
            <option value="">Loại: Tất cả</option>
            {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
 
-        <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)} className="input w-auto bg-[#161B22] min-w-[130px]">
+        <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)} className="input w-auto min-w-[130px]">
            <option value="">Khu vực: Tất cả</option>
            {uniqueRegions.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
 
-        <select value={selectedSegment} onChange={(e) => setSelectedSegment(e.target.value)} className="input w-auto bg-[#161B22] min-w-[140px]">
+        <select value={selectedSegment} onChange={(e) => setSelectedSegment(e.target.value)} className="input w-auto min-w-[140px]">
            <option value="">Phân khúc: Tất cả</option>
            {uniqueSegments.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
-        
-        <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)} className="input w-auto bg-[#161B22] min-w-[130px]">
+
+        <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)} className="input w-auto min-w-[130px]">
            <option value="">Quy mô: Tất cả</option>
            {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
-        <select value={selectedScoreRange} onChange={(e) => setSelectedScoreRange(e.target.value)} className="input w-auto bg-[#161B22] min-w-[120px]">
+        <select value={selectedScoreRange} onChange={(e) => setSelectedScoreRange(e.target.value)} className="input w-auto min-w-[120px]">
            <option value="">Điểm: Tất cả</option>
            <option value="low">1-3 (Thấp)</option>
            <option value="mid">4-6 (Trung)</option>
            <option value="high">7-10 (Cao)</option>
         </select>
 
-        <select value={sortConfig.key} onChange={(e) => setSortConfig({ key: e.target.value })} className="input w-auto bg-[#161B22] min-w-[160px]">
+        <select value={sortConfig.key} onChange={(e) => setSortConfig({ key: e.target.value })} className="input w-auto min-w-[160px]">
            <option value="name_asc">Tên A-Z</option>
            <option value="name_desc">Tên Z-A</option>
            <option value="score_desc">Điểm cao nhất</option>
@@ -369,7 +369,7 @@ export default function Accounts({ showToast }) {
         </select>
 
         {hasActiveFilters && (
-          <button onClick={clearFilters} className="text-[12px] font-bold text-[#8B949E] hover:text-white px-2 py-2 uppercase tracking-widest transition-colors">
+          <button onClick={clearFilters} className="text-[12px] font-bold px-2 py-2 uppercase tracking-widest transition-colors" style={{ color: 'var(--text-2)' }}>
             Xóa bộ lọc
           </button>
         )}
@@ -380,53 +380,53 @@ export default function Accounts({ showToast }) {
         <table className="table table-zebra w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr>
-              <th className="w-[220px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("name")}>
+              <th className="w-[220px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("name")}>
                 Tên tài khoản {sortConfig.key === "name_asc" ? "▲" : sortConfig.key === "name_desc" ? "▼" : ""}
               </th>
-              <th className="w-[100px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Loại</th>
-              <th className="w-[140px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Phân khúc</th>
-              <th className="w-[120px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Khu vực</th>
-              <th className="w-[80px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("score")}>
+              <th className="w-[100px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Loại</th>
+              <th className="w-[140px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Phân khúc</th>
+              <th className="w-[120px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Khu vực</th>
+              <th className="w-[80px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("score")}>
                 Điểm {sortConfig.key === "score_asc" ? "▲" : sortConfig.key === "score_desc" ? "▼" : ""}
               </th>
-              <th className="w-[140px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("pipeline")}>
+              <th className="w-[140px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("pipeline")}>
                 Pipeline (VND) {sortConfig.key === "pipeline_asc" ? "▲" : sortConfig.key === "pipeline_desc" ? "▼" : ""}
               </th>
-              <th className="w-[80px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A]">Liên hệ</th>
-              <th className="w-[140px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] cursor-pointer hover:bg-white/5" onClick={() => handleSort("interaction")}>
+              <th className="w-[80px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Liên hệ</th>
+              <th className="w-[140px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("interaction")}>
                 Tương tác gần nhất {sortConfig.key === "interaction_asc" ? "▲" : sortConfig.key === "interaction_desc" ? "▼" : ""}
               </th>
-              <th className="w-[80px] text-[9px] font-semibold text-[#707070] uppercase tracking-widest px-4 py-3 border-b border-[#2A2A2A] text-right">Actions</th>
+              <th className="w-[80px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b text-right" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Actions</th>
             </tr>
           </thead>
           <tbody className="flex-1">
             {loading ? (
               Array(5).fill().map((_, i) => (
-                <tr key={i} className="animate-pulse border-b border-[#30363D]">
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-3/4"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-16"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-24"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-20"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-10"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-24"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-8"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-20"></div></td>
-                  <td className="p-4"><div className="h-4 bg-[#30363D] rounded w-8"></div></td>
+                <tr key={i} className="animate-pulse border-b" style={{ borderColor: 'var(--border)' }}>
+                  <td className="p-4"><div className="h-4 rounded w-3/4" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-16" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-24" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-20" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-10" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-24" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-8" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-20" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-8" style={{ background: 'var(--border)' }}></div></td>
                 </tr>
               ))
             ) : currentData.length === 0 ? (
                <tr>
                  <td colSpan={9} className="text-center py-20">
-                   <div className="text-[#8B949E] text-sm font-bold uppercase tracking-widest mb-3">Không tìm thấy tài khoản nào</div>
-                   <button onClick={clearFilters} className="text-[#8B0000] hover:underline font-bold text-sm">Xóa bộ lọc</button>
+                   <div className="text-sm font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-2)' }}>Không tìm thấy tài khoản nào</div>
+                   <button onClick={clearFilters} className="hover:underline font-bold text-sm" style={{ color: 'var(--brand)' }}>Xóa bộ lọc</button>
                  </td>
                </tr>
             ) : (
               currentData.map(acc => {
                 const daysInactive = acc.last_interaction ? differenceInDays(new Date(), new Date(acc.last_interaction)) : 999;
                 return (
-                  <tr key={acc.id} onClick={(e) => handleRowClick(e, acc.id)} className="border-b border-[#1F1F1F] hover:bg-[#1E1E1E] transition-colors cursor-pointer group">
-                    <td className="text-sm font-medium text-[#F0F0F0] px-4 py-3 relative">
+                  <tr key={acc.id} onClick={(e) => handleRowClick(e, acc.id)} className="border-b transition-colors cursor-pointer group hover:bg-white/[0.02]" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <td className="text-sm font-medium px-4 py-3 relative" style={{ color: 'var(--text-1)' }}>
                       <EditableCell account={acc} field="name" />
                     </td>
                     <td>
@@ -442,21 +442,21 @@ export default function Accounts({ showToast }) {
                        <EditableCell account={acc} field="score" type="number" />
                     </td>
                     <td className="font-bold">
-                       {acc.pipeline_value > 0 ? <CurrencyDisplay value={acc.pipeline_value} /> : <span className="text-[#8B949E]">—</span>}
+                       {acc.pipeline_value > 0 ? <CurrencyDisplay value={acc.pipeline_value} /> : <span style={{ color: 'var(--text-2)' }}>—</span>}
                     </td>
-                    <td className="font-bold text-[#8B949E]">
+                    <td className="font-bold" style={{ color: 'var(--text-2)' }}>
                        {acc.contacts_count > 0 ? acc.contacts_count : "—"}
                     </td>
                     <td className="px-4 py-3">
-                       <span className={`text-xs ${daysInactive > 30 ? "text-red-400 font-bold" : "text-[#B0B0B0]"}`}>
+                       <span className={`text-xs ${daysInactive > 30 ? "text-red-400 font-bold" : ""}`} style={daysInactive <= 30 ? { color: 'var(--text-2)' } : {}}>
                          {acc.last_interaction ? format(new Date(acc.last_interaction), "dd/MM/yyyy") : "Chưa có"}
                        </span>
                     </td>
                     <td className="text-right flex items-center justify-end gap-2 pr-4 py-3">
-                      <button onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${acc.id}`); }} className="text-[#707070] hover:text-[#F0F0F0] transition-colors" title="Xem chi tiết">
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${acc.id}`); }} className="hover:text-white transition-colors" style={{ color: 'var(--text-3)' }} title="Xem chi tiết">
                         <Eye size={16} />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(acc); }} className="text-[#707070] hover:text-red-500 transition-colors" title="Xóa tài khoản">
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(acc); }} className="hover:text-red-500 transition-colors" style={{ color: 'var(--text-3)' }} title="Xóa tài khoản">
                         <Trash2 size={16} />
                       </button>
                     </td>
@@ -469,21 +469,21 @@ export default function Accounts({ showToast }) {
         
         {/* Pagination Bar */}
         {!loading && filteredAndSorted.length > 0 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-[#30363D] bg-[#161B22]/50 mt-auto">
-            <span className="text-[12px] font-bold text-[#8B949E] uppercase tracking-widest">
+          <div className="flex items-center justify-between px-6 py-4 border-t mt-auto" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+            <span className="text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>
               Hiển thị {(currentPage - 1) * rowsPerPage + 1}–{Math.min(currentPage * rowsPerPage, filteredAndSorted.length)} trong tổng số {filteredAndSorted.length} tài khoản
             </span>
             <div className="flex items-center gap-2">
-               <button 
-                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+               <button
+                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                  disabled={currentPage === 1}
-                 className="p-1 px-3 text-sm font-bold text-white bg-[#30363D] rounded hover:bg-[#4B535D] disabled:opacity-50"
+                 className="p-1 px-3 text-sm font-bold rounded disabled:opacity-50" style={{ color: 'var(--text-1)', background: 'var(--border)' }}
                >&lt;</button>
-               <span className="text-sm font-bold text-white px-2">Trang {currentPage} / {totalPages}</span>
-               <button 
-                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+               <span className="text-sm font-bold px-2" style={{ color: 'var(--text-1)' }}>Trang {currentPage} / {totalPages}</span>
+               <button
+                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                  disabled={currentPage === totalPages}
-                 className="p-1 px-3 text-sm font-bold text-white bg-[#30363D] rounded hover:bg-[#4B535D] disabled:opacity-50"
+                 className="p-1 px-3 text-sm font-bold rounded disabled:opacity-50" style={{ color: 'var(--text-1)', background: 'var(--border)' }}
                >&gt;</button>
             </div>
           </div>
@@ -515,10 +515,10 @@ export default function Accounts({ showToast }) {
 
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#161B22] border border-[#30363D] rounded-xl shadow-2xl p-6 max-w-sm w-full">
-            <h3 className="font-bold text-white mb-2 uppercase tracking-widest text-sm">Xác nhận xóa</h3>
-            <p className="text-sm text-[#8B949E] mb-6 leading-relaxed">
-              Bạn có chắc muốn xóa tài khoản <strong className="text-white">{deleteTarget.name}</strong>? Thao tác này không thể hoàn tác.
+          <div className="rounded-xl shadow-2xl p-6 max-w-sm w-full" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <h3 className="font-bold mb-2 uppercase tracking-widest text-sm" style={{ color: 'var(--text-1)' }}>Xác nhận xóa</h3>
+            <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-2)' }}>
+              Bạn có chắc muốn xóa tài khoản <strong style={{ color: 'var(--text-1)' }}>{deleteTarget.name}</strong>? Thao tác này không thể hoàn tác.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1" disabled={deleting}>
@@ -604,19 +604,19 @@ function AnalyticsDashboard({ accounts }) {
   });
 
   return (
-    <div className="mt-8 pt-8 border-t border-[#30363D]">
+    <div className="mt-8 pt-8 border-t" style={{ borderColor: 'var(--border)' }}>
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2" style={{ color: 'var(--text-1)' }}>
           📊 Phân Tích Danh Mục
         </h2>
-        <p className="text-[12px] font-bold text-[#8B949E] uppercase tracking-widest mt-1">Cập nhật mỗi lần tải trang</p>
+        <p className="text-[12px] font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--text-2)' }}>Cập nhật mỗi lần tải trang</p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         
         {/* Panel 1 */}
         <div className="card p-5">
-           <h3 className="text-[10px] font-black uppercase tracking-widest text-[#8B949E] mb-6">🏆 Top 10 theo Pipeline</h3>
+           <h3 className="text-[10px] font-black uppercase tracking-widest mb-6" style={{ color: 'var(--text-2)' }}>🏆 Top 10 theo Pipeline</h3>
            <ResponsiveContainer width="100%" height={250}>
              <BarChart data={topPipeline} margin={{ top: 20 }}>
                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#8B949E', fontWeight: 700 }} tickMargin={10} axisLine={false} tickLine={false} />
@@ -632,7 +632,7 @@ function AnalyticsDashboard({ accounts }) {
 
         {/* Panel 2 */}
         <div className="card p-5">
-           <h3 className="text-[10px] font-black uppercase tracking-widest text-[#8B949E] mb-6">📍 Điểm vs Pipeline</h3>
+           <h3 className="text-[10px] font-black uppercase tracking-widest mb-6" style={{ color: 'var(--text-2)' }}>📍 Điểm vs Pipeline</h3>
            <ResponsiveContainer width="100%" height={250}>
              <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                <CartesianGrid strokeDasharray="3 3" stroke="#30363D" />
@@ -652,7 +652,7 @@ function AnalyticsDashboard({ accounts }) {
 
         {/* Panel 3 */}
         <div className="card p-5 flex flex-col items-center">
-           <h3 className="text-[10px] font-black uppercase tracking-widest text-[#8B949E] mb-2 self-start w-full">🏷️ Phân bố theo Loại</h3>
+           <h3 className="text-[10px] font-black uppercase tracking-widest mb-2 self-start w-full" style={{ color: 'var(--text-2)' }}>🏷️ Phân bố theo Loại</h3>
            <div className="w-full flex-1 min-h-[250px]">
              <ResponsiveContainer width="100%" height="100%">
                <PieChart>
@@ -670,7 +670,7 @@ function AnalyticsDashboard({ accounts }) {
 
         {/* Panel 4 */}
         <div className="card p-5">
-           <h3 className="text-[10px] font-black uppercase tracking-widest text-[#8B949E] mb-6">📍 Phân bố theo Khu vực</h3>
+           <h3 className="text-[10px] font-black uppercase tracking-widest mb-6" style={{ color: 'var(--text-2)' }}>📍 Phân bố theo Khu vực</h3>
            <ResponsiveContainer width="100%" height={250}>
              <BarChart data={regionDistribution} layout="vertical" margin={{ left: 30 }}>
                <XAxis type="number" hide />
@@ -683,7 +683,7 @@ function AnalyticsDashboard({ accounts }) {
 
         {/* Panel 5 */}
         <div className="card p-5">
-           <h3 className="text-[10px] font-black uppercase tracking-widest text-[#8B949E] mb-6">📊 Phân bố Điểm</h3>
+           <h3 className="text-[10px] font-black uppercase tracking-widest mb-6" style={{ color: 'var(--text-2)' }}>📊 Phân bố Điểm</h3>
            <ResponsiveContainer width="100%" height={250}>
              <BarChart data={scoreDistribution}>
                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#8B949E', fontWeight: 700 }} axisLine={false} tickLine={false} />
@@ -699,17 +699,17 @@ function AnalyticsDashboard({ accounts }) {
 
         {/* Panel 6 - Heatmap */}
         <div className="card p-5 overflow-auto">
-           <h3 className="text-[10px] font-black uppercase tracking-widest text-[#8B949E] mb-6">🗺️ Heatmap Phân khúc × Khu vực</h3>
+           <h3 className="text-[10px] font-black uppercase tracking-widest mb-6" style={{ color: 'var(--text-2)' }}>🗺️ Heatmap Phân khúc × Khu vực</h3>
            <div className="min-w-[500px]">
-             <div className="flex border-b border-[#30363D]">
+             <div className="flex border-b" style={{ borderColor: 'var(--border)' }}>
                <div className="w-32 p-2"></div>
                {uniqueRegs.map(r => (
-                 <div key={r} className="flex-1 p-2 text-center text-[10px] font-bold text-[#8B949E] uppercase truncate" title={r}>{r}</div>
+                 <div key={r} className="flex-1 p-2 text-center text-[10px] font-bold uppercase truncate" style={{ color: 'var(--text-2)' }} title={r}>{r}</div>
                ))}
              </div>
              {uniqueSegs.map(seg => (
-               <div key={seg} className="flex border-b border-[#30363D]/50 hover:bg-white/[0.02]">
-                 <div className="w-32 p-2 text-[10px] font-bold text-[#8B949E] uppercase truncate flex items-center border-r border-[#30363D]" title={seg}>{seg}</div>
+               <div key={seg} className="flex border-b hover:bg-white/[0.02]" style={{ borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)' }}>
+                 <div className="w-32 p-2 text-[10px] font-bold uppercase truncate flex items-center border-r" style={{ color: 'var(--text-2)', borderColor: 'var(--border)' }} title={seg}>{seg}</div>
                  {uniqueRegs.map(reg => {
                    const count = accounts.filter(a => (a.segment || 'Khác') === seg && (a.region || 'Khác') === reg).length;
                    let bg = "transparent";
@@ -717,8 +717,8 @@ function AnalyticsDashboard({ accounts }) {
                    if (count > 2) bg = "rgba(139, 0, 0, 0.5)";
                    if (count >= 5) bg = "rgba(139, 0, 0, 0.9)";
                    return (
-                     <div key={reg} className="flex-1 p-2 flex items-center justify-center border-r border-[#30363D]/30" style={{ backgroundColor: bg }}>
-                        <span className={`text-xs font-bold ${count > 0 ? "text-white" : "text-[#30363D]"}`}>
+                     <div key={reg} className="flex-1 p-2 flex items-center justify-center border-r" style={{ backgroundColor: bg, borderColor: 'color-mix(in srgb, var(--border) 30%, transparent)' }}>
+                        <span className="text-xs font-bold" style={{ color: count > 0 ? 'var(--text-1)' : 'var(--border)' }}>
                           {count > 0 ? count : "—"}
                         </span>
                      </div>
@@ -731,27 +731,27 @@ function AnalyticsDashboard({ accounts }) {
 
         {/* Panel 7 - Dark Accounts */}
         <div className="card overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-[#30363D] bg-[#EF4444]/10">
+          <div className="p-5 border-b" style={{ borderColor: 'var(--border)', background: 'rgba(239,68,68,0.08)' }}>
              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#EF4444]">⚠️ Dark Accounts ({darkAccounts.length})</h3>
-             <p className="text-xs text-[#8B949E] mt-1 font-bold">Chưa có liên hệ nào</p>
+             <p className="text-xs mt-1 font-bold" style={{ color: 'var(--text-2)' }}>Chưa có liên hệ nào</p>
           </div>
           <div className="flex-1 overflow-auto max-h-[300px] p-0">
             {darkAccounts.length === 0 ? (
                <div className="flex items-center justify-center h-full text-sm font-bold text-[#2EA043] uppercase tracking-widest py-10">✅ Tất cả tài khoản đã có liên hệ</div>
             ) : (
               <table className="w-full text-left table-zebra text-sm border-collapse">
-                <thead className="bg-[#1F242C] sticky top-0 border-b border-[#30363D]">
+                <thead className="sticky top-0 border-b" style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
                    <tr>
-                     <th className="p-3 text-[10px] font-bold text-[#8B949E] uppercase tracking-widest">Tên</th>
-                     <th className="p-3 text-[10px] font-bold text-[#8B949E] uppercase tracking-widest">Khu vực</th>
-                     <th className="p-3 text-[10px] font-bold text-[#8B949E] uppercase tracking-widest">Điểm</th>
+                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tên</th>
+                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Khu vực</th>
+                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Điểm</th>
                    </tr>
                 </thead>
                 <tbody>
                    {darkAccounts.map(a => (
-                     <tr key={a.id} className="border-b border-[#30363D]/50 hover:bg-white/5 cursor-pointer">
-                        <td className="p-3 text-white font-bold max-w-[150px] truncate"><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
-                        <td className="p-3 text-[#8B949E] font-bold text-xs uppercase">{a.region || "—"}</td>
+                     <tr key={a.id} className="border-b hover:bg-white/5 cursor-pointer" style={{ borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)' }}>
+                        <td className="p-3 font-bold max-w-[150px] truncate" style={{ color: 'var(--text-1)' }}><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
+                        <td className="p-3 font-bold text-xs uppercase" style={{ color: 'var(--text-2)' }}>{a.region || "—"}</td>
                         <td className="p-3"><ScoreBadge score={a.score} /></td>
                      </tr>
                    ))}
@@ -763,29 +763,29 @@ function AnalyticsDashboard({ accounts }) {
 
         {/* Panel 8 - Inactive Accounts */}
         <div className="card overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-[#30363D] bg-[#D29922]/10">
+          <div className="p-5 border-b" style={{ borderColor: 'var(--border)', background: 'rgba(210,153,34,0.08)' }}>
              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#D29922]">🔇 Không hoạt động ({inactiveAccounts.length})</h3>
-             <p className="text-xs text-[#8B949E] mt-1 font-bold">Im lặng {'>'} 30 ngày</p>
+             <p className="text-xs mt-1 font-bold" style={{ color: 'var(--text-2)' }}>Im lặng {'>'} 30 ngày</p>
           </div>
           <div className="flex-1 overflow-auto max-h-[300px] p-0">
             {inactiveAccounts.length === 0 ? (
                <div className="flex items-center justify-center h-full text-sm font-bold text-[#2EA043] uppercase tracking-widest py-10">✅ Tất cả tài khoản đang hoạt động tốt</div>
             ) : (
               <table className="w-full text-left table-zebra text-sm border-collapse">
-                <thead className="bg-[#1F242C] sticky top-0 border-b border-[#30363D]">
+                <thead className="sticky top-0 border-b" style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
                    <tr>
-                     <th className="p-3 text-[10px] font-bold text-[#8B949E] uppercase tracking-widest">Tên</th>
-                     <th className="p-3 text-[10px] font-bold text-[#8B949E] uppercase tracking-widest">Tương tác cuối</th>
-                     <th className="p-3 text-[10px] font-bold text-[#8B949E] uppercase tracking-widest text-right">Ngày im lặng</th>
+                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tên</th>
+                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tương tác cuối</th>
+                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest text-right" style={{ color: 'var(--text-2)' }}>Ngày im lặng</th>
                    </tr>
                 </thead>
                 <tbody>
                    {inactiveAccounts.map(a => {
                      const days = a.last_interaction ? differenceInDays(new Date(), new Date(a.last_interaction)) : 999;
                      return (
-                       <tr key={a.id} className="border-b border-[#30363D]/50 hover:bg-white/5 cursor-pointer">
-                          <td className="p-3 text-white font-bold max-w-[150px] truncate"><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
-                          <td className="p-3 text-[#8B949E] font-bold text-xs uppercase">{a.last_interaction ? format(new Date(a.last_interaction), "dd/MM/yyyy") : "Chưa có"}</td>
+                       <tr key={a.id} className="border-b hover:bg-white/5 cursor-pointer" style={{ borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)' }}>
+                          <td className="p-3 font-bold max-w-[150px] truncate" style={{ color: 'var(--text-1)' }}><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
+                          <td className="p-3 font-bold text-xs uppercase" style={{ color: 'var(--text-2)' }}>{a.last_interaction ? format(new Date(a.last_interaction), "dd/MM/yyyy") : "Chưa có"}</td>
                           <td className={`p-3 text-right font-bold ${days > 60 ? "text-[#EF4444]" : "text-[#D29922]"}`}>
                             {days === 999 ? "Chưa bao giờ" : `${days} ngày`}
                           </td>
@@ -843,12 +843,12 @@ function AccountModal({ account, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-[#161616] rounded-xl shadow-2xl w-full max-w-2xl my-4 border border-[#2A2A2A]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2A2A2A]">
-          <h2 className="font-semibold text-[#F0F0F0]">
+      <div className="rounded-xl shadow-2xl w-full max-w-2xl my-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>
             {account ? "Chỉnh sửa tài khoản" : "Thêm tài khoản mới"}
           </h2>
-          <button onClick={onClose} className="text-[#707070] hover:text-[#B0B0B0] text-xl">×</button>
+          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
