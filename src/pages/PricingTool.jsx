@@ -382,7 +382,7 @@ function QuoteBuilder({ showToast }) {
                           await deleteQuote(q.id);
                           loadQuotes();
                         }
-                      }} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all" title="Xóa"><Trash2 size={16}/></button>
+                      }} className="p-2 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all" style={{ color: 'var(--text-3)' }} title="Xóa"><Trash2 size={16}/></button>
                     </div>
                   </td>
                 </tr>
@@ -843,7 +843,7 @@ function ROICalculator() {
                 <label className="label">Chi phí mỗi test (VNĐ)</label>
                 <div className="relative group">
                   <input type="number" className="input !bg-surface-950/50 !text-2xl !font-black !py-4" value={data.currentCost} onChange={e=>setData({...data, currentCost: Number(e.target.value)})} />
-                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600 uppercase">VND/TEST</div>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase" style={{ color: 'var(--text-3)' }}>VND/TEST</div>
                 </div>
               </div>
               <div className="space-y-3">
@@ -946,7 +946,7 @@ function PricePositioning() {
             <div className="w-2 h-8 bg-primary rounded-full shadow-glow-sm" />
             Bản đồ Định Giá Chiến Lược
           </h2>
-          <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-2 ml-6">Competitive Intelligence Engine</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] mt-2 ml-6" style={{ color: 'var(--text-3)' }}>Competitive Intelligence Engine</p>
         </div>
         <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-glow-sm">
           Real-time Market Data
@@ -987,7 +987,7 @@ function PricePositioning() {
                           return (
                             <tr key={`${p.id}-${idx}`} className="group hover:bg-white/5 transition-all">
                               {idx === 0 && (
-                                <td rowSpan={p.competitor_alternatives.length} className="px-6 py-8 font-black text-slate-100 align-top border-r border-white/5 group-hover:text-primary transition-colors">
+                                <td rowSpan={p.competitor_alternatives.length} className="px-6 py-8 font-black align-top border-r border-white/5 group-hover:text-primary transition-colors" style={{ color: 'var(--text-1)' }}>
                                   {p.name}
                                 </td>
                               )}
