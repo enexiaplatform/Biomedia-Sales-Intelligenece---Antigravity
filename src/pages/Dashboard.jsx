@@ -17,45 +17,111 @@ import {
 } from "../lib/supabase";
 
 const STAGE_LABELS = {
-  prospect: "Tiềm năng",
-  qualified: "Đã xác nhận",
-  proposal: "Báo giá",
+  prospect:    "Tiềm năng",
+  qualified:   "Đã xác nhận",
+  proposal:    "Báo giá",
   negotiation: "Đàm phán",
-  closed_won: "Thắng",
+  closed_won:  "Thắng",
   closed_lost: "Thua"
 };
 
 const STAGE_COLORS = {
-  prospect: "#475569",
-  qualified: "#0EA5E9",
-  proposal: "#F59E0B",
+  prospect:    "#4B5563",
+  qualified:   "#3B82F6",
+  proposal:    "#F59E0B",
   negotiation: "#8B5CF6",
-  closed_won: "#10B981",
+  closed_won:  "#22C55E",
   closed_lost: "#EF4444"
 };
 
 const INTERACTION_TYPE_LABELS = {
-  call: "Gọi điện",
-  meeting: "Họp",
-  email: "Email",
-  demo: "Demo",
+  call:     "Gọi điện",
+  meeting:  "Họp",
+  email:    "Email",
+  demo:     "Demo",
   proposal: "Báo giá",
-  other: "Khác"
+  other:    "Khác"
 };
 
+// ── Custom Tooltip for chart ───────────────────────────────
+function ChartTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      className="px-3 py-2 rounded-xl text-[12px]"
+      style={{
+        background:  'var(--bg-elevated)',
+        border:      '1px solid var(--border)',
+        color:       'var(--text-1)',
+        boxShadow:   'var(--shadow-md)',
+      }}
+    >
+      <div className="font-semibold mb-0.5">{STAGE_LABELS[label] || label}</div>
+      <div style={{ color: 'var(--text-2)' }}>{payload[0]?.value} deals</div>
+    </div>
+  );
+}
+
+// ── Stat Card ─────────────────────────────────────────────
+function StatCard({ title, value, icon: Icon, accent }) {
+  return (
+    <div
+      className="card p-5 group cursor-default transition-all duration-200"
+      style={{ '--hover-border': 'var(--brand-border)' }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand-border)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: 'var(--brand-bg)' }}
+        >
+          <Icon size={17} style={{ color: 'var(--brand)' }} />
+        </div>
+      </div>
+      <p className="kpi-label mb-2">{title}</p>
+      <div className="kpi-value">{value}</div>
+    </div>
+  );
+}
+
+// ── Section Header ────────────────────────────────────────
+function SectionHeader({ title }) {
+  return (
+    <div className="flex items-center gap-2.5 mb-5">
+      <div className="w-0.5 h-4 rounded-full" style={{ background: 'var(--brand)' }} />
+      <h3 className="section-title">{title}</h3>
+    </div>
+  );
+}
+
+// ── Empty State ───────────────────────────────────────────
+function EmptyState({ message }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-44 gap-2">
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center"
+        style={{ background: 'var(--bg-elevated)' }}
+      >
+        <Inbox size={18} style={{ color: 'var(--text-3)' }} />
+      </div>
+      <p className="text-[13px]" style={{ color: 'var(--text-3)' }}>{message}</p>
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────
 export default function Dashboard({ showToast }) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
-  const [topAccounts, setTopAccounts] = useState([]);
-  const [stageData, setStageData] = useState([]);
+  const [loading, setLoading]               = useState(true);
+  const [stats, setStats]                   = useState(null);
+  const [topAccounts, setTopAccounts]       = useState([]);
+  const [stageData, setStageData]           = useState([]);
   const [recentInteractions, setRecentInteractions] = useState([]);
-  const [closingDeals, setClosingDeals] = useState([]);
-  const [error, setError] = useState("");
+  const [closingDeals, setClosingDeals]     = useState([]);
+  const [error, setError]                   = useState("");
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+  useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
     setLoading(true);
@@ -67,7 +133,7 @@ export default function Dashboard({ showToast }) {
         fetchRecentInteractions(10),
         fetchDeals()
       ]);
-      
+
       if (statsRes.error) throw new Error(statsRes.error.message);
       setStats(statsRes.data);
       setTopAccounts(topRes.data || []);
@@ -89,103 +155,82 @@ export default function Dashboard({ showToast }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-        <div className="spinner mb-4" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Đang khởi tạo Dashboard...</span>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 animate-fade-in">
+        <div className="spinner" />
+        <span className="text-[11px] font-medium" style={{ color: 'var(--text-3)' }}>
+          Đang khởi tạo dashboard...
+        </span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-16 card max-w-md mx-auto">
-        <AlertCircle size={32} className="mx-auto text-red-500 mb-4" />
-        <p className="text-red-400 font-bold mb-6">{error}</p>
+      <div className="card p-8 max-w-md mx-auto text-center">
+        <AlertCircle size={28} style={{ color: 'var(--brand)' }} className="mx-auto mb-3" />
+        <p className="text-[13px] mb-5" style={{ color: 'var(--text-2)' }}>{error}</p>
         <button onClick={loadAll} className="btn-secondary w-full">Thử lại</button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="TỔNG PIPELINE"
-          value={<CurrencyDisplay value={stats?.totalPipelineValue} />}
-          icon={<DollarSign className="w-5 h-5 text-[#8B0000]" />}
-        />
-        <StatCard
-          title="DEAL ĐANG MỞ"
-          value={stats?.activeDeals ?? 0}
-          icon={<TrendingUp className="w-5 h-5 text-[#8B0000]" />}
-        />
-        <StatCard
-          title="TỶ LỆ THẮNG"
-          value={`${stats?.winRate ?? 0}%`}
-          icon={<Target className="w-5 h-5 text-[#8B0000]" />}
-        />
-        <StatCard
-          title="TỔNG TÀI KHOẢN"
-          value={stats?.totalAccounts ?? 0}
-          icon={<Users className="w-5 h-5 text-[#8B0000]" />}
-        />
+    <div className="space-y-7 animate-fade-in">
+
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Tổng pipeline"    value={<CurrencyDisplay value={stats?.totalPipelineValue} />} icon={DollarSign} />
+        <StatCard title="Deal đang mở"     value={stats?.activeDeals ?? 0}   icon={TrendingUp} />
+        <StatCard title="Tỷ lệ thắng"      value={`${stats?.winRate ?? 0}%`} icon={Target} />
+        <StatCard title="Tổng tài khoản"   value={stats?.totalAccounts ?? 0} icon={Users} />
       </div>
 
-      {/* Quick actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      {/* ── Quick Actions ── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <button onClick={() => navigate("/accounts")} className="btn-primary">
-            <Plus size={16} /> Thêm tài khoản
+            <Plus size={15} /> Thêm tài khoản
           </button>
           <button onClick={() => navigate("/pipeline")} className="btn-secondary">
-            <Plus size={16} /> Thêm deal
+            <Plus size={15} /> Thêm deal
           </button>
         </div>
-        <Link to="/pipeline" className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-red-500 flex items-center gap-2 transition-colors">
-          Xem toàn bộ pipeline <ChevronRight size={14} />
+        <Link
+          to="/pipeline"
+          className="flex items-center gap-1.5 text-[12px] font-medium transition-colors duration-150"
+          style={{ color: 'var(--text-3)' }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+        >
+          Xem toàn bộ pipeline <ChevronRight size={13} />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* ── Charts Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
         {/* Pipeline by Stage */}
         <div className="card p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
-            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
-              PIPELINE THEO GIAI ĐOẠN
-            </h3>
-          </div>
+          <SectionHeader title="Pipeline theo giai đoạn" />
           {stageData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 gap-2">
-              <div className="w-10 h-10 rounded-full bg-[#1E1E1E] flex items-center justify-center">
-                <Inbox className="w-5 h-5 text-[#404040]" />
-              </div>
-              <p className="text-sm text-[#707070]">Chưa có dữ liệu</p>
-              <p className="text-xs text-[#404040]">Thêm deal để xem pipeline</p>
-            </div>
+            <EmptyState message="Chưa có dữ liệu pipeline" />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={stageData} layout="vertical" margin={{ left: -10 }}>
+              <BarChart data={stageData} layout="vertical" margin={{ left: -12, right: 8 }}>
                 <XAxis type="number" hide />
                 <YAxis
                   type="category"
                   dataKey="stage"
                   tickFormatter={(v) => STAGE_LABELS[v] || v}
-                  tick={{ fontSize: 10, fill: '#64748b', fontWeight: 900 }}
-                  width={90}
+                  tick={{ fontSize: 11, fill: 'var(--text-3)', fontWeight: 500 }}
+                  width={88}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip
-                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                  contentStyle={{ backgroundColor: '#0F172A', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}
-                  labelStyle={{ fontSize: '10px', color: '#94A3B8', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}
-                  itemStyle={{ fontSize: '12px', fontWeight: 700 }}
-                />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--bg-overlay)' }} />
+                <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={16}>
                   {stageData.map((entry) => (
-                    <Cell key={entry.stage} fill={STAGE_COLORS[entry.stage] || "#6b7280"} />
+                    <Cell key={entry.stage} fill={STAGE_COLORS[entry.stage] || '#6B7280'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -195,32 +240,34 @@ export default function Dashboard({ showToast }) {
 
         {/* Deals Closing This Month */}
         <div className="card p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
-            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
-              DEAL ĐỐNG THÁNG NÀY ({closingDeals.length})
-            </h3>
-          </div>
+          <SectionHeader title={`Deal đóng tháng này (${closingDeals.length})`} />
           {closingDeals.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 gap-2">
-              <div className="w-10 h-10 rounded-full bg-[#1E1E1E] flex items-center justify-center">
-                <Inbox className="w-5 h-5 text-[#404040]" />
-              </div>
-              <p className="text-sm text-[#707070]">Chưa có dữ liệu</p>
-              <p className="text-xs text-[#404040]">Không có deal sắp đóng tháng này</p>
-            </div>
+            <EmptyState message="Không có deal sắp đóng tháng này" />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {closingDeals.slice(0, 5).map((deal) => (
-                <div key={deal.id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group">
-                  <div>
-                    <div className="text-sm font-bold text-slate-200 group-hover:text-red-500 transition-colors">{deal.name}</div>
-                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wide mt-1">{deal.accounts?.name}</div>
+                <div
+                  key={deal.id}
+                  className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-150"
+                  style={{ border: '1px solid var(--border-subtle)' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-overlay)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-1)' }}>
+                      {deal.name}
+                    </div>
+                    <div className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>
+                      {deal.accounts?.name}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <CurrencyDisplay value={deal.value} className="text-sm font-black text-white" />
-                    <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${deal.probability >= 60 ? "text-emerald-500" : "text-amber-500"}`}>
-                      {deal.probability}% Prob
+                  <div className="text-right ml-4 flex-shrink-0">
+                    <CurrencyDisplay value={deal.value} className="text-[13px] font-semibold" style={{ color: 'var(--text-1)' }} />
+                    <div
+                      className="text-[11px] mt-0.5 font-medium"
+                      style={{ color: deal.probability >= 60 ? '#22C55E' : '#F59E0B' }}
+                    >
+                      {deal.probability}%
                     </div>
                   </div>
                 </div>
@@ -230,38 +277,49 @@ export default function Dashboard({ showToast }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* ── Tables Row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
         {/* Top Accounts */}
         <div className="card overflow-hidden">
-          <div className="px-6 py-5 border-b border-[#2A2A2A] bg-white/[0.01] flex items-center gap-2">
-            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
-            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
-              TOP 5 TÀI KHOẢN TIỀM NĂNG
-            </h3>
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+            <SectionHeader title="Top 5 tài khoản tiềm năng" />
           </div>
           <div className="table-container">
-            <table className="table table-zebra">
+            <table className="table">
               <thead>
                 <tr>
                   <th>Tài khoản</th>
                   <th>Loại</th>
                   <th>Điểm</th>
-                  <th>Hoạt động</th>
+                  <th>Gần nhất</th>
                 </tr>
               </thead>
               <tbody>
                 {topAccounts.map((acc) => (
-                  <tr key={acc.id} className="group">
+                  <tr key={acc.id}>
                     <td>
-                      <Link to={`/accounts/${acc.id}`} className="font-bold text-slate-200 group-hover:text-red-500 transition-colors">
+                      <Link
+                        to={`/accounts/${acc.id}`}
+                        className="font-semibold transition-colors duration-150"
+                        style={{ color: 'var(--text-1)' }}
+                        onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-1)'}
+                      >
                         {acc.name}
                       </Link>
-                      <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest mt-1">{acc.region}</div>
+                      {acc.region && (
+                        <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-3)' }}>
+                          {acc.region}
+                        </div>
+                      )}
                     </td>
-                    <td><span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{acc.type}</span></td>
+                    <td className="text-[12px]">{acc.type || '—'}</td>
                     <td><ScoreBadge score={acc.score} /></td>
-                    <td className="text-[10px] text-slate-600 font-black uppercase tracking-widest">
-                      {acc.interactions?.[0]?.date ? format(parseISO(acc.interactions[0].date), "dd/MM/yy") : "—"}
+                    <td className="text-[12px]">
+                      {acc.interactions?.[0]?.date
+                        ? format(parseISO(acc.interactions[0].date), "dd/MM/yy")
+                        : '—'}
                     </td>
                   </tr>
                 ))}
@@ -272,62 +330,60 @@ export default function Dashboard({ showToast }) {
 
         {/* Recent Interactions */}
         <div className="card overflow-hidden">
-          <div className="px-6 py-5 border-b border-[#2A2A2A] bg-white/[0.01] flex items-center gap-2">
-            <div className="w-1 h-4 bg-[#8B0000] rounded-full" />
-            <h3 className="text-xs font-semibold text-[#F0F0F0] uppercase tracking-widest">
-              TƯƠNG TÁC CHIẾN LƯỢC
-            </h3>
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+            <SectionHeader title="Tương tác gần nhất" />
           </div>
-          <div className="divide-y divide-white/5">
-            {recentInteractions.slice(0, 6).map((interaction) => (
-              <div key={interaction.id} className="px-6 py-4 hover:bg-white/[0.02] transition-all">
+          <div>
+            {recentInteractions.slice(0, 6).map((interaction, i) => (
+              <div
+                key={interaction.id}
+                className="px-6 py-4 transition-colors duration-150"
+                style={{
+                  borderBottom: i < 5 ? '1px solid var(--border-subtle)' : 'none',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-overlay)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <Link to={`/accounts/${interaction.account_id}`} className="text-xs font-black text-slate-300 hover:text-red-500 transition-colors uppercase tracking-widest">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Link
+                        to={`/accounts/${interaction.account_id}`}
+                        className="text-[12px] font-semibold transition-colors duration-150 truncate"
+                        style={{ color: 'var(--text-1)' }}
+                        onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-1)'}
+                      >
                         {interaction.accounts?.name}
                       </Link>
-                      <span className="w-1 h-1 rounded-full bg-slate-700" />
-                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em]">
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: 'var(--bg-elevated)', color: 'var(--text-3)' }}
+                      >
                         {INTERACTION_TYPE_LABELS[interaction.type] || interaction.type}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">{interaction.summary}</p>
+                    <p className="text-[12px] leading-relaxed line-clamp-2" style={{ color: 'var(--text-2)' }}>
+                      {interaction.summary}
+                    </p>
                     {interaction.buying_signal && (
-                      <div className="mt-2 text-[9px] font-black text-red-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <Target size={10} /> {interaction.buying_signal}
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <Target size={10} style={{ color: 'var(--brand)', flexShrink: 0 }} />
+                        <span className="text-[11px] font-medium truncate" style={{ color: 'var(--brand)' }}>
+                          {interaction.buying_signal}
+                        </span>
                       </div>
                     )}
                   </div>
-                  <div className="text-[10px] text-slate-700 font-black uppercase tracking-widest">
-                    {interaction.date ? format(parseISO(interaction.date), "dd/MM") : ""}
-                  </div>
+                  <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--text-3)' }}>
+                    {interaction.date ? format(parseISO(interaction.date), "dd/MM") : ''}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function StatCard({ title, value, icon }) {
-  return (
-    <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl p-5 hover:border-[#8B0000]/50 transition-colors group">
-      {/* Icon — use SINGLE color per semantic meaning */}
-      <div className="w-9 h-9 rounded-lg bg-[#8B000020] flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
-        {icon}
-      </div>
-
-      {/* Label */}
-      <p className="kpi-label mb-1">
-        {title}
-      </p>
-
-      {/* Value */}
-      <div className="kpi-value">
-        {value}
       </div>
     </div>
   );

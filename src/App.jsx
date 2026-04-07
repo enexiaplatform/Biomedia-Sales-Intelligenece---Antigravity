@@ -42,11 +42,10 @@ const PAGE_TITLES = {
   "/gm-hub": "GM Simulator"
 };
 
-// Premium Loading State
 const PageLoader = () => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-    <div className="spinner mb-4" />
-    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Đang tải dữ liệu...</span>
+  <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 animate-fade-in">
+    <div className="spinner" />
+    <span className="text-[11px] font-medium" style={{ color: 'var(--text-3)' }}>Đang tải...</span>
   </div>
 );
 
@@ -59,10 +58,10 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-red-900 border-t-transparent rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Đang tải...</p>
+          <div className="spinner" />
+          <p className="text-[11px] font-medium" style={{ color: 'var(--text-3)' }}>Đang tải...</p>
         </div>
       </div>
     );
@@ -131,25 +130,40 @@ function DashboardLayout() {
   }, []);
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0D1117] text-white' : 'bg-slate-50 text-slate-900'}`}>
-      <Sidebar 
-        open={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
+    <div
+      className="min-h-screen flex"
+      style={{ background: 'var(--bg-base)', color: 'var(--text-1)', transition: 'background 0.2s ease, color 0.2s ease' }}
+    >
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
         onLogout={handleLogout}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
-      
-      <main className="flex-1 lg:pl-64 transition-all duration-300">
-        {/* Header - Optimized for Premium Look */}
-        <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-5 bg-[#161B22]/60 backdrop-blur-xl border-b border-[#30363D] lg:hidden shadow-lg">
-          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8B0000]">{pageTitle}</div>
-          <button onClick={() => setSidebarOpen(true)} className="p-2 text-slate-400 hover:text-white transition-colors">
-            <Menu size={20} />
+
+      <main className="flex-1 lg:pl-60 min-w-0">
+        {/* Mobile header */}
+        <header
+          className="sticky top-0 z-30 flex items-center justify-between px-5 py-4 lg:hidden backdrop-blur-xl"
+          style={{
+            background: 'rgba(var(--bg-surface), 0.8)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          <span className="text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ color: 'var(--text-3)' }}>
+            {pageTitle}
+          </span>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: 'var(--text-2)' }}
+          >
+            <Menu size={18} />
           </button>
         </header>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 min-h-screen">
           <Suspense fallback={<PageLoader />}>
             <div className="animate-fade-in">
               <Routes>
@@ -184,14 +198,23 @@ function DashboardLayout() {
       <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
       <QuickLogModal open={quickLogOpen} onClose={() => setQuickLogOpen(false)} />
 
-      {/* Premium Toast */}
+      {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-24 right-6 z-50 px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-4 duration-300
-          ${toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-          <div className="flex items-center gap-3">
-            <div className={`w-1.5 h-1.5 rounded-full ${toast.type === 'success' ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-            <span className="text-[10px] font-black uppercase tracking-widest">{toast.message}</span>
-          </div>
+        <div
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl animate-fade-in"
+          style={{
+            background:    toast.type === 'success' ? 'rgba(34,197,94,0.1)'  : 'rgba(239,68,68,0.1)',
+            border:        toast.type === 'success' ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(239,68,68,0.25)',
+            color:         toast.type === 'success' ? '#4ade80' : '#f87171',
+            backdropFilter: 'blur(12px)',
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
+          <div
+            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+            style={{ background: toast.type === 'success' ? '#4ade80' : '#f87171' }}
+          />
+          <span className="text-[13px] font-medium">{toast.message}</span>
         </div>
       )}
     </div>

@@ -2,87 +2,66 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  BarChart3,
-  Users,
-  TrendingUp,
-  Map,
-  Target,
-  GitBranch,
-  Brain,
-  X,
-  Activity,
-  Tag,
-  BarChart2,
-  Radar,
-  Package,
-  Network,
-  Activity as Flask,
-  Briefcase,
-  LogOut,
-  Sun,
-  Moon,
-  ChevronDown
+  BarChart3, Users, TrendingUp, Map, Target, GitBranch, Brain,
+  X, Activity, Tag, BarChart2, Radar, Package, Network,
+  Activity as Flask, Briefcase, LogOut, Sun, Moon, ChevronRight
 } from "lucide-react";
 
-// Step 1: Modify Navigation Data Structure
 const navigationGroups = [
   {
     id: 'CRM_CORE',
-    label: 'CRM CORE',
+    label: 'CRM',
     items: [
-      { label: 'Dashboard', to: '/', icon: BarChart3 },
-      { label: 'Tài khoản', to: '/accounts', icon: Users },
-      { label: 'Pipeline', to: '/pipeline', icon: TrendingUp },
-      { label: 'BD Tool', to: '/bd-tool', icon: Network },
+      { label: 'Dashboard',  to: '/',         icon: BarChart3 },
+      { label: 'Tài khoản', to: '/accounts',  icon: Users },
+      { label: 'Pipeline',  to: '/pipeline',  icon: TrendingUp },
+      { label: 'BD Tool',   to: '/bd-tool',   icon: Network },
     ],
   },
   {
     id: 'MARKET_INTEL',
-    label: 'MARKET INTEL',
+    label: 'Market Intel',
     items: [
-      { label: 'Bản đồ thị trường', to: '/market-map', icon: Map },
-      { label: 'Đối thủ', to: '/competitors', icon: Target },
-      { label: 'Market Scan', to: '/market-scan', icon: Radar },
+      { label: 'Bản đồ thị trường', to: '/market-map',  icon: Map },
+      { label: 'Đối thủ',           to: '/competitors', icon: Target },
+      { label: 'Market Scan',        to: '/market-scan', icon: Radar },
     ],
   },
   {
     id: 'PRODUCT_PRICING',
-    label: 'PRODUCT & PRICING',
+    label: 'Sản phẩm & Giá',
     items: [
       { label: 'Quy trình', to: '/workflows', icon: GitBranch },
-      { label: 'Sản Phẩm', to: '/products', icon: Package },
-      { label: 'Báo giá & Giá', to: '/pricing', icon: Tag },
+      { label: 'Sản phẩm', to: '/products',  icon: Package },
+      { label: 'Báo giá',  to: '/pricing',   icon: Tag },
     ],
   },
   {
     id: 'PERFORMANCE',
-    label: 'PERFORMANCE',
+    label: 'Hiệu suất',
     items: [
-      { label: 'KPI & Hiệu suất', to: '/kpi', icon: BarChart2 },
+      { label: 'KPI',          to: '/kpi',    icon: BarChart2 },
       { label: 'GM Simulator', to: '/gm-hub', icon: Briefcase },
     ],
   },
   {
     id: 'AI_HUB',
-    label: 'AI HUB',
+    label: 'AI',
     items: [
-      { label: 'AI Coach', to: '/ai-coach', icon: Brain },
-      { label: 'Công cụ Lab', to: '/lab-tools', icon: Flask },
+      { label: 'AI Coach',    to: '/ai-coach',   icon: Brain },
+      { label: 'Công cụ Lab', to: '/lab-tools',  icon: Flask },
     ],
   },
 ];
 
 export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme }) {
   const { user, signOut } = useAuth();
-  
-  // Step 2: Add Collapsed State
+
   const [collapsedGroups, setCollapsedGroups] = useState(() => {
     try {
       const stored = localStorage.getItem('sidebarGroups_collapsed');
-      return stored ? JSON.parse(stored) : {}; // Default all expanded
-    } catch {
-      return {};
-    }
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
   });
 
   const toggleGroup = (groupId) => {
@@ -95,121 +74,195 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar shell */}
       <aside
-        className={`fixed top-0 left-0 h-full z-50 w-64 border-r border-[#30363D] flex flex-col transition-all duration-300 ease-in-out shadow-xl dark:shadow-[20px_0_40px_rgba(0,0,0,0.6)]
-          ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 bg-white dark:bg-[#0D1117]`}
+        style={{
+          background: 'var(--sidebar-bg)',
+          borderRight: '1px solid var(--sidebar-border)',
+        }}
+        className={`fixed top-0 left-0 h-full z-50 w-60 flex flex-col
+          transition-transform duration-300 ease-in-out
+          ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
-        {/* Logo */}
-        <div className="flex items-center justify-between px-6 py-8 border-b border-black/5 dark:border-[#30363D] bg-slate-50/50 dark:bg-[#161B22]/40">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-red-900/10 rounded-xl shadow-[0_0_15px_rgba(139,0,0,0.1)] border border-red-500/20">
-              <Activity className="text-[#8B0000] drop-shadow-red" size={20} />
+        {/* ── Logo ── */}
+        <div
+          className="flex items-center justify-between px-5 py-[18px]"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'var(--brand-bg)', border: '1px solid var(--brand-border)' }}
+            >
+              <Activity size={16} style={{ color: 'var(--brand)' }} />
             </div>
             <div>
-              <div className="font-bold text-[#F0F0F0] text-sm tracking-tight uppercase leading-none">Biomedia SI</div>
-              <div className="text-[#8B0000] text-[9px] uppercase font-bold tracking-[0.2em] mt-1">Intelligence</div>
+              <div className="text-[13px] font-semibold leading-none" style={{ color: 'var(--text-1)' }}>
+                Biomedia SI
+              </div>
+              <div
+                className="text-[10px] font-medium mt-0.5 uppercase tracking-[0.12em]"
+                style={{ color: 'var(--brand)' }}
+              >
+                Intelligence
+              </div>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className="lg:hidden text-slate-500 hover:text-red-500 transition-colors p-1"
+            className="lg:hidden w-7 h-7 flex items-center justify-center rounded-lg transition-colors duration-150"
+            style={{ color: 'var(--text-3)' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-1)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Step 3: Replace Navigation Rendering */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto scrollbar-hide">
+        {/* ── Navigation ── */}
+        <nav className="flex-1 px-2.5 py-4 overflow-y-auto scrollbar-hide space-y-4">
           {navigationGroups.map((group) => (
-            <div key={group.id} className="mb-4">
-              {/* Group Header */}
+            <div key={group.id}>
+              {/* Group label */}
               <button
                 onClick={() => toggleGroup(group.id)}
-                className="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#161B22] transition-colors text-left group-btn"
+                className="w-full flex items-center justify-between px-2 py-1 mb-1 rounded-lg transition-colors duration-150"
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-overlay)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <span className="text-[9px] font-bold text-[#404040] uppercase tracking-[0.2em]">
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-[0.1em]"
+                  style={{ color: 'var(--text-3)' }}
+                >
                   {group.label}
                 </span>
-                <ChevronDown
-                  size={14}
-                  className={`text-slate-400 dark:text-[#8B949E] transition-transform duration-300 ${
-                    collapsedGroups[group.id] ? '-rotate-90' : 'rotate-0'
-                  }`}
+                <ChevronRight
+                  size={11}
+                  className="transition-transform duration-200"
+                  style={{
+                    color: 'var(--text-3)',
+                    transform: collapsedGroups[group.id] ? 'rotate(0deg)' : 'rotate(90deg)',
+                  }}
                 />
               </button>
 
-              {/* Group Items (Collapsible) */}
+              {/* Group items */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  collapsedGroups[group.id] ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
-                }`}
+                className="overflow-hidden transition-all duration-200 ease-in-out space-y-px"
+                style={{
+                  maxHeight: collapsedGroups[group.id] ? '0' : '600px',
+                  opacity:   collapsedGroups[group.id] ? 0 : 1,
+                }}
               >
-                <div className="space-y-1 mt-1">
-                  {group.items.map(({ to, label, icon: Icon }) => (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      end={to === "/"}
-                      onClick={onClose}
-                      className={({ isActive }) =>
-                        `relative flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 group
-                        ${isActive
-                          ? "bg-[#8B0000]/15 text-[#F0F0F0]"
-                          : "text-[#B0B0B0] hover:text-[#F0F0F0] hover:bg-[#1E1E1E]"
-                        }`
-                      }
-                    >
-                      {({ isActive }) => (
-                        <>
-                          {isActive && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#8B0000] rounded-r-full shadow-[0_0_10px_rgba(139,0,0,0.5)]" />
-                          )}
-                          <Icon size={16} className={`transition-all duration-300 group-hover:scale-110 ${isActive ? 'text-[#8B0000]' : 'opacity-60 group-hover:opacity-100'}`} />
-                          <span className={isActive ? "font-black" : ""}>{label}</span>
-                        </>
-                      )}
-                    </NavLink>
-                  ))}
-                </div>
+                {group.items.map(({ to, label, icon: Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={to === '/'}
+                    onClick={onClose}
+                  >
+                    {({ isActive }) => (
+                      <div
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] transition-all duration-150 cursor-pointer"
+                        style={{
+                          fontWeight:  isActive ? 600 : 500,
+                          color:       isActive ? 'var(--text-1)' : 'var(--text-2)',
+                          background:  isActive ? 'var(--bg-elevated)' : 'transparent',
+                        }}
+                        onMouseEnter={e => {
+                          if (!isActive) {
+                            e.currentTarget.style.color = 'var(--text-1)';
+                            e.currentTarget.style.background = 'var(--bg-overlay)';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!isActive) {
+                            e.currentTarget.style.color = 'var(--text-2)';
+                            e.currentTarget.style.background = 'transparent';
+                          }
+                        }}
+                      >
+                        <Icon
+                          size={15}
+                          style={{
+                            color:      isActive ? 'var(--brand)' : 'var(--text-3)',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span className="flex-1 truncate">{label}</span>
+                        {isActive && (
+                          <span
+                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ background: 'var(--brand)' }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </NavLink>
+                ))}
               </div>
             </div>
           ))}
         </nav>
 
-        {/* Footer with Theme Toggle and Logout */}
-        <div className="p-4 border-t border-black/5 dark:border-[#30363D] bg-slate-50/50 dark:bg-surface-950/40 space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-3 min-w-0">
-               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-[#161B22] border border-black/5 dark:border-[#30363D] flex items-center justify-center text-[10px] font-black text-red-600 dark:text-[#8B0000]">AD</div>
-               <div className="flex-1 min-w-0">
-                 <div className="text-[11px] font-black text-slate-900 dark:text-slate-200 uppercase tracking-wide truncate">Admin User</div>
-                 <div className="text-[9px] font-bold text-slate-500 dark:text-[#8B949E] uppercase truncate">{user?.email || 'Administrator'}</div>
-               </div>
-            </div>
-            
-            <button 
-              onClick={onToggleTheme}
-              className="p-2 rounded-xl border border-black/5 dark:border-[#30363D] text-slate-500 dark:text-[#8B949E] hover:text-[#8B0000] dark:hover:text-[#8B0000] hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-95"
-              title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+        {/* ── Footer ── */}
+        <div className="p-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          {/* User row */}
+          <div className="flex items-center gap-2.5 px-2 py-2 mb-1">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
+              style={{
+                background: 'var(--brand-bg)',
+                border: '1px solid var(--brand-border)',
+                color: 'var(--brand)',
+              }}
             >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              {user?.email?.[0]?.toUpperCase() || 'H'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--text-1)' }}>
+                {user?.email?.split('@')[0] || 'Henry'}
+              </div>
+              <div className="text-[10px] truncate" style={{ color: 'var(--text-3)' }}>
+                Sales Manager
+              </div>
+            </div>
+            {/* Theme toggle */}
+            <button
+              onClick={onToggleTheme}
+              className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0 transition-all duration-150"
+              style={{
+                color:      'var(--text-3)',
+                background: 'var(--bg-elevated)',
+                border:     '1px solid var(--border)',
+              }}
+              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--brand)'; e.currentTarget.style.borderColor = 'var(--brand-border)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+            >
+              {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
             </button>
           </div>
-          
-          <button 
+
+          {/* Logout */}
+          <button
             onClick={() => signOut()}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-[#8B949E] hover:bg-[#8B0000]/10 hover:text-[#8B0000] dark:hover:text-[#8B0000] transition-all border border-transparent dark:hover:border-[#8B0000]/20 hover:shadow-[0_0_15px_rgba(139,0,0,0.2)]"
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[12px] font-medium transition-all duration-150"
+            style={{ color: 'var(--text-3)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.background = 'transparent'; }}
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
             <span>Đăng xuất</span>
           </button>
         </div>
