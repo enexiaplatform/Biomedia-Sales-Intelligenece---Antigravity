@@ -41,9 +41,10 @@ export default function PricingTool({ showToast }) {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-3 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 group whitespace-nowrap
-                ${isActive 
-                  ? "bg-primary/10 text-primary border border-primary/20 shadow-glow-sm" 
-                  : "text-slate-500 hover:text-slate-200 hover:bg-white/5 border border-transparent"}`}
+                ${isActive
+                  ? "bg-primary/10 text-primary border border-primary/20 shadow-glow-sm"
+                  : "border border-transparent"}`}
+              style={!isActive ? { color: 'var(--text-3)' } : undefined}
             >
               <Icon size={16} className={`transition-all duration-500 ${isActive ? "drop-shadow-glow scale-110" : "group-hover:scale-110"}`} />
               {tab.label}
@@ -103,7 +104,7 @@ function ProductCatalog({ showToast }) {
       <div className="flex flex-wrap items-center gap-4 justify-between bg-white/5 p-6 rounded-2xl border border-white/5 shadow-inner">
         <div className="flex flex-wrap gap-4 flex-1">
           <div className="relative w-80 group">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" />
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-primary transition-colors" style={{ color: 'var(--text-3)' }} />
             <input type="text" placeholder="Tìm tên sản phẩm hoặc SKU..." className="input !pl-12 !bg-surface-950/50" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <div className="relative">
@@ -111,7 +112,7 @@ function ProductCatalog({ showToast }) {
               <option value="" className="bg-surface-900">Tất cả danh mục</option>
               {CATEGORIES.map(c => <option key={c.id} value={c.id} className="bg-surface-900">{c.label}</option>)}
             </select>
-            <Tag size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            <Tag size={14} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-3)' }} />
           </div>
         </div>
         <button className="btn-primary shadow-glow-sm shadow-primary/20 uppercase tracking-widest text-[10px] h-11 px-6" onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
@@ -138,16 +139,16 @@ function ProductCatalog({ showToast }) {
                 return (
                   <tr key={p.id} className="group transition-all duration-300">
                     <td>
-                      <div className="font-bold text-slate-100 group-hover:text-primary transition-colors">{p.name}</div>
-                      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">{p.unit}</div>
+                      <div className="font-bold group-hover:text-primary transition-colors" style={{ color: 'var(--text-1)' }}>{p.name}</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest mt-1" style={{ color: 'var(--text-3)' }}>{p.unit}</div>
                     </td>
-                    <td className="font-mono text-[10px] text-slate-400 opacity-60 tracking-tighter uppercase">{p.sku || "—"}</td>
+                    <td className="font-mono text-[10px] opacity-60 tracking-tighter uppercase" style={{ color: 'var(--text-2)' }}>{p.sku || "—"}</td>
                     <td>
-                      <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-white/5 text-slate-500 border border-white/5">
+                      <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-white/5 border border-white/5" style={{ color: 'var(--text-3)' }}>
                         {CATEGORIES.find(c => c.id === p.category)?.label || p.category}
                       </span>
                     </td>
-                    <td className="font-bold text-slate-200">
+                    <td className="font-bold" style={{ color: 'var(--text-1)' }}>
                       <div className="text-primary drop-shadow-glow-sm">{formatVND(p.list_price)}</div>
                     </td>
                     <td>
@@ -160,15 +161,15 @@ function ProductCatalog({ showToast }) {
                     </td>
                     <td className="text-right">
                       <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
-                        <button onClick={() => { setEditingProduct(p); setModalOpen(true); }} className="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl border border-transparent hover:border-primary/20 transition-all"><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(p.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-all"><Trash2 size={16} /></button>
+                        <button onClick={() => { setEditingProduct(p); setModalOpen(true); }} className="p-2 hover:text-primary hover:bg-primary/10 rounded-xl border border-transparent hover:border-primary/20 transition-all" style={{ color: 'var(--text-3)' }}><Edit2 size={16} /></button>
+                        <button onClick={() => handleDelete(p.id)} className="p-2 hover:text-red-400 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-all" style={{ color: 'var(--text-3)' }}><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan="6" className="px-6 py-20 text-center text-slate-500 uppercase font-black text-[10px] tracking-[0.2em] opacity-40">Không tìm thấy sản phẩm phù hợp</td></tr>
+                <tr><td colSpan="6" className="px-6 py-20 text-center uppercase font-black text-[10px] tracking-[0.2em] opacity-40" style={{ color: 'var(--text-2)' }}>Không tìm thấy sản phẩm phù hợp</td></tr>
               )}
             </tbody>
           </table>
@@ -219,10 +220,10 @@ function ProductModal({ product, onClose, onSave }) {
       <div className="bg-surface-900/90 backdrop-blur-2xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-3xl max-h-[90vh] flex flex-col border border-white/5 overflow-hidden">
         <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-white/5">
           <div>
-            <h2 className="font-black text-slate-100 uppercase tracking-widest text-sm">{product ? "Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}</h2>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Product Intelligence Catalog</p>
+            <h2 className="font-black uppercase tracking-widest text-sm" style={{ color: 'var(--text-1)' }}>{product ? "Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}</h2>
+            <p className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--text-3)' }}>Product Intelligence Catalog</p>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-500 hover:text-white transition-colors hover:bg-white/5 rounded-xl">
+          <button onClick={onClose} className="p-2 transition-colors hover:bg-white/5 rounded-xl" style={{ color: 'var(--text-3)' }}>
             <X size={20}/>
           </button>
         </div>
@@ -240,7 +241,7 @@ function ProductModal({ product, onClose, onSave }) {
               <div>
                 <label className="label">Danh mục</label>
                 <select name="category" className="input cursor-pointer" value={form.category} onChange={handleChange}>
-                  {CATEGORIES.map(c => <option key={c.id} value={c.id} className="bg-surface-900 text-slate-100">{c.label}</option>)}
+                  {CATEGORIES.map(c => <option key={c.id} value={c.id} className="bg-surface-900">{c.label}</option>)}
                 </select>
               </div>
               <div>
@@ -284,7 +285,7 @@ function ProductModal({ product, onClose, onSave }) {
                       </div>
                       <input type="number" placeholder="Giá đối thủ (VNĐ)..." className="input !py-1 text-xs font-mono" value={alt.price} onChange={e => updateCompetitor(idx, 'price', Number(e.target.value))} />
                     </div>
-                    <button type="button" onClick={() => removeCompetitor(idx)} className="p-3 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                    <button type="button" onClick={() => removeCompetitor(idx)} className="p-3 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all" style={{ color: 'var(--text-3)' }}>
                       <Trash2 size={16}/>
                     </button>
                   </div>
@@ -319,13 +320,14 @@ function QuoteBuilder({ showToast }) {
 
   const getStatusBadge = (status) => {
     const map = {
-      draft: "bg-surface-800 text-slate-400 border-surface-700",
+      draft: "bg-surface-800 border-surface-700",
       sent: "bg-primary/10 text-primary border-primary/20",
       accepted: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
       rejected: "bg-red-500/10 text-red-400 border-red-500/20"
     };
     const labels = { draft: "Nháp", sent: "Đã Gửi", accepted: "Chốt Deal", rejected: "Báo Rớt" };
-    return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${map[status] || map.draft}`}>{labels[status] || status}</span>;
+    const isDraft = !status || status === "draft";
+    return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${map[status] || map.draft}`} style={isDraft ? { color: 'var(--text-2)' } : undefined}>{labels[status] || status}</span>;
   };
 
   if (view !== "list") {
@@ -336,11 +338,11 @@ function QuoteBuilder({ showToast }) {
     <div className="p-8 space-y-8 relative">
       <div className="flex justify-between items-center bg-white/5 p-6 rounded-2xl border border-white/5 shadow-inner">
         <div>
-          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-3">
+          <h2 className="text-xl font-bold flex items-center gap-3" style={{ color: 'var(--text-1)' }}>
             <div className="w-2 h-8 bg-primary rounded-full shadow-glow-sm" />
             Quản lý Báo giá Chiến lược
           </h2>
-          <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1 ml-5">Sales Intelligence Engine</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] mt-1 ml-5" style={{ color: 'var(--text-3)' }}>Sales Intelligence Engine</p>
         </div>
         <button onClick={() => setView('create')} className="btn-primary flex items-center gap-2 h-11 px-6 shadow-glow-sm shadow-primary/20 uppercase tracking-widest text-[10px]">
           <PlusCircle size={18}/> 
@@ -366,15 +368,15 @@ function QuoteBuilder({ showToast }) {
                 <tr key={q.id} className="group transition-all duration-300">
                   <td>
                     <div className="font-bold text-primary drop-shadow-glow-sm text-sm">#{q.name}</div>
-                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">EST: {format(new Date(q.created_at), "MMM yyyy")}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest mt-0.5" style={{ color: 'var(--text-3)' }}>EST: {format(new Date(q.created_at), "MMM yyyy")}</div>
                   </td>
-                  <td className="text-slate-300 font-medium">{q.accounts?.name || "—"}</td>
-                  <td className="text-slate-500 text-xs font-mono">{format(new Date(q.created_at), "dd/MM/yyyy")}</td>
-                  <td className="font-black text-slate-100">{formatVND(q.grand_total)}</td>
+                  <td className="font-medium" style={{ color: 'var(--text-2)' }}>{q.accounts?.name || "—"}</td>
+                  <td className="text-xs font-mono" style={{ color: 'var(--text-3)' }}>{format(new Date(q.created_at), "dd/MM/yyyy")}</td>
+                  <td className="font-black" style={{ color: 'var(--text-1)' }}>{formatVND(q.grand_total)}</td>
                   <td>{getStatusBadge(q.status)}</td>
                   <td className="text-right">
                     <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
-                      <button className="p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition-all" title="Xem chi tiết"><Edit2 size={16}/></button>
+                      <button className="p-2 hover:text-white hover:bg-white/10 rounded-xl transition-all" style={{ color: 'var(--text-3)' }} title="Xem chi tiết"><Edit2 size={16}/></button>
                       <button onClick={async () => {
                         if(confirm("Xóa báo giá này?")) {
                           await deleteQuote(q.id);
@@ -386,7 +388,7 @@ function QuoteBuilder({ showToast }) {
                 </tr>
               ))}
               {quotes.length === 0 && (
-                <tr><td colSpan="6" className="px-6 py-20 text-center text-slate-500 uppercase font-black text-[10px] tracking-[0.2em] opacity-40">Chưa có dữ liệu báo giá trong hệ thống</td></tr>
+                <tr><td colSpan="6" className="px-6 py-20 text-center uppercase font-black text-[10px] tracking-[0.2em] opacity-40" style={{ color: 'var(--text-2)' }}>Chưa có dữ liệu báo giá trong hệ thống</td></tr>
               )}
             </tbody>
           </table>
@@ -493,26 +495,26 @@ function QuoteForm({ onBack, showToast }) {
   const searchedProducts = productSearch ? products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 5) : [];
 
   return (
-    <div className="flex flex-col h-full bg-surface-950 relative overflow-hidden">
+    <div className="flex flex-col h-full relative overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       {/* Background patterns */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 blur-[140px] rounded-full -z-10" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[120px] rounded-full -z-10" />
       
       <div className="px-8 py-6 border-b border-white/5 bg-surface-900/60 backdrop-blur-2xl flex justify-between items-center shrink-0 shadow-2xl">
         <div className="flex items-center gap-6">
-          <button onClick={onBack} className="p-3 -ml-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-2xl transition-all border border-transparent hover:border-white/10">
+          <button onClick={onBack} className="p-3 -ml-2 hover:text-white hover:bg-white/5 rounded-2xl transition-all border border-transparent hover:border-white/10" style={{ color: 'var(--text-3)' }}>
             <X size={20}/>
           </button>
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="font-black text-slate-100 uppercase tracking-tighter text-xl">Soạn Báo Giá Chiến Lược</h2>
+              <h2 className="font-black uppercase tracking-tighter text-xl" style={{ color: 'var(--text-1)' }}>Soạn Báo Giá Chiến Lược</h2>
               <div className="h-4 w-[1px] bg-white/10" />
               <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-glow-sm">Draft Mode</span>
             </div>
             <div className="flex items-center gap-3 mt-1.5">
               <div className="flex items-center gap-1.5">
                 <div className={`w-2 h-2 rounded-full ${totalGP > 30 ? 'bg-emerald-500 shadow-glow-sm shadow-emerald-500' : 'bg-amber-500 shadow-glow-sm shadow-amber-500'}`} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target GP:</span>
+                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Target GP:</span>
                 <span className={`text-[10px] font-black uppercase tracking-widest ${totalGP > 30 ? 'text-emerald-400' : 'text-amber-400'}`}>{totalGP.toFixed(1)}%</span>
               </div>
             </div>
@@ -545,12 +547,12 @@ function QuoteForm({ onBack, showToast }) {
 
           <div className="bg-white/5 rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
             <div className="px-8 py-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
-              <h3 className="font-black text-slate-100 uppercase tracking-widest text-sm flex items-center gap-3">
+              <h3 className="font-black uppercase tracking-widest text-sm flex items-center gap-3" style={{ color: 'var(--text-1)' }}>
                 <Tag size={18} className="text-primary drop-shadow-glow"/>
                 Danh mục giải pháp đề xuất
               </h3>
               <div className="relative w-80 group">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" />
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-primary transition-colors" style={{ color: 'var(--text-3)' }} />
                 <input 
                   placeholder="Thêm sản phẩm từ Catalog..." 
                   className="input !bg-surface-950/50 !pl-12 !py-2.5 text-xs" 
@@ -562,13 +564,13 @@ function QuoteForm({ onBack, showToast }) {
                     {searchedProducts.map(p => (
                       <div key={p.id} className="p-4 hover:bg-white/5 cursor-pointer flex justify-between items-center transition-colors border-b border-white/5 last:border-0 group" onClick={() => addItem(p)}>
                         <div>
-                          <div className="text-sm font-bold text-slate-100 group-hover:text-primary transition-colors">{p.name}</div>
-                          <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-0.5">{p.sku}</div>
+                          <div className="text-sm font-bold group-hover:text-primary transition-colors" style={{ color: 'var(--text-1)' }}>{p.name}</div>
+                          <div className="text-[10px] font-black uppercase tracking-widest mt-0.5" style={{ color: 'var(--text-3)' }}>{p.sku}</div>
                         </div>
                         <div className="text-xs font-black text-primary drop-shadow-glow-sm">{formatVND(p.list_price)}</div>
                       </div>
                     ))}
-                    {searchedProducts.length===0 && <div className="p-6 text-xs text-slate-500 text-center italic font-medium uppercase tracking-widest">Không có mã phù hợp</div>}
+                    {searchedProducts.length===0 && <div className="p-6 text-xs text-center italic font-medium uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Không có mã phù hợp</div>}
                   </div>
                 )}
               </div>
@@ -592,31 +594,31 @@ function QuoteForm({ onBack, showToast }) {
                     return (
                       <tr key={idx} className="group hover:bg-white/5 transition-all">
                         <td>
-                          <div className="font-bold text-slate-100 group-hover:text-primary transition-colors">{item.name}</div>
+                          <div className="font-bold group-hover:text-primary transition-colors" style={{ color: 'var(--text-1)' }}>{item.name}</div>
                           <div className={`text-[10px] font-black uppercase tracking-widest mt-1 inline-flex items-center gap-1.5 ${lineGP > 25 ? 'text-emerald-500' : 'text-amber-500'}`}>
                             <div className={`w-1.5 h-1.5 rounded-full ${lineGP > 25 ? 'bg-emerald-500 shadow-glow-sm shadow-emerald-500' : 'bg-amber-500 shadow-glow-sm shadow-amber-500'}`} />
                             Margin: {lineGP.toFixed(1)}%
                           </div>
                         </td>
                         <td>
-                          <input type="number" min="1" className="bg-surface-950/50 border border-white/5 text-slate-100 rounded-xl px-3 py-2 w-full text-sm text-center font-bold focus:border-primary/50 transition-all outline-none" value={item.qty} onChange={e => updateItem(idx, 'qty', Number(e.target.value))} />
+                          <input type="number" min="1" className="bg-surface-950/50 border border-white/5 rounded-xl px-3 py-2 w-full text-sm text-center font-bold focus:border-primary/50 transition-all outline-none" style={{ color: 'var(--text-1)' }} value={item.qty} onChange={e => updateItem(idx, 'qty', Number(e.target.value))} />
                         </td>
-                        <td className="text-right text-slate-400 text-sm font-medium">{formatVND(item.unit_price)}</td>
+                        <td className="text-right text-sm font-medium" style={{ color: 'var(--text-2)' }}>{formatVND(item.unit_price)}</td>
                         <td>
                           <div className="flex items-center gap-2 px-3 border border-white/5 bg-surface-950/50 rounded-xl group-focus-within:border-primary/50 transition-all">
                             <input type="number" min="0" max="100" className="bg-transparent text-primary font-black py-2 w-full text-sm text-center outline-none" value={item.discount_pct} onChange={e => updateItem(idx, 'discount_pct', Number(e.target.value))} />
-                            <span className="text-slate-600 font-bold text-xs">%</span>
+                            <span className="font-bold text-xs" style={{ color: 'var(--text-3)' }}>%</span>
                           </div>
                         </td>
-                        <td className="text-right font-black text-slate-100 text-sm">{formatVND(item.total)}</td>
+                        <td className="text-right font-black text-sm" style={{ color: 'var(--text-1)' }}>{formatVND(item.total)}</td>
                         <td className="text-right">
-                          <button onClick={()=>removeItem(idx)} className="p-3 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"><Trash2 size={18}/></button>
+                          <button onClick={()=>removeItem(idx)} className="p-3 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100" style={{ color: 'var(--text-3)' }}><Trash2 size={18}/></button>
                         </td>
                       </tr>
                     );
                   })}
                   {form.items.length === 0 && (
-                    <tr><td colSpan="6" className="px-6 py-24 text-center text-slate-600 uppercase font-black text-[10px] tracking-[0.3em] opacity-40 italic">Hệ thống đang chờ danh mục sản phẩm</td></tr>
+                    <tr><td colSpan="6" className="px-6 py-24 text-center uppercase font-black text-[10px] tracking-[0.3em] opacity-40 italic" style={{ color: 'var(--text-2)' }}>Hệ thống đang chờ danh mục sản phẩm</td></tr>
                   )}
                 </tbody>
               </table>
@@ -627,14 +629,14 @@ function QuoteForm({ onBack, showToast }) {
         <div className="space-y-8">
           <div className="bg-surface-900 border border-primary/20 rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_30px_rgba(16,185,129,0.05)] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -z-10 group-hover:bg-primary/10 transition-all duration-700" />
-            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 flex items-center gap-2" style={{ color: 'var(--text-3)' }}>
               <div className="w-1.5 h-1.5 bg-primary rounded-full shadow-glow-sm shadow-primary" />
               Financial Summary
             </h3>
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Giá gộp:</span>
-                <span className="text-slate-200 font-bold text-sm font-mono">{formatVND(subtotal)}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Giá gộp:</span>
+                <span className="font-bold text-sm font-mono" style={{ color: 'var(--text-1)' }}>{formatVND(subtotal)}</span>
               </div>
               <div className="flex justify-between items-center text-emerald-400">
                 <span className="text-[10px] font-bold uppercase tracking-widest">Tiết kiệm:</span>
@@ -643,14 +645,14 @@ function QuoteForm({ onBack, showToast }) {
               <div className="pt-6 border-t border-white/5 space-y-6">
                 <div className="flex justify-between items-center">
                    <div className="space-y-1">
-                    <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest block">Lợi nhuận gộp</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest block" style={{ color: 'var(--text-3)' }}>Lợi nhuận gộp</span>
                     <span className={`text-xl font-black ${totalGP > 30 ? 'text-emerald-400' : 'text-amber-400'} drop-shadow-glow-sm`}>
                       {totalGP.toFixed(1)}%
                     </span>
                   </div>
                 </div>
                 <div className="bg-white/5 rounded-3xl p-6 border border-white/5 shadow-inner">
-                  <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest block mb-2">Tổng cộng hệ thống:</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest block mb-2" style={{ color: 'var(--text-3)' }}>Tổng cộng hệ thống:</span>
                   <div className="text-3xl font-black text-primary tracking-tighter drop-shadow-glow">
                     {formatVND(grandTotal)}
                   </div>
@@ -664,7 +666,8 @@ function QuoteForm({ onBack, showToast }) {
             <button 
               onClick={handleAISuggestion}
               disabled={aiLoading}
-              className="w-full py-5 bg-white/5 hover:bg-white/10 text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border-b border-white/5"
+              className="w-full py-5 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border-b border-white/5"
+            style={{ color: 'var(--text-2)' }}
             >
               {aiLoading ? (
                 <>
@@ -680,13 +683,13 @@ function QuoteForm({ onBack, showToast }) {
             </button>
             <div className="p-8">
               {aiInsight ? (
-                <div className="text-[12px] leading-relaxed text-slate-400 whitespace-pre-wrap animate-in fade-in slide-in-from-bottom-4 duration-700 font-medium">
+                <div className="text-[12px] leading-relaxed whitespace-pre-wrap animate-in fade-in slide-in-from-bottom-4 duration-700 font-medium" style={{ color: 'var(--text-2)' }}>
                   {aiInsight}
                 </div>
               ) : (
                 <div className="text-center py-10 opacity-30 group-hover:opacity-50 transition-opacity duration-700">
-                  <Calculator size={48} className="mx-auto text-slate-600 mb-4"/>
-                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">AI Sales Coach Standby</span>
+                  <Calculator size={48} className="mx-auto mb-4" style={{ color: 'var(--text-3)' }}/>
+                  <span className="text-[10px] uppercase font-black tracking-widest" style={{ color: 'var(--text-3)' }}>AI Sales Coach Standby</span>
                 </div>
               )}
             </div>
@@ -702,38 +705,38 @@ function QuoteForm({ onBack, showToast }) {
 function QuotePreviewModal({ form, totals, onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-surface-950/95 backdrop-blur-md p-4">
-      <div className="bg-white text-slate-900 rounded-[3rem] shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col p-16 relative overflow-y-auto">
-        <button onClick={onClose} className="absolute top-10 right-10 p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-100 rounded-2xl transition-all">
+      <div className="rounded-[3rem] shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col p-16 relative overflow-y-auto" style={{ background: 'var(--bg-surface)', color: 'var(--text-1)' }}>
+        <button onClick={onClose} className="absolute top-10 right-10 p-3 rounded-2xl transition-all" style={{ color: 'var(--text-3)' }}>
           <X size={24}/>
         </button>
         
         {/* Document Header */}
-        <div className="flex justify-between items-start border-b-[8px] border-slate-900 pb-12">
+        <div className="flex justify-between items-start pb-12" style={{ borderBottom: '8px solid var(--text-1)' }}>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center">
-                <FileText size={24} className="text-white"/>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--text-1)' }}>
+                <FileText size={24} style={{ color: 'var(--bg-surface)' }}/>
               </div>
-              <h1 className="text-5xl font-black tracking-tighter uppercase leading-none">Quotation</h1>
+              <h1 className="text-5xl font-black tracking-tighter uppercase leading-none" style={{ color: 'var(--text-1)' }}>Quotation</h1>
             </div>
-            <div className="text-slate-400 space-y-1 text-[10px] uppercase font-black tracking-[0.2em]">
-              <div className="flex items-center gap-2">REF ID: <span className="text-slate-900">BM/SI/2026/{Math.floor(Math.random()*9000)+1000}</span></div>
-              <div className="flex items-center gap-2">ISSUE DATE: <span className="text-slate-900">{format(new Date(), "dd MMMM yyyy")}</span></div>
+            <div className="space-y-1 text-[10px] uppercase font-black tracking-[0.2em]" style={{ color: 'var(--text-2)' }}>
+              <div className="flex items-center gap-2">REF ID: <span style={{ color: 'var(--text-1)' }}>BM/SI/2026/{Math.floor(Math.random()*9000)+1000}</span></div>
+              <div className="flex items-center gap-2">ISSUE DATE: <span style={{ color: 'var(--text-1)' }}>{format(new Date(), "dd MMMM yyyy")}</span></div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-black uppercase tracking-tighter">Biomedia Group</div>
-            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Life Science Solutions Division</div>
-            <div className="text-[10px] text-slate-400 font-bold uppercase mt-1">Ho Chi Minh City, Vietnam</div>
+            <div className="text-2xl font-black uppercase tracking-tighter" style={{ color: 'var(--text-1)' }}>Biomedia Group</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--text-2)' }}>Life Science Solutions Division</div>
+            <div className="text-[10px] font-bold uppercase mt-1" style={{ color: 'var(--text-2)' }}>Ho Chi Minh City, Vietnam</div>
           </div>
         </div>
 
         {/* Client Context */}
         <div className="mt-12 grid grid-cols-2 gap-12">
           <div>
-            <div className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-300 mb-4">Attention to:</div>
-            <div className="text-2xl font-black uppercase tracking-tighter text-slate-900">{form.account_name || "Valued Strategic Partner"}</div>
-            <div className="text-xs text-slate-500 font-bold mt-2 uppercase tracking-widest leading-relaxed">Proposal for advanced laboratory <br/>intelligence & operational excellence.</div>
+            <div className="text-[10px] uppercase font-black tracking-[0.2em] mb-4" style={{ color: 'var(--text-2)' }}>Attention to:</div>
+            <div className="text-2xl font-black uppercase tracking-tighter" style={{ color: 'var(--text-1)' }}>{form.account_name || "Valued Strategic Partner"}</div>
+            <div className="text-xs font-bold mt-2 uppercase tracking-widest leading-relaxed" style={{ color: 'var(--text-2)' }}>Proposal for advanced laboratory <br/>intelligence & operational excellence.</div>
           </div>
         </div>
 
@@ -741,23 +744,23 @@ function QuotePreviewModal({ form, totals, onClose }) {
         <div className="mt-16 flex-1">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b-2 border-slate-900">
-                <th className="text-left py-4 text-[10px] uppercase font-black tracking-widest text-slate-400">Description of Solutions</th>
-                <th className="text-center py-4 text-[10px] uppercase font-black tracking-widest text-slate-400 w-24">Qty</th>
-                <th className="text-right py-4 text-[10px] uppercase font-black tracking-widest text-slate-400 w-44">Unit Net (VND)</th>
-                <th className="text-right py-4 text-[10px] uppercase font-black tracking-widest text-slate-400 w-44">Subtotal (VND)</th>
+              <tr style={{ borderBottom: '2px solid var(--text-1)' }}>
+                <th className="text-left py-4 text-[10px] uppercase font-black tracking-widest" style={{ color: 'var(--text-2)' }}>Description of Solutions</th>
+                <th className="text-center py-4 text-[10px] uppercase font-black tracking-widest w-24" style={{ color: 'var(--text-2)' }}>Qty</th>
+                <th className="text-right py-4 text-[10px] uppercase font-black tracking-widest w-44" style={{ color: 'var(--text-2)' }}>Unit Net (VND)</th>
+                <th className="text-right py-4 text-[10px] uppercase font-black tracking-widest w-44" style={{ color: 'var(--text-2)' }}>Subtotal (VND)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody style={{ borderTop: '1px solid var(--border)' }}>
               {form.items.map((item, idx) => (
-                <tr key={idx} className="group">
+                <tr key={idx} className="group" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <td className="py-6 pr-6">
-                    <div className="font-black text-slate-900 text-sm uppercase tracking-tight">{item.name}</div>
-                    <div className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-widest">Professional Grade Standard</div>
+                    <div className="font-black text-sm uppercase tracking-tight" style={{ color: 'var(--text-1)' }}>{item.name}</div>
+                    <div className="text-[10px] font-bold mt-1 uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Professional Grade Standard</div>
                   </td>
-                  <td className="py-6 text-center font-bold text-slate-900">{item.qty}</td>
-                  <td className="py-6 text-right font-bold text-slate-700">{formatVND(item.unit_price * (1 - item.discount_pct/100))}</td>
-                  <td className="py-6 text-right font-black text-slate-900">{formatVND(item.total)}</td>
+                  <td className="py-6 text-center font-bold" style={{ color: 'var(--text-1)' }}>{item.qty}</td>
+                  <td className="py-6 text-right font-bold" style={{ color: 'var(--text-2)' }}>{formatVND(item.unit_price * (1 - item.discount_pct/100))}</td>
+                  <td className="py-6 text-right font-black" style={{ color: 'var(--text-1)' }}>{formatVND(item.total)}</td>
                 </tr>
               ))}
             </tbody>
@@ -765,28 +768,28 @@ function QuotePreviewModal({ form, totals, onClose }) {
         </div>
 
         {/* Summary Footer */}
-        <div className="mt-12 pt-12 border-t-2 border-slate-900">
+        <div className="mt-12 pt-12" style={{ borderTop: '2px solid var(--text-1)' }}>
           <div className="flex justify-between items-end">
             <div className="max-w-md">
-              <div className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-300 mb-4">Official Terms:</div>
-              <div className="text-[10px] text-slate-500 font-bold leading-relaxed uppercase space-y-1">
+              <div className="text-[10px] uppercase font-black tracking-[0.2em] mb-4" style={{ color: 'var(--text-2)' }}>Official Terms:</div>
+              <div className="text-[10px] font-bold leading-relaxed uppercase space-y-1" style={{ color: 'var(--text-2)' }}>
                 <p>• Validity: 30 Days from issue date</p>
                 <p>• Delivery: 4-6 Weeks upon PO acceptance</p>
                 <p>• Quality: Certified ISO/USP Laboratory Standards</p>
               </div>
             </div>
             <div className="w-80 space-y-3">
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400 px-2">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest px-2" style={{ color: 'var(--text-2)' }}>
                 <span>Gross Value:</span>
                 <span>{formatVND(totals.subtotal)}</span>
               </div>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 px-2 py-1 rounded">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded" style={{ color: '#16a34a', background: 'rgba(34,197,94,0.1)' }}>
                 <span>Strategic Discount:</span>
                 <span>-{formatVND(totals.subtotal - totals.grandTotal)}</span>
               </div>
-              <div className="flex justify-between items-center pt-4 border-t-4 border-slate-900 px-2">
-                <span className="text-xl font-black uppercase tracking-tighter">Total Price:</span>
-                <span className="text-2xl font-black text-slate-900 tracking-tighter">{formatVND(totals.grandTotal)}</span>
+              <div className="flex justify-between items-center pt-4 px-2" style={{ borderTop: '4px solid var(--text-1)' }}>
+                <span className="text-xl font-black uppercase tracking-tighter" style={{ color: 'var(--text-1)' }}>Total Price:</span>
+                <span className="text-2xl font-black tracking-tighter" style={{ color: 'var(--text-1)' }}>{formatVND(totals.grandTotal)}</span>
               </div>
             </div>
           </div>
@@ -818,23 +821,22 @@ function ROICalculator() {
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 mb-4">
             <Calculator size={16} className="text-primary"/>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Intelligence Module</span>
+            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Financial Intelligence Module</span>
           </div>
-          <h2 className="text-5xl font-black text-slate-100 tracking-tighter uppercase leading-none">ROI Optimizer</h2>
-          <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px]">Tối ưu hóa tổng chi phí sở hữu (TCO) cho phòng Lab</p>
+          <h2 className="text-5xl font-black tracking-tighter uppercase leading-none" style={{ color: 'var(--text-1)' }}>ROI Optimizer</h2>
+          <p className="font-bold uppercase tracking-[0.2em] text-[10px]" style={{ color: 'var(--text-3)' }}>Tối ưu hóa tổng chi phí sở hữu (TCO) cho phòng Lab</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-10">
           {/* Inputs - Competitor */}
           <div className="bg-surface-900/60 backdrop-blur-xl p-10 rounded-[3rem] border border-white/5 shadow-2xl relative group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-slate-700/30 rounded-full overflow-hidden">
-               <div className="h-full w-full bg-slate-500 opacity-20" />
+            <div className="absolute top-0 left-0 w-full h-1 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
             </div>
             <div className="flex items-center gap-3 mb-10">
-              <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center border border-white/5">
-                <X size={20} className="text-slate-500"/>
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center border border-white/5" style={{ background: 'var(--bg-elevated)' }}>
+                <X size={20} style={{ color: 'var(--text-3)' }}/>
               </div>
-              <h3 className="font-black text-slate-400 uppercase text-xs tracking-[0.2em]">Hiện trạng mô hình cũ</h3>
+              <h3 className="font-black uppercase text-xs tracking-[0.2em]" style={{ color: 'var(--text-2)' }}>Hiện trạng mô hình cũ</h3>
             </div>
             <div className="space-y-8">
               <div className="space-y-3">
@@ -850,8 +852,8 @@ function ROICalculator() {
               </div>
             </div>
             <div className="mt-12 pt-8 border-t border-white/5 flex justify-between items-end">
-               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Chi phí hàng tháng:</span>
-               <span className="text-xl font-black text-slate-400">{formatVND(currentMonthly)}</span>
+               <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Chi phí hàng tháng:</span>
+               <span className="text-xl font-black" style={{ color: 'var(--text-2)' }}>{formatVND(currentMonthly)}</span>
             </div>
           </div>
 
@@ -887,7 +889,7 @@ function ROICalculator() {
             </div>
             <div className="mt-12 pt-8 border-t border-white/5 flex justify-between items-end">
                <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Chi phí hàng tháng:</span>
-               <span className="text-xl font-black text-white">{formatVND(bioMonthly)}</span>
+               <span className="text-xl font-black" style={{ color: 'var(--text-1)' }}>{formatVND(bioMonthly)}</span>
             </div>
           </div>
         </div>
@@ -897,23 +899,23 @@ function ROICalculator() {
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 blur-[120px] rounded-full group-hover:bg-primary/10 transition-all duration-1000" />
           <div className="relative flex flex-col md:flex-row gap-12 justify-between items-center">
             <div className="space-y-2 text-center md:text-left">
-              <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Annual Optimization Value</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: 'var(--text-3)' }}>Annual Optimization Value</div>
               <div className={`text-6xl font-black tracking-tighter ${annualSavings > 0 ? 'text-primary drop-shadow-glow' : 'text-red-500'}`}>
                 {formatVND(annualSavings)}
               </div>
-              <div className="text-xs text-slate-600 font-bold uppercase tracking-widest">Lợi ích kinh tế trực tiếp hàng năm</div>
+              <div className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Lợi ích kinh tế trực tiếp hàng năm</div>
             </div>
             
             <div className="flex gap-12 divide-x divide-white/5">
               <div className="pl-12 space-y-2">
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Gaining</div>
+                <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Monthly Gaining</div>
                 <div className={`text-3xl font-black ${monthlySavings > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {formatVND(monthlySavings)}
                 </div>
               </div>
                <div className="pl-12 space-y-2">
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Payback Period</div>
-                <div className="text-3xl font-black text-white italic tracking-tighter uppercase">
+                <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Payback Period</div>
+                <div className="text-3xl font-black italic tracking-tighter uppercase" style={{ color: 'var(--text-1)' }}>
                   {payback > 0 ? `${payback} Months` : 'Instant ROI'}
                 </div>
               </div>
@@ -940,7 +942,7 @@ function PricePositioning() {
     <div className="p-8 space-y-12">
       <div className="flex flex-wrap items-center justify-between gap-6 bg-white/5 p-8 rounded-[2.5rem] border border-white/5 shadow-inner">
         <div>
-          <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tighter flex items-center gap-4">
+          <h2 className="text-2xl font-black uppercase tracking-tighter flex items-center gap-4" style={{ color: 'var(--text-1)' }}>
             <div className="w-2 h-8 bg-primary rounded-full shadow-glow-sm" />
             Bản đồ Định Giá Chiến Lược
           </h2>
@@ -995,10 +997,10 @@ function PricePositioning() {
                                 </td>
                               )}
                               <td className="px-6 py-6">
-                                <div className="font-bold text-slate-300 uppercase text-xs group-hover:text-white transition-colors">{alt.competitor}</div>
-                                <div className="text-[10px] text-slate-500 italic mt-1 font-medium">{alt.product}</div>
+                                <div className="font-bold uppercase text-xs group-hover:text-white transition-colors" style={{ color: 'var(--text-2)' }}>{alt.competitor}</div>
+                                <div className="text-[10px] italic mt-1 font-medium" style={{ color: 'var(--text-3)' }}>{alt.product}</div>
                               </td>
-                              <td className="px-4 py-6 text-slate-100 font-bold font-mono">{formatVND(alt.price)}</td>
+                              <td className="px-4 py-6 font-bold font-mono" style={{ color: 'var(--text-1)' }}>{formatVND(alt.price)}</td>
                               <td className="px-6 py-6">
                                 <div className={`inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter border
                                   ${isCheaper ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-glow-sm shadow-emerald-500/10' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>

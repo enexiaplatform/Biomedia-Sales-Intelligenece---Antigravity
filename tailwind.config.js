@@ -13,8 +13,9 @@ export default {
           dim:     '#B91C1C',
           light:   '#EF4444',
         },
-        /* ── Backward-compat aliases (Pipeline, etc.) ── */
+        /* ── Backward-compat aliases (Pipeline, BDTool, etc.) ── */
         primary: '#DC2626',
+        secondary: '#8B5CF6',
         surface: {
           950: '#0C0C0F',
           900: '#131318',

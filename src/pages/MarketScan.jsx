@@ -194,12 +194,12 @@ export default function MarketScan({ showToast }) {
           {[1, 2, 3, 4].map(k => <SkeletonCard key={k} />)}
         </div>
       ) : displayData.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 flex flex-col items-center justify-center p-16 text-center shadow-sm">
-          <div className="bg-gray-100 p-4 rounded-full mb-4">
-            <Radar className="text-gray-400" size={48} />
+        <div className="card flex flex-col items-center justify-center p-16 text-center">
+          <div className="p-4 rounded-full mb-4" style={{ background: 'var(--bg-elevated)' }}>
+            <Radar size={48} style={{ color: 'var(--text-3)' }} />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có dữ liệu</h3>
-          <p className="text-gray-500 mb-6 max-w-sm">Chưa có thông tin thị trường nào. Bấm 'Quét Ngay' để bắt đầu lấy dữ liệu mới.</p>
+          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-1)' }}>Chưa có dữ liệu</h3>
+          <p className="mb-6 max-w-sm" style={{ color: 'var(--text-2)' }}>Chưa có thông tin thị trường nào. Bấm 'Quét Ngay' để bắt đầu lấy dữ liệu mới.</p>
           <button onClick={handleScanNow} className="btn-primary">
             Quét Ngay
           </button>
@@ -395,19 +395,19 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="font-semibold text-gray-900">Tạo Account mới</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+      <div className="rounded-xl shadow-xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>Tạo Account mới</h2>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }} className="hover:opacity-70"><X size={20}/></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="label">Tên Account</label>
-            <input 
-              type="text" 
-              className="input text-gray-900 font-medium" 
-              value={form.name} 
-              onChange={e => setForm({...form, name: e.target.value})} 
+            <input
+              type="text"
+              className="input"
+              value={form.name}
+              onChange={e => setForm({...form, name: e.target.value})}
               required
             />
           </div>
@@ -415,11 +415,11 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
             <div>
               <label className="label">Loại ngành</label>
               <div className="flex gap-4 items-center h-10">
-                <label className="flex items-center gap-1 text-sm cursor-pointer">
-                  <input type="radio" checked={form.type === "pharma"} onChange={() => setForm({...form, type:"pharma"})} className="text-blue-600" /> Pharma
+                <label className="flex items-center gap-1 text-sm cursor-pointer" style={{ color: 'var(--text-2)' }}>
+                  <input type="radio" checked={form.type === "pharma"} onChange={() => setForm({...form, type:"pharma"})} className="accent-primary" /> Pharma
                 </label>
-                <label className="flex items-center gap-1 text-sm cursor-pointer">
-                  <input type="radio" checked={form.type === "fnb"} onChange={() => setForm({...form, type:"fnb"})} className="text-blue-600" /> F&B
+                <label className="flex items-center gap-1 text-sm cursor-pointer" style={{ color: 'var(--text-2)' }}>
+                  <input type="radio" checked={form.type === "fnb"} onChange={() => setForm({...form, type:"fnb"})} className="accent-primary" /> F&B
                 </label>
               </div>
             </div>
@@ -433,45 +433,45 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
             </div>
           </div>
 
-          <div className="border-t pt-4 space-y-4">
+          <div className="pt-4 space-y-4" style={{ borderTop: '1px solid var(--border)' }}>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={form.createDeal} 
+              <input
+                type="checkbox"
+                checked={form.createDeal}
                 onChange={e => setForm({...form, createDeal: e.target.checked})}
-                className="rounded text-primary" 
+                className="rounded accent-primary"
               />
-              <span className="text-sm font-bold text-gray-700">Tạo kèm một Deal (Cơ hội)</span>
+              <span className="text-sm font-bold" style={{ color: 'var(--text-2)' }}>Tạo kèm một Deal (Cơ hội)</span>
             </label>
 
             {form.createDeal && (
-              <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-100 animate-in fade-in duration-300">
+              <div className="space-y-3 p-3 rounded-lg animate-in fade-in duration-300" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-gray-500">Tên Deal</label>
-                  <input 
-                    type="text" 
-                    className="input h-9 text-sm" 
-                    value={form.dealName} 
-                    onChange={e => setForm({...form, dealName: e.target.value})} 
+                  <label className="label">Tên Deal</label>
+                  <input
+                    type="text"
+                    className="input h-9 text-sm"
+                    value={form.dealName}
+                    onChange={e => setForm({...form, dealName: e.target.value})}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] uppercase font-bold text-gray-500">Giá trị dự kiến</label>
-                    <input 
-                      type="number" 
-                      className="input h-9 text-sm" 
-                      value={form.dealValue} 
-                      onChange={e => setForm({...form, dealValue: parseInt(e.target.value) || 0})} 
+                    <label className="label">Giá trị dự kiến</label>
+                    <input
+                      type="number"
+                      className="input h-9 text-sm"
+                      value={form.dealValue}
+                      onChange={e => setForm({...form, dealValue: parseInt(e.target.value) || 0})}
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase font-bold text-gray-500">Ngày dự kiến chốt</label>
-                    <input 
-                      type="date" 
-                      className="input h-9 text-sm" 
-                      value={form.dealDate} 
-                      onChange={e => setForm({...form, dealDate: e.target.value})} 
+                    <label className="label">Ngày dự kiến chốt</label>
+                    <input
+                      type="date"
+                      className="input h-9 text-sm"
+                      value={form.dealDate}
+                      onChange={e => setForm({...form, dealDate: e.target.value})}
                     />
                   </div>
                 </div>
@@ -503,18 +503,18 @@ function StatCard({ label, value, color = "text-slate-100", valueClassName = "te
 
 function SkeletonCard() {
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm animate-pulse flex flex-col gap-4">
+    <div className="card p-5 animate-pulse flex flex-col gap-4">
       <div className="flex gap-2">
-        <div className="h-6 w-24 bg-gray-200 rounded-full"></div>
-        <div className="h-6 w-16 bg-gray-200 rounded-full"></div>
+        <div className="h-6 w-24 rounded-full" style={{ background: 'var(--bg-elevated)' }}></div>
+        <div className="h-6 w-16 rounded-full" style={{ background: 'var(--bg-elevated)' }}></div>
       </div>
-      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+      <div className="h-6 rounded w-3/4" style={{ background: 'var(--bg-elevated)' }}></div>
+      <div className="h-4 rounded w-1/4" style={{ background: 'var(--bg-elevated)' }}></div>
       <div className="space-y-2 mt-2">
-        <div className="h-3 bg-gray-200 rounded w-full"></div>
-        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+        <div className="h-3 rounded w-full" style={{ background: 'var(--bg-elevated)' }}></div>
+        <div className="h-3 rounded w-5/6" style={{ background: 'var(--bg-elevated)' }}></div>
       </div>
-      <div className="mt-auto h-10 bg-gray-200 rounded w-full"></div>
+      <div className="mt-auto h-10 rounded w-full" style={{ background: 'var(--bg-elevated)' }}></div>
     </div>
   );
 }

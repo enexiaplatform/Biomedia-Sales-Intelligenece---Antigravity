@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { 
+import {
   Package, Tag, Map, GitBranch, Plus, Search, Edit2, Trash2, X, PlusCircle, Save, FileText, Upload, BrainCircuit, ExternalLink, Download, Sparkles
 } from "lucide-react";
-import { 
+import {
   fetchProducts, createProduct, updateProduct, deleteProduct,
   fetchMarketSizing, createMarketSizing, updateMarketSizing, deleteMarketSizing,
   uploadProductDoc, listProductDocs, getProductDocUrl, deleteProductDoc
@@ -28,16 +28,16 @@ export default function ProductManagement({ showToast }) {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-blue-100 text-blue-700 rounded-lg">
+        <div className="p-3 rounded-lg" style={{ background: 'var(--brand-bg)', color: 'var(--brand)' }}>
           <Package size={24} />
         </div>
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-100 uppercase">Sản Phẩm</h1>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Danh mục & Tài liệu kỹ thuật Biomedia</p>
+          <h1 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--text-1)' }}>Sản Phẩm</h1>
+          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Danh mục & Tài liệu kỹ thuật Biomedia</p>
         </div>
       </div>
 
-      <div className="flex bg-surface-900 rounded-2xl shadow-xl border border-surface-700/50 p-1 overflow-x-auto scrollbar-hide">
+      <div className="flex rounded-2xl shadow-xl p-1 overflow-x-auto scrollbar-hide" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -45,8 +45,10 @@ export default function ProductManagement({ showToast }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap
-                ${isActive ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"}`}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap"
+              style={isActive
+                ? { background: 'var(--brand-bg)', color: 'var(--brand)' }
+                : { color: 'var(--text-2)' }}
             >
               <Icon size={16} />
               {tab.label}
@@ -55,7 +57,7 @@ export default function ProductManagement({ showToast }) {
         })}
       </div>
 
-      <div className="bg-surface-900 rounded-3xl shadow-2xl border border-surface-700/50 overflow-hidden min-h-[500px] relative">
+      <div className="rounded-3xl shadow-2xl overflow-hidden min-h-[500px] relative" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[120px] -mr-48 -mt-48 pointer-events-none"></div>
         {activeTab === "catalog" && <ProductCatalog showToast={showToast} />}
         {activeTab === "docs" && <ProductDocuments showToast={showToast} />}
@@ -99,11 +101,11 @@ function ProductCatalog({ showToast }) {
   });
 
   const validProducts = products.filter(p => p.list_price > 0 && p.cost >= 0);
-  const avgMargin = validProducts.length > 0 
-    ? validProducts.reduce((sum, p) => sum + ((p.list_price - p.cost) / p.list_price * 100), 0) / validProducts.length 
+  const avgMargin = validProducts.length > 0
+    ? validProducts.reduce((sum, p) => sum + ((p.list_price - p.cost) / p.list_price * 100), 0) / validProducts.length
     : 0;
-  const avgPrice = validProducts.length > 0 
-    ? validProducts.reduce((sum, p) => sum + Number(p.list_price), 0) / validProducts.length 
+  const avgPrice = validProducts.length > 0
+    ? validProducts.reduce((sum, p) => sum + Number(p.list_price), 0) / validProducts.length
     : 0;
   const uniqueCategories = new Set(products.map(p => p.category)).size;
 
@@ -126,10 +128,10 @@ function ProductCatalog({ showToast }) {
         <StatCard title="Số danh mục" value={uniqueCategories} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 justify-between border-b pb-4 border-gray-100">
+      <div className="flex flex-wrap items-center gap-3 justify-between border-b pb-4" style={{ borderColor: 'var(--border)' }}>
         <div className="flex flex-wrap gap-3 flex-1">
           <div className="relative w-64">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
             <input type="text" placeholder="Tìm theo tên hoặc SKU..." className="input pl-9" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <select className="input w-auto" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
@@ -160,34 +162,39 @@ function ProductCatalog({ showToast }) {
             <tbody>
               {filtered.map((p) => {
                 const margin = p.list_price > 0 ? ((p.list_price - p.cost) / p.list_price) * 100 : 0;
-                let badgeClass = "bg-red-100 text-red-700";
-                if (margin >= 40) badgeClass = "bg-green-100 text-green-700";
-                else if (margin >= 20) badgeClass = "bg-yellow-100 text-yellow-700";
+                let badgeBg = 'var(--brand-bg)';
+                let badgeColor = 'var(--brand)';
+                if (margin >= 40) { badgeBg = 'rgba(34,197,94,0.1)'; badgeColor = '#16a34a'; }
+                else if (margin >= 20) { badgeBg = 'rgba(234,179,8,0.1)'; badgeColor = '#ca8a04'; }
 
                 return (
                   <tr key={p.id}>
-                    <td className="text-gray-500 font-mono text-xs">{p.sku || "—"}</td>
-                    <td className="font-medium text-gray-900">{p.name}</td>
+                    <td className="font-mono text-xs" style={{ color: 'var(--text-2)' }}>{p.sku || "—"}</td>
+                    <td className="font-medium" style={{ color: 'var(--text-1)' }}>{p.name}</td>
                     <td>
-                      <span className="badge bg-gray-100 text-gray-700">
+                      <span className="badge" style={{ background: 'var(--bg-elevated)', color: 'var(--text-2)', border: '1px solid var(--border)' }}>
                         {CATEGORIES.find(c => c.id === p.category)?.label || p.category}
                       </span>
                     </td>
-                    <td>{p.unit || "—"}</td>
-                    <td className="font-medium text-blue-700">{formatVND(p.list_price)}</td>
-                    <td className="text-gray-500">{formatVND(p.cost)}</td>
-                    <td><span className={`badge ${badgeClass}`}>{margin.toFixed(1)}%</span></td>
+                    <td style={{ color: 'var(--text-1)' }}>{p.unit || "—"}</td>
+                    <td className="font-medium" style={{ color: 'var(--brand)' }}>{formatVND(p.list_price)}</td>
+                    <td style={{ color: 'var(--text-2)' }}>{formatVND(p.cost)}</td>
+                    <td>
+                      <span className="badge" style={{ background: badgeBg, color: badgeColor }}>
+                        {margin.toFixed(1)}%
+                      </span>
+                    </td>
                     <td>
                       <div className="flex gap-2">
-                        <button onClick={() => { setEditingProduct(p); setModalOpen(true); }} className="text-gray-400 hover:text-blue-600"><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(p.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={16} /></button>
+                        <button onClick={() => { setEditingProduct(p); setModalOpen(true); }} style={{ color: 'var(--text-3)' }} className="hover:text-blue-600"><Edit2 size={16} /></button>
+                        <button onClick={() => handleDelete(p.id)} style={{ color: 'var(--text-3)' }} className="hover:text-red-600"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan="8" className="text-center py-12 text-gray-500">Chưa có sản phẩm. Bấm "+ Thêm Sản Phẩm" để bắt đầu.</td></tr>
+                <tr><td colSpan="8" className="text-center py-12" style={{ color: 'var(--text-2)' }}>Chưa có sản phẩm. Bấm "+ Thêm Sản Phẩm" để bắt đầu.</td></tr>
               )}
             </tbody>
           </table>
@@ -195,10 +202,10 @@ function ProductCatalog({ showToast }) {
       )}
 
       {modalOpen && (
-        <ProductModal 
-          product={editingProduct} 
-          onClose={() => setModalOpen(false)} 
-          onSave={() => { setModalOpen(false); showToast("Đã lưu sản phẩm"); loadProducts(); }} 
+        <ProductModal
+          product={editingProduct}
+          onClose={() => setModalOpen(false)}
+          onSave={() => { setModalOpen(false); showToast("Đã lưu sản phẩm"); loadProducts(); }}
         />
       )}
     </div>
@@ -207,9 +214,9 @@ function ProductCatalog({ showToast }) {
 
 function StatCard({ title, value }) {
   return (
-    <div className="bg-surface-800 p-5 rounded-2xl border border-surface-700/30 group hover:border-primary/30 transition-all">
-      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-primary transition-colors">{title}</div>
-      <div className="text-2xl font-black text-slate-100 tracking-tight truncate">{value}</div>
+    <div className="p-5 rounded-2xl transition-all" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>{title}</div>
+      <div className="text-2xl font-black tracking-tight truncate" style={{ color: 'var(--text-1)' }}>{value}</div>
     </div>
   );
 }
@@ -244,11 +251,11 @@ function ProductDocuments({ showToast }) {
     if (!selectedProduct || !e.target.files?.[0]) return;
     const file = e.target.files[0];
     const path = `${selectedProduct.id}/${Date.now()}_${file.name}`;
-    
+
     setUploading(true);
     const { error } = await uploadProductDoc(file, path);
     setUploading(false);
-    
+
     if (error) showToast(error.message, "error");
     else {
       showToast("Đã tải lên tài liệu");
@@ -278,19 +285,22 @@ function ProductDocuments({ showToast }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 h-[700px]">
        {/* Sidebar: Product List */}
-       <div className="border-r border-surface-700/50 bg-surface-950/20 flex flex-col">
-          <div className="p-4 border-b border-surface-700/50 bg-surface-900/50">
+       <div className="flex flex-col" style={{ borderRight: '1px solid var(--border)' }}>
+          <div className="p-4" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type="text" placeholder="Tìm sản phẩm..." className="input pl-9 h-10 text-xs bg-surface-950 border-surface-700" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
+                <input type="text" placeholder="Tìm sản phẩm..." className="input pl-9 h-10 text-xs" />
              </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-hide">
              {products.map(p => (
-                <button 
+                <button
                   key={p.id}
                   onClick={() => handleSelectProduct(p)}
-                  className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedProduct?.id === p.id ? 'bg-primary/10 text-primary border border-primary/20 shadow-glow-sm' : 'text-slate-400 hover:bg-surface-800'}`}
+                  className="w-full text-left px-4 py-3 rounded-xl transition-all"
+                  style={selectedProduct?.id === p.id
+                    ? { background: 'var(--brand-bg)', color: 'var(--brand)', border: '1px solid var(--brand-border)' }
+                    : { color: 'var(--text-2)', border: '1px solid transparent' }}
                 >
                    <div className="text-xs font-black uppercase tracking-tight truncate">{p.name}</div>
                    <div className="text-[10px] opacity-60 mt-0.5">{p.sku || 'No SKU'}</div>
@@ -300,26 +310,27 @@ function ProductDocuments({ showToast }) {
        </div>
 
        {/* Content: Document List & AI Tools */}
-       <div className="lg:col-span-2 flex flex-col bg-surface-900/40 relative">
+       <div className="lg:col-span-2 flex flex-col relative" style={{ background: 'var(--bg-surface)' }}>
           {selectedProduct ? (
             <>
-              <div className="p-6 border-b border-surface-700/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-900/50">
+              <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
                  <div>
-                    <h2 className="text-xl font-black text-slate-100 tracking-tight">{selectedProduct.name}</h2>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Quản lý tài liệu & Hỗ trợ kỹ thuật</p>
+                    <h2 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-1)' }}>{selectedProduct.name}</h2>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--text-3)' }}>Quản lý tài liệu & Hỗ trợ kỹ thuật</p>
                  </div>
                  <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={() => setAiSupportModal(selectedProduct)}
                       className="btn-primary h-10 px-4 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-glow-sm"
                     >
                        <BrainCircuit size={16} /> Technical Q&A
                     </button>
-                    <button 
+                    <button
                       onClick={() => setTenderModal(selectedProduct)}
-                      className="btn-secondary h-10 px-4 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border-primary/20 text-primary hover:bg-primary/5 shadow-inner"
+                      className="btn-secondary h-10 px-4 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 shadow-inner"
+                      style={{ color: 'var(--brand)', borderColor: 'var(--brand-border)' }}
                     >
-                       <Sparkles size={16} className="text-primary" /> Tender Assist
+                       <Sparkles size={16} style={{ color: 'var(--brand)' }} /> Tender Assist
                     </button>
                  </div>
               </div>
@@ -327,36 +338,37 @@ function ProductDocuments({ showToast }) {
               <div className="p-8 flex-1 overflow-y-auto">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Upload Card */}
-                    <label className="border-2 border-dashed border-surface-700 hover:border-primary/50 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group bg-surface-950/20 active:scale-95">
+                    <label className="rounded-2xl p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group active:scale-95" style={{ border: '2px dashed var(--border)', background: 'var(--bg-elevated)' }}>
                        <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
-                       <div className="p-4 bg-surface-800 rounded-2xl group-hover:bg-primary/10 transition-colors">
-                          <Upload size={32} className={`text-slate-500 group-hover:text-primary transition-colors ${uploading ? 'animate-bounce' : ''}`} />
+                       <div className="p-4 rounded-2xl transition-colors" style={{ background: 'var(--bg-base)' }}>
+                          <Upload size={32} className={`transition-colors ${uploading ? 'animate-bounce' : ''}`} style={{ color: 'var(--text-3)' }} />
                        </div>
                        <div className="text-center">
-                          <div className="text-sm font-black text-slate-200 uppercase tracking-widest leading-loose">Tải lên Catalogue</div>
-                          <p className="text-[10px] text-slate-500 font-bold">PDF, JPG hoặc PNG (Max 10MB)</p>
+                          <div className="text-sm font-black uppercase tracking-widest leading-loose" style={{ color: 'var(--text-1)' }}>Tải lên Catalogue</div>
+                          <p className="text-[10px] font-bold" style={{ color: 'var(--text-2)' }}>PDF, JPG hoặc PNG (Max 10MB)</p>
                        </div>
                     </label>
 
                     {/* Doc Cards */}
                     {docs.map(doc => (
-                       <div key={doc.name} className="bg-surface-800/50 border border-surface-700/50 rounded-2xl p-5 flex flex-col group hover:border-primary/30 transition-all">
+                       <div key={doc.name} className="rounded-2xl p-5 flex flex-col group transition-all" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                           <div className="flex items-start justify-between mb-4">
-                             <div className="p-2.5 bg-surface-950 rounded-xl">
-                                <FileText size={20} className="text-primary shadow-glow-lg" />
+                             <div className="p-2.5 rounded-xl" style={{ background: 'var(--bg-base)' }}>
+                                <FileText size={20} style={{ color: 'var(--brand)' }} />
                              </div>
                              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => handleDownload(doc.name)} className="p-2 bg-surface-950 rounded-lg text-slate-400 hover:text-primary"><Download size={14} /></button>
-                                <button onClick={() => handleDeleteDoc(doc.name)} className="p-2 bg-surface-950 rounded-lg text-slate-400 hover:text-red-500"><Trash2 size={14} /></button>
+                                <button onClick={() => handleDownload(doc.name)} className="p-2 rounded-lg" style={{ background: 'var(--bg-base)', color: 'var(--text-2)' }}><Download size={14} /></button>
+                                <button onClick={() => handleDeleteDoc(doc.name)} className="p-2 rounded-lg" style={{ background: 'var(--bg-base)', color: 'var(--text-2)' }}><Trash2 size={14} /></button>
                              </div>
                           </div>
                           <div className="flex-1">
-                             <div className="text-xs font-black text-slate-200 uppercase tracking-tight line-clamp-1 mb-1">{doc.name.split('_').slice(1).join('_')}</div>
-                             <div className="text-[10px] font-bold text-slate-500 uppercase">{(doc.metadata?.size / 1024 / 1024).toFixed(2)} MB • {new Date(doc.created_at).toLocaleDateString('vi-VN')}</div>
+                             <div className="text-xs font-black uppercase tracking-tight line-clamp-1 mb-1" style={{ color: 'var(--text-1)' }}>{doc.name.split('_').slice(1).join('_')}</div>
+                             <div className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-2)' }}>{(doc.metadata?.size / 1024 / 1024).toFixed(2)} MB • {new Date(doc.created_at).toLocaleDateString('vi-VN')}</div>
                           </div>
-                          <button 
+                          <button
                             onClick={() => handleDownload(doc.name)}
-                            className="mt-4 w-full h-9 bg-surface-950 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-primary hover:border-primary/50 border border-surface-700 transition-all flex items-center justify-center gap-2"
+                            className="mt-4 w-full h-9 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2"
+                            style={{ background: 'var(--bg-base)', color: 'var(--text-2)', border: '1px solid var(--border)' }}
                           >
                              Xem tài liệu <ExternalLink size={12} />
                           </button>
@@ -366,8 +378,8 @@ function ProductDocuments({ showToast }) {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 gap-4 opacity-40 uppercase font-black text-sm tracking-widest">
-               <div className="p-6 bg-surface-800 rounded-full">
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 opacity-40 uppercase font-black text-sm tracking-widest" style={{ color: 'var(--text-2)' }}>
+               <div className="p-6 rounded-full" style={{ background: 'var(--bg-elevated)' }}>
                   <FileText size={48} />
                </div>
                Chọn một sản phẩm để quản lý tài liệu
@@ -376,16 +388,16 @@ function ProductDocuments({ showToast }) {
        </div>
 
        {tenderModal && (
-         <TenderAssistantModal 
-           product={tenderModal} 
-           onClose={() => setTenderModal(null)} 
+         <TenderAssistantModal
+           product={tenderModal}
+           onClose={() => setTenderModal(null)}
            showToast={showToast}
          />
        )}
        {aiSupportModal && (
-         <AIProductSupportModal 
-           product={aiSupportModal} 
-           onClose={() => setAiSupportModal(null)} 
+         <AIProductSupportModal
+           product={aiSupportModal}
+           onClose={() => setAiSupportModal(null)}
            showToast={showToast}
          />
        )}
@@ -396,8 +408,8 @@ function ProductDocuments({ showToast }) {
 function ProductStatCard({ title, value }) {
   return (
     <div className="card p-4">
-      <div className="text-sm font-medium text-gray-500">{title}</div>
-      <div className="text-xl font-bold text-gray-900 mt-1 truncate">{value}</div>
+      <div className="text-sm font-medium" style={{ color: 'var(--text-2)' }}>{title}</div>
+      <div className="text-xl font-bold mt-1 truncate" style={{ color: 'var(--text-1)' }}>{value}</div>
     </div>
   );
 }
@@ -408,9 +420,9 @@ function ProductModal({ product, onClose, onSave }) {
   });
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  
-  const addCompetitor = () => setForm({ 
-    ...form, competitor_alternatives: [...(form.competitor_alternatives || []), { brand: "", product: "", price: 0 }] 
+
+  const addCompetitor = () => setForm({
+    ...form, competitor_alternatives: [...(form.competitor_alternatives || []), { brand: "", product: "", price: 0 }]
   });
   const updateCompetitor = (idx, field, val) => {
     const newAlts = [...form.competitor_alternatives];
@@ -430,11 +442,11 @@ function ProductModal({ product, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
-          <h2 className="font-semibold text-gray-900">{product ? "Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+      <div className="rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col" style={{ background: 'var(--bg-surface)' }}>
+        <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>{product ? "Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}</h2>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20}/></button>
         </div>
         <div className="overflow-y-auto p-6 flex-1">
           <form id="product-form" onSubmit={handleSubmit} className="space-y-4">
@@ -476,25 +488,25 @@ function ProductModal({ product, onClose, onSave }) {
               </div>
             </div>
 
-            <div className="border-t pt-4">
+            <div className="border-t pt-4" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center justify-between mb-3">
                 <label className="label !mb-0">Đối thủ cạnh tranh</label>
-                <button type="button" onClick={addCompetitor} className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1">
+                <button type="button" onClick={addCompetitor} className="text-sm font-medium hover:underline flex items-center gap-1" style={{ color: 'var(--brand)' }}>
                   <PlusCircle size={14} /> Thêm đối thủ
                 </button>
               </div>
               {(form.competitor_alternatives || []).map((alt, idx) => (
-                <div key={idx} className="flex gap-2 items-center mb-2 bg-gray-50 p-2 rounded border border-gray-100">
+                <div key={idx} className="flex gap-2 items-center mb-2 p-2 rounded" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                   <input placeholder="Hãng (Brand)..." className="input flex-1" value={alt.brand} onChange={e => updateCompetitor(idx, 'brand', e.target.value)} />
                   <input placeholder="Sản phẩm..." className="input flex-1" value={alt.product} onChange={e => updateCompetitor(idx, 'product', e.target.value)} />
                   <input type="number" placeholder="Giá..." className="input w-32" value={alt.price} onChange={e => updateCompetitor(idx, 'price', Number(e.target.value))} />
-                  <button type="button" onClick={() => removeCompetitor(idx)} className="text-gray-400 hover:text-red-600 p-2"><Trash2 size={16}/></button>
+                  <button type="button" onClick={() => removeCompetitor(idx)} className="p-2" style={{ color: 'var(--text-3)' }}><Trash2 size={16}/></button>
                 </div>
               ))}
             </div>
           </form>
         </div>
-        <div className="px-6 py-4 border-t flex justify-end gap-3 shrink-0">
+        <div className="px-6 py-4 flex justify-end gap-3 shrink-0" style={{ borderTop: '1px solid var(--border)' }}>
           <button type="button" onClick={onClose} className="btn-secondary">Hủy</button>
           <button type="submit" form="product-form" className="btn-primary">Lưu Sản Phẩm</button>
         </div>
@@ -535,7 +547,7 @@ function MarketSizing({ showToast }) {
   return (
     <div className="p-6 space-y-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Phân Phân Tích Thị Trường (TAM/SAM/SOM)</h2>
+        <h2 className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>Phân Phân Tích Thị Trường (TAM/SAM/SOM)</h2>
         <button className="btn-primary" onClick={() => setModalOpen(true)}>
           <Plus size={15}/> Thêm Dữ Liệu
         </button>
@@ -543,9 +555,9 @@ function MarketSizing({ showToast }) {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <h3 className="font-medium text-gray-700">Mô hình Funnel Thị Trường</h3>
+          <h3 className="font-medium" style={{ color: 'var(--text-2)' }}>Mô hình Funnel Thị Trường</h3>
           {data.length === 0 ? (
-            <div className="text-gray-500 text-sm p-8 bg-gray-50 rounded text-center border border-dashed border-gray-300">
+            <div className="text-sm p-8 rounded text-center border border-dashed" style={{ color: 'var(--text-2)', background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
               Chưa có dữ liệu vẽ biểu đồ.
             </div>
           ) : (
@@ -554,10 +566,10 @@ function MarketSizing({ showToast }) {
         </div>
 
         <div>
-          <h3 className="font-medium text-gray-700 mb-4">Dữ liệu chi tiết</h3>
-          <div className="border border-gray-200 rounded-lg overflow-x-auto">
+          <h3 className="font-medium mb-4" style={{ color: 'var(--text-2)' }}>Dữ liệu chi tiết</h3>
+          <div className="rounded-lg overflow-x-auto" style={{ border: '1px solid var(--border)' }}>
             <table className="table text-sm min-w-[600px]">
-              <thead className="bg-gray-50">
+              <thead>
                 <tr>
                   <th>Phân khúc</th>
                   <th>Khu vực</th>
@@ -573,20 +585,20 @@ function MarketSizing({ showToast }) {
               <tbody>
                 {data.map(d => (
                   <tr key={d.id}>
-                    <td className="font-medium">{SEGMENTS.find(s=>s.id===d.segment)?.label || d.segment}</td>
-                    <td>{d.region}</td>
-                    <td>{d.year}</td>
-                    <td>{formatTienTy(d.tam)}</td>
-                    <td>{formatTienTy(d.sam)}</td>
-                    <td>{formatTienTy(d.som)}</td>
-                    <td className="font-semibold text-blue-700">{formatTienTy(d.biomedia_share)}</td>
-                    <td className="text-green-600">{(d.growth_rate * 100).toFixed(0)}%</td>
+                    <td className="font-medium" style={{ color: 'var(--text-1)' }}>{SEGMENTS.find(s=>s.id===d.segment)?.label || d.segment}</td>
+                    <td style={{ color: 'var(--text-1)' }}>{d.region}</td>
+                    <td style={{ color: 'var(--text-1)' }}>{d.year}</td>
+                    <td style={{ color: 'var(--text-1)' }}>{formatTienTy(d.tam)}</td>
+                    <td style={{ color: 'var(--text-1)' }}>{formatTienTy(d.sam)}</td>
+                    <td style={{ color: 'var(--text-1)' }}>{formatTienTy(d.som)}</td>
+                    <td className="font-semibold" style={{ color: 'var(--brand)' }}>{formatTienTy(d.biomedia_share)}</td>
+                    <td style={{ color: '#16a34a' }}>{(d.growth_rate * 100).toFixed(0)}%</td>
                     <td>
-                      <button onClick={()=>handleDelete(d.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={14}/></button>
+                      <button onClick={()=>handleDelete(d.id)} style={{ color: 'var(--text-3)' }}><Trash2 size={14}/></button>
                     </td>
                   </tr>
                 ))}
-                {data.length === 0 && <tr><td colSpan="9" className="text-center py-10 text-gray-500">Chưa có dữ liệu</td></tr>}
+                {data.length === 0 && <tr><td colSpan="9" className="text-center py-10" style={{ color: 'var(--text-2)' }}>Chưa có dữ liệu</td></tr>}
               </tbody>
             </table>
           </div>
@@ -606,23 +618,29 @@ function MarketFunnel({ item }) {
 
   return (
     <div className="card p-5 space-y-3">
-      <div className="font-bold text-gray-800 mb-3">{SEGMENTS.find(s=>s.id===item.segment)?.label || item.segment} - {item.year} <span className="text-gray-500 font-normal">({item.region})</span></div>
+      <div className="font-bold mb-3" style={{ color: 'var(--text-1)' }}>
+        {SEGMENTS.find(s=>s.id===item.segment)?.label || item.segment} - {item.year}{' '}
+        <span className="font-normal" style={{ color: 'var(--text-2)' }}>({item.region})</span>
+      </div>
       <div className="space-y-2">
-        <FunnelBar label="TAM" value={item.tam} pct={100} color="bg-blue-200" text="text-blue-900" />
-        <FunnelBar label="SAM" value={item.sam} pct={pctSAM} color="bg-teal-300" text="text-teal-900" />
-        <FunnelBar label="SOM" value={item.som} pct={pctSOM} color="bg-green-400" text="text-green-900" />
-        <FunnelBar label="Share" value={item.biomedia_share} pct={pctShare} color="bg-yellow-400" text="text-yellow-900" />
+        <FunnelBar label="TAM" value={item.tam} pct={100} color="rgba(59,130,246,0.2)" textColor="#1e3a5f" />
+        <FunnelBar label="SAM" value={item.sam} pct={pctSAM} color="rgba(20,184,166,0.3)" textColor="#134e4a" />
+        <FunnelBar label="SOM" value={item.som} pct={pctSOM} color="rgba(34,197,94,0.4)" textColor="#14532d" />
+        <FunnelBar label="Share" value={item.biomedia_share} pct={pctShare} color="rgba(234,179,8,0.4)" textColor="#713f12" />
       </div>
     </div>
   );
 }
 
-function FunnelBar({ label, value, pct, color, text }) {
+function FunnelBar({ label, value, pct, color, textColor }) {
   return (
     <div className="flex items-center text-sm">
-      <div className="w-12 font-medium text-gray-500">{label}</div>
+      <div className="w-12 font-medium" style={{ color: 'var(--text-2)' }}>{label}</div>
       <div className="flex-1">
-        <div className={`h-8 rounded flex items-center px-3 ${color} ${text} font-semibold transition-all duration-500 whitespace-nowrap overflow-hidden`} style={{ width: `${Math.max(pct, 15)}%`, minWidth: '80px' }}>
+        <div
+          className="h-8 rounded flex items-center px-3 font-semibold transition-all duration-500 whitespace-nowrap overflow-hidden"
+          style={{ width: `${Math.max(pct, 15)}%`, minWidth: '80px', background: color, color: textColor }}
+        >
           {formatTienTy(value)} <span className="ml-1 opacity-70 font-normal text-xs">({pct.toFixed(0)}%)</span>
         </div>
       </div>
@@ -654,11 +672,11 @@ function MarketModal({ onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="font-semibold text-gray-900">Thêm Dữ Liệu Thị Trường</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+      <div className="rounded-xl shadow-2xl w-full max-w-lg" style={{ background: 'var(--bg-surface)' }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>Thêm Dữ Liệu Thị Trường</h2>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20}/></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -684,14 +702,17 @@ function MarketModal({ onClose, onSave }) {
             <div><label className="label">TAM (Tỷ VNĐ)</label><input type="number" step="0.1" name="tam" className="input" value={form.tam} onChange={handleChange} /></div>
             <div><label className="label">SAM (Tỷ VNĐ)</label><input type="number" step="0.1" name="sam" className="input" value={form.sam} onChange={handleChange} /></div>
             <div><label className="label">SOM (Tỷ VNĐ)</label><input type="number" step="0.1" name="som" className="input" value={form.som} onChange={handleChange} /></div>
-            <div><label className="label">Share Biomedia (Tỷ VNĐ)</label><input type="number" step="0.1" name="biomedia_share" className="input bg-blue-50 text-blue-900 font-semibold" value={form.biomedia_share} onChange={handleChange} /></div>
+            <div>
+              <label className="label">Share Biomedia (Tỷ VNĐ)</label>
+              <input type="number" step="0.1" name="biomedia_share" className="input" value={form.biomedia_share} onChange={handleChange} style={{ background: 'var(--brand-bg)', color: 'var(--brand)' }} />
+            </div>
             <div><label className="label">Tăng trưởng (%)</label><input type="number" name="growth_rate" className="input" value={form.growth_rate} onChange={handleChange} /></div>
             <div className="col-span-2">
               <label className="label">Ghi chú</label>
               <input name="notes" className="input" value={form.notes} onChange={handleChange} />
             </div>
           </div>
-          <div className="pt-4 flex justify-end gap-3 mt-4 border-t">
+          <div className="pt-4 flex justify-end gap-3 mt-4" style={{ borderTop: '1px solid var(--border)' }}>
              <button type="button" onClick={onClose} className="btn-secondary">Hủy</button>
              <button type="submit" className="btn-primary">Lưu Giá Trị</button>
           </div>
@@ -711,9 +732,10 @@ function GTMStrategy() {
       channels: "Direct visit, seminar/webinar, tender",
       cycle: "3–6 tháng",
       products: "Sterility testing kits, Endotoxin LAL kits, Culture media",
-      bgStyle: "bg-blue-50/50 border-blue-200",
-      accent: "bg-blue-500",
-      text: "text-blue-900"
+      accentColor: "#3b82f6",
+      bgColor: "rgba(59,130,246,0.05)",
+      borderColor: "rgba(59,130,246,0.2)",
+      textColor: "var(--text-1)"
     },
     {
       title: "F&B Manufacturing",
@@ -722,9 +744,10 @@ function GTMStrategy() {
       channels: "Direct visit, distributor network, trade shows",
       cycle: "1–3 tháng",
       products: "Microbiology rapid tests, Culture media, ATP testing",
-      bgStyle: "bg-teal-50/50 border-teal-200",
-      accent: "bg-teal-500",
-      text: "text-teal-900"
+      accentColor: "#14b8a6",
+      bgColor: "rgba(20,184,166,0.05)",
+      borderColor: "rgba(20,184,166,0.2)",
+      textColor: "var(--text-1)"
     },
     {
       title: "Hospital & Clinical",
@@ -733,9 +756,10 @@ function GTMStrategy() {
       channels: "Tender/đấu thầu, direct, medical distributor",
       cycle: "6–12 tháng (tender cycle)",
       products: "Culture media, ID/AST systems, QC materials",
-      bgStyle: "bg-purple-50/50 border-purple-200",
-      accent: "bg-purple-500",
-      text: "text-purple-900"
+      accentColor: "var(--brand)",
+      bgColor: "var(--brand-bg)",
+      borderColor: "var(--brand-border)",
+      textColor: "var(--text-1)"
     },
     {
       title: "Research & University",
@@ -744,61 +768,66 @@ function GTMStrategy() {
       channels: "Direct, online, demo",
       cycle: "2–4 tuần",
       products: "All categories",
-      bgStyle: "bg-orange-50/50 border-orange-200",
-      accent: "bg-orange-500",
-      text: "text-orange-900"
+      accentColor: "#f97316",
+      bgColor: "rgba(249,115,22,0.05)",
+      borderColor: "rgba(249,115,22,0.2)",
+      textColor: "var(--text-1)"
     }
   ];
 
   return (
     <div className="p-6 md:p-8 space-y-12">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Go-To-Market (GTM) Strategy</h2>
+        <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-1)' }}>Go-To-Market (GTM) Strategy</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {gtmCards.map((c, i) => (
-            <div key={i} className={`p-6 rounded-xl border ${c.bgStyle} relative overflow-hidden transition-all hover:shadow-md`}>
-              <div className={`absolute top-0 left-0 w-1.5 h-full ${c.accent}`}></div>
-              <h3 className={`text-lg font-bold ${c.text} mb-4`}>{c.title}</h3>
+            <div key={i} className="p-6 rounded-xl relative overflow-hidden transition-all hover:shadow-md" style={{ background: c.bgColor, border: `1px solid ${c.borderColor}` }}>
+              <div className="absolute top-0 left-0 w-1.5 h-full rounded-l-xl" style={{ background: c.accentColor }}></div>
+              <h3 className="text-lg font-bold mb-4" style={{ color: c.textColor }}>{c.title}</h3>
               <div className="space-y-3 text-sm">
-                <div><span className="font-semibold text-gray-700">Người quyết định:</span> <span className="text-gray-900">{c.target}</span></div>
-                <div><span className="font-semibold text-gray-700">Thông điệp cốt lõi:</span> <span className="text-gray-900">{c.msg}</span></div>
-                <div><span className="font-semibold text-gray-700">Kênh tiếp cận:</span> <span className="text-gray-900">{c.channels}</span></div>
-                <div><span className="font-semibold text-gray-700">Chu kỳ sale:</span> <span className="text-gray-900">{c.cycle}</span></div>
-                <div className="pt-2"><span className="inline-block px-3 py-1 bg-white rounded-md text-xs font-semibold text-gray-700 border border-gray-200 shadow-sm">Key Products: {c.products}</span></div>
+                <div><span className="font-semibold" style={{ color: 'var(--text-2)' }}>Người quyết định:</span> <span style={{ color: 'var(--text-1)' }}>{c.target}</span></div>
+                <div><span className="font-semibold" style={{ color: 'var(--text-2)' }}>Thông điệp cốt lõi:</span> <span style={{ color: 'var(--text-1)' }}>{c.msg}</span></div>
+                <div><span className="font-semibold" style={{ color: 'var(--text-2)' }}>Kênh tiếp cận:</span> <span style={{ color: 'var(--text-1)' }}>{c.channels}</span></div>
+                <div><span className="font-semibold" style={{ color: 'var(--text-2)' }}>Chu kỳ sale:</span> <span style={{ color: 'var(--text-1)' }}>{c.cycle}</span></div>
+                <div className="pt-2">
+                  <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold" style={{ background: 'var(--bg-surface)', color: 'var(--text-2)', border: '1px solid var(--border)' }}>
+                    Key Products: {c.products}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="border-t pt-10">
-         <h2 className="text-xl font-bold text-gray-900 mb-6">Route-To-Market (RTM) Model</h2>
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2.5rem' }}>
+         <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-1)' }}>Route-To-Market (RTM) Model</h2>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div className="card shadow-sm border border-gray-200 hover:border-gray-300 transition-colors">
-             <div className="bg-gray-50/80 border-b p-4 text-center font-bold text-gray-800">Direct Sales</div>
-             <ul className="p-6 space-y-4 text-sm text-gray-700">
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div> Key accounts pharma</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div> F&B large factories</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div> Henry handles directly</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div> High margin, long cycle</li>
+           <div className="card shadow-sm transition-colors">
+             <div className="p-4 text-center font-bold" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)', color: 'var(--text-1)' }}>Direct Sales</div>
+             <ul className="p-6 space-y-4 text-sm" style={{ color: 'var(--text-2)' }}>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#3b82f6' }}></div> Key accounts pharma</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#3b82f6' }}></div> F&B large factories</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#3b82f6' }}></div> Henry handles directly</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#3b82f6' }}></div> High margin, long cycle</li>
              </ul>
            </div>
-           <div className="card shadow-sm border border-gray-200 hover:border-gray-300 transition-colors">
-             <div className="bg-gray-50/80 border-b p-4 text-center font-bold text-gray-800">Distribution (Đại lý)</div>
-             <ul className="p-6 space-y-4 text-sm text-gray-700">
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0"></div> Tỉnh/thành xa</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0"></div> F&B SME</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0"></div> Partner network</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0"></div> Lower margin, volume</li>
+           <div className="card shadow-sm transition-colors">
+             <div className="p-4 text-center font-bold" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)', color: 'var(--text-1)' }}>Distribution (Đại lý)</div>
+             <ul className="p-6 space-y-4 text-sm" style={{ color: 'var(--text-2)' }}>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#14b8a6' }}></div> Tỉnh/thành xa</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#14b8a6' }}></div> F&B SME</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#14b8a6' }}></div> Partner network</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#14b8a6' }}></div> Lower margin, volume</li>
              </ul>
            </div>
-           <div className="card shadow-sm border border-gray-200 hover:border-gray-300 transition-colors">
-             <div className="bg-gray-50/80 border-b p-4 text-center font-bold text-gray-800">Tender / Đấu thầu</div>
-             <ul className="p-6 space-y-4 text-sm text-gray-700">
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div> Bệnh viện, viện NC</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div> Government/State</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div> Formal procurement</li>
-               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div> Fixed price, compliance</li>
+           <div className="card shadow-sm transition-colors">
+             <div className="p-4 text-center font-bold" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)', color: 'var(--text-1)' }}>Tender / Đấu thầu</div>
+             <ul className="p-6 space-y-4 text-sm" style={{ color: 'var(--text-2)' }}>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--brand)' }}></div> Bệnh viện, viện NC</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--brand)' }}></div> Government/State</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--brand)' }}></div> Formal procurement</li>
+               <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--brand)' }}></div> Fixed price, compliance</li>
              </ul>
            </div>
          </div>
@@ -806,4 +835,3 @@ function GTMStrategy() {
     </div>
   );
 }
-

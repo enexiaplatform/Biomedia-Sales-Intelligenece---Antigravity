@@ -244,7 +244,7 @@ export default function MarketMap({ showToast }) {
                     <button 
                       onClick={() => setMapFilter("accounts")}
                       className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
-                        ${mapFilter === "accounts" ? "bg-[#8B0000] text-white" : "text-slate-500"}`}
+                        ${mapFilter === "accounts" ? "bg-primary text-white" : "text-slate-500"}`}
                     >
                       Tài khoản
                     </button>
@@ -333,19 +333,19 @@ export default function MarketMap({ showToast }) {
                           <td>{seg.region}</td>
                           <td>{seg.opportunity_size || "—"}</td>
                           <td>
-                            <span className={`badge ${PENETRATION_CONFIG[seg.penetration]?.color || "bg-[#2A2A2A] text-[#707070] border-[#2A2A2A]"}`}>
+                            <span className={`badge ${PENETRATION_CONFIG[seg.penetration]?.color || "bg-surface-800 text-slate-500 border-surface-700"}`}>
                               {PENETRATION_CONFIG[seg.penetration]?.label || seg.penetration}
                             </span>
                           </td>
                           <td className="max-w-xs">
-                            <p className="text-sm text-[#B0B0B0] line-clamp-2">{seg.trends || "—"}</p>
+                            <p className="text-sm line-clamp-2" style={{ color: 'var(--text-2)' }}>{seg.trends || "—"}</p>
                           </td>
                           <td>
                             <div className="flex gap-2">
-                              <button onClick={() => { setEditingSegment(seg); setModalOpen(true); }} className="text-[#707070] hover:text-[#8B0000]">
+                              <button onClick={() => { setEditingSegment(seg); setModalOpen(true); }} style={{ color: 'var(--text-3)' }} className="hover:text-primary transition-colors">
                                 <Edit2 size={14} />
                               </button>
-                              <button onClick={() => setDeleteTarget(seg)} className="text-[#707070] hover:text-red-500">
+                              <button onClick={() => setDeleteTarget(seg)} style={{ color: 'var(--text-3)' }} className="hover:text-red-400 transition-colors">
                                 <Trash2 size={14} />
                               </button>
                             </div>
@@ -374,9 +374,9 @@ export default function MarketMap({ showToast }) {
 
           {deleteTarget && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl p-6 max-w-sm w-full">
-                <h3 className="font-semibold text-[#F0F0F0] mb-2">Xóa phân khúc?</h3>
-                <p className="text-sm text-[#B0B0B0] mb-5">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
+              <div className="rounded-xl shadow-2xl p-6 max-w-sm w-full" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                <h3 className="font-semibold mb-2" style={{ color: 'var(--text-1)' }}>Xóa phân khúc?</h3>
+                <p className="text-sm mb-5" style={{ color: 'var(--text-2)' }}>Xóa "<strong>{deleteTarget.name}</strong>"?</p>
                 <div className="flex gap-3">
                   <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1">Hủy</button>
                   <button onClick={() => handleDelete(deleteTarget.id)} className="btn-danger flex-1">Xóa</button>
@@ -414,10 +414,10 @@ function SegmentModal({ segment, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2A2A]">
-          <h2 className="font-semibold text-[#F0F0F0]">{segment ? "Sửa phân khúc" : "Thêm phân khúc"}</h2>
-          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
+      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>{segment ? "Sửa phân khúc" : "Thêm phân khúc"}</h2>
+          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>

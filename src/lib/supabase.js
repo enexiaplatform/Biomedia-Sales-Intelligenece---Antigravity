@@ -51,6 +51,7 @@ export async function fetchAccounts(filters = {}) {
   let query = supabase
     .from("accounts")
     .select("*, contacts(count), deals(count), interactions(date)")
+    .is("is_duplicate_of", null)
     .order("updated_at", { ascending: false });
 
   if (filters.type) query = query.eq("type", filters.type);
@@ -648,7 +649,7 @@ export async function deleteInfluenceLink(id) {
 // ── Complex Queries ───────────────────────────────────────────────────────────
 export async function getAccountStats() {
   const [accountsResult, dealsResult] = await Promise.all([
-    supabase.from("accounts").select("id", { count: "exact" }),
+    supabase.from("accounts").select("id", { count: "exact" }).is("is_duplicate_of", null),
     supabase.from("deals").select("id, value, stage, probability")
   ]);
 
@@ -671,6 +672,7 @@ export async function getTopAccountsByScore(limit = 5) {
   const { data, error } = await supabase
     .from("accounts")
     .select("*, interactions(date)")
+    .is("is_duplicate_of", null)
     .order("score", { ascending: false })
     .limit(limit);
   return { data, error };
@@ -695,7 +697,7 @@ export async function getDealsByStage() {
 
 export async function getMarketMatrixData() {
   const [accountsResult, dealsResult, segmentsResult] = await Promise.all([
-    supabase.from("accounts").select("id, name, segment, region"),
+    supabase.from("accounts").select("id, name, segment, region").is("is_duplicate_of", null),
     supabase.from("deals").select("account_id, value, stage"),
     supabase.from("market_segments").select("*")
   ]);
@@ -735,7 +737,7 @@ export async function globalSearch(query) {
   if (!query || query.trim().length < 2) return { data: { accounts: [], contacts: [], deals: [], competitors: [] } };
 
   const [accounts, contacts, deals, competitors] = await Promise.all([
-    supabase.from("accounts").select("id, name, region, type").ilike("name", `%${query}%`).limit(5),
+    supabase.from("accounts").select("id, name, region, type").is("is_duplicate_of", null).ilike("name", `%${query}%`).limit(5),
     supabase.from("contacts").select("id, name, email, title, account_id, accounts(name)").or(`name.ilike.%${query}%,email.ilike.%${query}%`).limit(5),
     supabase.from("deals").select("id, name, stage, value, account_id, accounts(name)").ilike("name", `%${query}%`).limit(5),
     supabase.from("competitors").select("id, name, market_share").ilike("name", `%${query}%`).limit(5)

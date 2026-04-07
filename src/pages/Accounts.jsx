@@ -77,7 +77,7 @@ export default function Accounts({ showToast }) {
   async function loadAll() {
     setLoading(true);
     const [accountsRes, dealsRes, contactsRes, interactionsRes] = await Promise.all([
-      supabase.from('accounts').select('*'),
+      supabase.from('accounts').select('*').is('is_duplicate_of', null),
       supabase.from('deals').select('account_id, value, stage'),
       supabase.from('contacts').select('account_id'),
       supabase.from('interactions').select('account_id, date').order('date', { ascending: false })
@@ -190,11 +190,11 @@ export default function Accounts({ showToast }) {
 
   const exportCSV = () => {
     const rows = filteredAndSorted.map(a => [
-      `"${a.name || ''}"`, a.type || '', a.segment || '', a.region || '', a.size || '',
+      `"${a.name || ''}"`, a.type || '', a.segment || '', a.region || '', a.zone || '', a.size || '',
       a.score || 0, a.pipeline_value || 0, a.contacts_count || 0,
       a.last_interaction ? format(new Date(a.last_interaction), 'dd/MM/yyyy') : ''
     ]);
-    const header = ['Tên','Loại','Phân khúc','Khu vực','Quy mô','Điểm','Pipeline (VND)','Liên hệ','Tương tác gần nhất'];
+    const header = ['Tên','Loại','Phân khúc','Khu vực','Vùng','Quy mô','Điểm','Pipeline (VND)','Liên hệ','Tương tác gần nhất'];
     const csv = [header, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Vietnamese
     const url = URL.createObjectURL(blob);
@@ -386,6 +386,7 @@ export default function Accounts({ showToast }) {
               <th className="w-[100px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Loại</th>
               <th className="w-[140px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Phân khúc</th>
               <th className="w-[120px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Khu vực</th>
+              <th className="w-[120px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Vùng</th>
               <th className="w-[80px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("score")}>
                 Điểm {sortConfig.key === "score_asc" ? "▲" : sortConfig.key === "score_desc" ? "▼" : ""}
               </th>
@@ -407,6 +408,7 @@ export default function Accounts({ showToast }) {
                   <td className="p-4"><div className="h-4 rounded w-16" style={{ background: 'var(--border)' }}></div></td>
                   <td className="p-4"><div className="h-4 rounded w-24" style={{ background: 'var(--border)' }}></div></td>
                   <td className="p-4"><div className="h-4 rounded w-20" style={{ background: 'var(--border)' }}></div></td>
+                  <td className="p-4"><div className="h-4 rounded w-20" style={{ background: 'var(--border)' }}></div></td>
                   <td className="p-4"><div className="h-4 rounded w-10" style={{ background: 'var(--border)' }}></div></td>
                   <td className="p-4"><div className="h-4 rounded w-24" style={{ background: 'var(--border)' }}></div></td>
                   <td className="p-4"><div className="h-4 rounded w-8" style={{ background: 'var(--border)' }}></div></td>
@@ -416,7 +418,7 @@ export default function Accounts({ showToast }) {
               ))
             ) : currentData.length === 0 ? (
                <tr>
-                 <td colSpan={9} className="text-center py-20">
+                 <td colSpan={10} className="text-center py-20">
                    <div className="text-sm font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-2)' }}>Không tìm thấy tài khoản nào</div>
                    <button onClick={clearFilters} className="hover:underline font-bold text-sm" style={{ color: 'var(--brand)' }}>Xóa bộ lọc</button>
                  </td>
@@ -437,6 +439,9 @@ export default function Accounts({ showToast }) {
                     </td>
                     <td>
                        <EditableCell account={acc} field="region" type="select" options={uniqueRegions.length > 0 ? uniqueRegions : REGIONS_CONST} />
+                    </td>
+                    <td>
+                       <EditableCell account={acc} field="zone" type="select" options={["Miền Bắc", "Miền Trung", "Miền Nam"]} />
                     </td>
                     <td>
                        <EditableCell account={acc} field="score" type="number" />
@@ -808,13 +813,17 @@ function AnalyticsDashboard({ accounts }) {
 function AccountModal({ account, onClose, onSave }) {
   const [form, setForm] = useState({
     name: account?.name || "",
+    legal_name: account?.legal_name || "",
+    short_name: account?.short_name || "",
     type: account?.type || "pharma",
     segment: account?.segment || "",
     region: account?.region || "",
+    zone: account?.zone || "",
     size: account?.size || "",
     website: account?.website || "",
     address: account?.address || "",
     score: account?.score ?? 5,
+    data_quality_score: account?.data_quality_score || 0,
     score_reason: account?.score_reason || "",
     pain_points: account?.pain_points || "",
     budget_cycle: account?.budget_cycle || "",
@@ -827,7 +836,7 @@ function AccountModal({ account, onClose, onSave }) {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: name === "score" ? parseInt(value) : value }));
+    setForm((f) => ({ ...f, [name]: (name === "score" || name === "data_quality_score") ? parseInt(value) : value }));
   }
 
   async function handleSubmit(e) {
@@ -856,8 +865,16 @@ function AccountModal({ account, onClose, onSave }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="label">Tên tài khoản *</label>
+              <label className="label">Tên tài khoản (Common Name) *</label>
               <input name="name" value={form.name} onChange={handleChange} className="input" placeholder="Tên công ty..." />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="label">Tên pháp lý (Legal Name)</label>
+              <input name="legal_name" value={form.legal_name} onChange={handleChange} className="input" placeholder="Công ty TNHH..." />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="label">Tên viết tắt (Short Name)</label>
+              <input name="short_name" value={form.short_name} onChange={handleChange} className="input" placeholder="VD: SAMIL" />
             </div>
             <div>
               <label className="label">Loại</label>
@@ -871,6 +888,13 @@ function AccountModal({ account, onClose, onSave }) {
                 <option value="">-- Chọn khu vực --</option>
                 {/* Fallback to global if unique fails during modal render */}
                 {["Hà Nội", "TP.HCM", "Miền Trung", "Miền Nam", "Miền Bắc"].map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Vùng</label>
+              <select name="zone" value={form.zone} onChange={handleChange} className="input">
+                <option value="">-- Chọn vùng --</option>
+                {["Miền Bắc", "Miền Trung", "Miền Nam"].map((z) => <option key={z} value={z}>{z}</option>)}
               </select>
             </div>
             <div>
@@ -891,6 +915,10 @@ function AccountModal({ account, onClose, onSave }) {
             <div>
               <label className="label">Điểm ({form.score}/10)</label>
               <input type="range" min={0} max={10} name="score" value={form.score} onChange={handleChange} className="w-full" />
+            </div>
+            <div>
+              <label className="label">Chất lượng dữ liệu ({form.data_quality_score}/100)</label>
+              <input type="range" min={0} max={100} name="data_quality_score" value={form.data_quality_score} onChange={handleChange} className="w-full" />
             </div>
             <div className="sm:col-span-2">
               <label className="label">Địa chỉ</label>

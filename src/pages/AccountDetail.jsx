@@ -168,7 +168,11 @@ export default function AccountDetail({ showToast }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className="card p-5 space-y-4">
             <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>Thông tin công ty</h3>
+            <InfoRow label="Tên pháp lý" value={account.legal_name} />
+            <InfoRow label="Tên viết tắt" value={account.short_name} />
             <InfoRow label="Địa chỉ" value={account.address} />
+            <InfoRow label="Khu vực" value={account.region} />
+            <InfoRow label="Vùng" value={account.zone} />
             <InfoRow label="Phân khúc" value={account.segment} />
             <InfoRow label="Quy mô" value={account.size} />
             <InfoRow label="Chu kỳ ngân sách" value={account.budget_cycle} />
@@ -176,10 +180,21 @@ export default function AccountDetail({ showToast }) {
           </div>
 
           <div className="card p-5 space-y-4">
-            <h3 className="font-semibold" style={{ color: 'var(--text-1)' }}>Đánh giá</h3>
             <div>
               <div className="label">Điểm tài khoản: <ScoreBadge score={account.score} /></div>
               {account.score_reason && <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>{account.score_reason}</p>}
+            </div>
+            <div>
+              <div className="label">Chất lượng dữ liệu:</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-white/10 h-1.5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500" 
+                    style={{ width: `${account.data_quality_score || 0}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs font-bold" style={{ color: 'var(--text-2)' }}>{account.data_quality_score || 0}%</span>
+              </div>
             </div>
             <InfoRow label="Điểm đau" value={account.pain_points} />
             <InfoRow label="Nhu cầu hiện tại" value={account.current_needs} />
@@ -516,7 +531,13 @@ function DeleteConfirmModal({ message, onConfirm, onCancel }) {
 }
 
 function AccountEditModal({ account, onClose, onSave }) {
-  const [form, setForm] = useState({ ...account });
+  const [form, setForm] = useState({
+    ...account,
+    legal_name: account.legal_name || "",
+    short_name: account.short_name || "",
+    zone: account.zone || "",
+    data_quality_score: account.data_quality_score || 0
+  });
   const [saving, setSaving] = useState(false);
   const REGIONS = ["Hà Nội", "TP.HCM", "Miền Trung", "Miền Nam", "Miền Bắc"];
 
@@ -538,8 +559,16 @@ function AccountEditModal({ account, onClose, onSave }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="label">Tên</label>
+              <label className="label">Tên (Common Name)</label>
               <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="input" />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Tên pháp lý (Legal Name)</label>
+              <input value={form.legal_name} onChange={(e) => setForm((f) => ({ ...f, legal_name: e.target.value }))} className="input" placeholder="Công ty TNHH..." />
+            </div>
+            <div>
+              <label className="label">Tên viết tắt (Short Name)</label>
+              <input value={form.short_name} onChange={(e) => setForm((f) => ({ ...f, short_name: e.target.value }))} className="input" />
             </div>
             <div>
               <label className="label">Khu vực</label>
@@ -549,8 +578,19 @@ function AccountEditModal({ account, onClose, onSave }) {
               </select>
             </div>
             <div>
+              <label className="label">Vùng (Zone)</label>
+              <select value={form.zone || ""} onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))} className="input">
+                <option value="">--</option>
+                {["Miền Bắc", "Miền Trung", "Miền Nam"].map((z) => <option key={z} value={z}>{z}</option>)}
+              </select>
+            </div>
+            <div>
               <label className="label">Điểm ({form.score}/10)</label>
               <input type="range" min={0} max={10} value={form.score} onChange={(e) => setForm((f) => ({ ...f, score: parseInt(e.target.value) }))} className="w-full mt-2" />
+            </div>
+            <div>
+              <label className="label">Chất lượng dữ liệu ({form.data_quality_score}/100)</label>
+              <input type="range" min={0} max={100} value={form.data_quality_score} onChange={(e) => setForm((f) => ({ ...f, data_quality_score: parseInt(e.target.value) }))} className="w-full mt-2" />
             </div>
             <div className="col-span-2">
               <label className="label">Điểm đau</label>
