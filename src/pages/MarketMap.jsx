@@ -5,8 +5,12 @@ import { PageLoader } from "../components/LoadingSpinner";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
   fetchMarketSegments, createMarketSegment, updateMarketSegment, deleteMarketSegment,
-  getMarketMatrixData
+  getMarketMatrixData, fetchAccounts, fetchMarketIntel
 } from "../lib/supabase";
+import { MapContainer, TileLayer, ZoomControl } from "react-leaflet";
+import MapMarker from "../components/MapMarker";
+import { getCoordsByRegion, addJitter } from "../utils/geo";
+import "leaflet/dist/leaflet.css";
 
 const MATRIX_SEGMENTS = ["Pharma QC", "Lab Chemicals", "F&B Testing", "Pharma Manufacturing"];
 const MATRIX_REGIONS = ["Hà Nội", "TP.HCM", "Miền Trung"];
@@ -20,6 +24,13 @@ const PENETRATION_CONFIG = {
 
 const OPPORTUNITY_SIZES = ["Nhỏ", "Trung bình", "Lớn", "Rất lớn"];
 
+/**
+ * Formats value as VND currency for matrix
+ */
+const formatVND = (value) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+};
+
 export default function MarketMap({ showToast }) {
   const [segments, setSegments] = useState([]);
   const [matrixData, setMatrixData] = useState({ accounts: [], deals: [], segments: [] });
@@ -28,22 +39,49 @@ export default function MarketMap({ showToast }) {
   const [editingSegment, setEditingSegment] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [activeTab, setActiveTab] = useState("matrix");
+  
+  // Map specific state
+  const [mapAccounts, setMapAccounts] = useState([]);
+  const [mapIntel, setMapIntel] = useState([]);
+  const [mapFilter, setMapFilter] = useState("all"); // all, accounts, intel
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
-    const [segsRes, matrixRes] = await Promise.all([
-      fetchMarketSegments(),
-      getMarketMatrixData()
-    ]);
-    setSegments(segsRes.data || []);
-    setMatrixData({
-      accounts: matrixRes.accounts || [],
-      deals: matrixRes.deals || [],
-      segments: matrixRes.segments || []
-    });
-    setLoading(false);
+    try {
+      const [segsRes, matrixRes, accountsRes, intelRes] = await Promise.all([
+        fetchMarketSegments(),
+        getMarketMatrixData(),
+        fetchAccounts(),
+        fetchMarketIntel()
+      ]);
+      setSegments(segsRes.data || []);
+      setMatrixData({
+        accounts: matrixRes.accounts || [],
+        deals: matrixRes.deals || [],
+        segments: matrixRes.segments || []
+      });
+
+      // Process Accounts for Map
+      const enrichedAccounts = (accountsRes.data || []).map(acc => ({
+        ...acc,
+        position: addJitter(getCoordsByRegion(acc.region), 0.08)
+      }));
+      setMapAccounts(enrichedAccounts);
+
+      // Process Market Intel (Leads) for Map
+      const enrichedIntel = (intelRes.data || []).map(intel => ({
+        ...intel,
+        position: addJitter(getCoordsByRegion(intel.region), 0.12)
+      }));
+      setMapIntel(enrichedIntel);
+    } catch (err) {
+      console.error("Error loading market data:", err);
+      showToast("Lỗi khi tải dữ liệu thị trường", "error");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function getMatrixCell(segment, region) {
@@ -94,6 +132,13 @@ export default function MarketMap({ showToast }) {
                 ${activeTab === "matrix" ? "bg-primary text-slate-900 shadow-glow shadow-primary/40" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}
             >
               Ma trận thị trường
+            </button>
+            <button
+              onClick={() => setActiveTab("map")}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
+                ${activeTab === "map" ? "bg-primary text-slate-900 shadow-glow shadow-primary/40" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}
+            >
+              Bản đồ nhiệt
             </button>
             <button
               onClick={() => setActiveTab("trends")}
@@ -184,90 +229,162 @@ export default function MarketMap({ showToast }) {
             </div>
           )}
 
-      {activeTab === "trends" && (
-        <div className="space-y-4">
-          <div className="flex justify-end">
-            <button onClick={() => { setEditingSegment(null); setModalOpen(true); }} className="btn-primary">
-              <Plus size={14} /> Thêm phân khúc
-            </button>
-          </div>
+          {activeTab === "map" && (
+            <div className="space-y-6 h-[700px] flex flex-col animate-fade-in">
+              <div className="flex items-center justify-between gap-4 bg-white/5 p-6 rounded-3xl border border-white/5 shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                    <button 
+                      onClick={() => setMapFilter("all")}
+                      className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
+                        ${mapFilter === "all" ? "bg-slate-700 text-white" : "text-slate-500"}`}
+                    >
+                      Tất cả
+                    </button>
+                    <button 
+                      onClick={() => setMapFilter("accounts")}
+                      className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
+                        ${mapFilter === "accounts" ? "bg-[#8B0000] text-white" : "text-slate-500"}`}
+                    >
+                      Tài khoản
+                    </button>
+                    <button 
+                      onClick={() => setMapFilter("intel")}
+                      className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
+                        ${mapFilter === "intel" ? "bg-amber-600 text-white" : "text-slate-500"}`}
+                    >
+                      Cơ hội mới
+                    </button>
+                  </div>
+                </div>
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">
+                  Hiển thị {mapAccounts.length + mapIntel.length} điểm dữ liệu chiến lược
+                </div>
+              </div>
 
-          {segments.length === 0 ? (
-            <div className="text-center py-16 text-sm text-gray-400">
-              Chưa có phân khúc nào. Thêm phân khúc để theo dõi xu hướng.
-            </div>
-          ) : (
-            <div className="card table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Tên phân khúc</th>
-                    <th>Khu vực</th>
-                    <th>Quy mô cơ hội</th>
-                    <th>Độ thâm nhập</th>
-                    <th>Xu hướng</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {segments.map((seg) => (
-                    <tr key={seg.id}>
-                      <td className="font-medium">{seg.name}</td>
-                      <td>{seg.region}</td>
-                      <td>{seg.opportunity_size || "—"}</td>
-                      <td>
-                        <span className={`badge ${PENETRATION_CONFIG[seg.penetration]?.color || "bg-gray-100 text-gray-600"}`}>
-                          {PENETRATION_CONFIG[seg.penetration]?.label || seg.penetration}
-                        </span>
-                      </td>
-                      <td className="max-w-xs">
-                        <p className="text-sm text-gray-700 line-clamp-2">{seg.trends || "—"}</p>
-                      </td>
-                      <td>
-                        <div className="flex gap-2">
-                          <button onClick={() => { setEditingSegment(seg); setModalOpen(true); }} className="text-gray-400 hover:text-blue-600">
-                            <Edit2 size={14} />
-                          </button>
-                          <button onClick={() => setDeleteTarget(seg)} className="text-gray-400 hover:text-red-600">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+              <div className="flex-1 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative">
+                <MapContainer 
+                  center={[16.0471, 108.2062]} 
+                  zoom={6} 
+                  zoomControl={false}
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                  />
+                  <ZoomControl position="bottomright" />
+                  
+                  {/* Biomedia Accounts */}
+                  {(mapFilter === "all" || mapFilter === "accounts") && mapAccounts.map(acc => (
+                    <MapMarker 
+                      key={`acc-${acc.id}`}
+                      position={acc.position}
+                      type={acc.type}
+                      data={acc}
+                      isLead={false}
+                    />
                   ))}
-                </tbody>
-              </table>
+
+                  {/* Market Intel (Leads) */}
+                  {(mapFilter === "all" || mapFilter === "intel") && mapIntel.map(intel => (
+                    <MapMarker 
+                      key={`intel-${intel.id}`}
+                      position={intel.position}
+                      type={intel.category}
+                      data={intel}
+                      isLead={true}
+                    />
+                  ))}
+                </MapContainer>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "trends" && (
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <button onClick={() => { setEditingSegment(null); setModalOpen(true); }} className="btn-primary">
+                  <Plus size={14} /> Thêm phân khúc
+                </button>
+              </div>
+
+              {segments.length === 0 ? (
+                <div className="text-center py-16 text-sm text-gray-400">
+                  Chưa có phân khúc nào. Thêm phân khúc để theo dõi xu hướng.
+                </div>
+              ) : (
+                <div className="card table-container">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Tên phân khúc</th>
+                        <th>Khu vực</th>
+                        <th>Quy mô cơ hội</th>
+                        <th>Độ thâm nhập</th>
+                        <th>Xu hướng</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {segments.map((seg) => (
+                        <tr key={seg.id}>
+                          <td className="font-medium">{seg.name}</td>
+                          <td>{seg.region}</td>
+                          <td>{seg.opportunity_size || "—"}</td>
+                          <td>
+                            <span className={`badge ${PENETRATION_CONFIG[seg.penetration]?.color || "bg-[#2A2A2A] text-[#707070] border-[#2A2A2A]"}`}>
+                              {PENETRATION_CONFIG[seg.penetration]?.label || seg.penetration}
+                            </span>
+                          </td>
+                          <td className="max-w-xs">
+                            <p className="text-sm text-[#B0B0B0] line-clamp-2">{seg.trends || "—"}</p>
+                          </td>
+                          <td>
+                            <div className="flex gap-2">
+                              <button onClick={() => { setEditingSegment(seg); setModalOpen(true); }} className="text-[#707070] hover:text-[#8B0000]">
+                                <Edit2 size={14} />
+                              </button>
+                              <button onClick={() => setDeleteTarget(seg)} className="text-[#707070] hover:text-red-500">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {modalOpen && (
+            <SegmentModal
+              segment={editingSegment}
+              onClose={() => setModalOpen(false)}
+              onSave={(saved) => {
+                if (editingSegment) setSegments((p) => p.map((s) => (s.id === saved.id ? saved : s)));
+                else setSegments((p) => [...p, saved]);
+                setModalOpen(false);
+                showToast(editingSegment ? "Đã cập nhật" : "Đã thêm phân khúc");
+              }}
+            />
+          )}
+
+          {deleteTarget && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl p-6 max-w-sm w-full">
+                <h3 className="font-semibold text-[#F0F0F0] mb-2">Xóa phân khúc?</h3>
+                <p className="text-sm text-[#B0B0B0] mb-5">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1">Hủy</button>
+                  <button onClick={() => handleDelete(deleteTarget.id)} className="btn-danger flex-1">Xóa</button>
+                </div>
+              </div>
             </div>
           )}
         </div>
-      )}
-
-      {modalOpen && (
-        <SegmentModal
-          segment={editingSegment}
-          onClose={() => setModalOpen(false)}
-          onSave={(saved) => {
-            if (editingSegment) setSegments((p) => p.map((s) => (s.id === saved.id ? saved : s)));
-            else setSegments((p) => [...p, saved]);
-            setModalOpen(false);
-            showToast(editingSegment ? "Đã cập nhật" : "Đã thêm phân khúc");
-          }}
-        />
-      )}
-
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
-            <h3 className="font-semibold mb-2">Xóa phân khúc?</h3>
-            <p className="text-sm text-gray-600 mb-5">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1">Hủy</button>
-              <button onClick={() => handleDelete(deleteTarget.id)} className="btn-danger flex-1">Xóa</button>
-            </div>
-          </div>
-        </div>
-      )}
-      </div>
       </div>
     </div>
   );
@@ -297,10 +414,10 @@ function SegmentModal({ segment, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="font-semibold">{segment ? "Sửa phân khúc" : "Thêm phân khúc"}</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2A2A]">
+          <h2 className="font-semibold text-[#F0F0F0]">{segment ? "Sửa phân khúc" : "Thêm phân khúc"}</h2>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>

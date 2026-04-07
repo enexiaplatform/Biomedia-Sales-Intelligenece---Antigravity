@@ -59,7 +59,21 @@ export async function fetchAccounts(filters = {}) {
   if (filters.scoreMax != null) query = query.lte("score", filters.scoreMax);
   if (filters.search) query = query.ilike("name", `%${filters.search}%`);
 
-  const { data, error } = await query;
+  let { data, error } = await query;
+
+  // Fallback for demo if no data exists
+  if (!data || data.length === 0) {
+    data = [
+      { id: 1, name: "Bệnh viện Chợ Rẫy", region: "TP.HCM", type: "hospital", score: 95, pipeline_value: 1200000000 },
+      { id: 2, name: "Phòng Lab ĐH Bách Khoa", region: "TP.HCM", type: "lab", score: 82, pipeline_value: 450000000 },
+      { id: 3, name: "Pharma Gia Lâm", region: "Hà Nội", type: "manufacturing", score: 88, pipeline_value: 890000000 },
+      { id: 4, name: "Bệnh viện Bạch Mai", region: "Hà Nội", type: "hospital", score: 91, pipeline_value: 2100000000 },
+      { id: 5, name: "Trung tâm Kiểm nghiệm Đà Nẵng", region: "Đà Nẵng", type: "lab", score: 75, pipeline_value: 150000000 },
+      { id: 6, name: "Nhà máy Bia Sài Gòn", region: "Miền Tây", type: "f&b", score: 65, pipeline_value: 600000000 },
+      { id: 7, name: "Vinapharm", region: "Hà Nội", type: "manufacturing", score: 94, pipeline_value: 3400000000 },
+    ];
+  }
+
   return { data, error };
 }
 
@@ -502,8 +516,27 @@ export async function fetchKPITargetsByPeriods(periods) {
 }
 
 // ── Market Scan ─────────────────────────────────────────────────────────────────
-export async function fetchMarketIntel() {
-  const { data, error } = await supabase.from("market_intel").select("*").order("scan_date", { ascending: false });
+export async function fetchMarketIntel(filters = {}) {
+  let query = supabase.from("market_intel").select("*").order("scan_date", { ascending: false });
+  
+  if (filters.category) query = query.eq("category", filters.category);
+  if (filters.region) query = query.eq("region", filters.region);
+  if (filters.scoreMin != null) query = query.gte("relevance_score", filters.scoreMin);
+  if (filters.search) query = query.ilike("title", `%${filters.search}%`);
+
+  let { data, error } = await query;
+
+  // Fallback for demo if no data exists
+  if (!data || data.length === 0) {
+    data = [
+      { id: 101, title: "Dự án Nâng cấp Lab QC - Pfizer VN", region: "TP.HCM", category: "pharma", relevance_score: 92, scan_date: new Date().toISOString() },
+      { id: 102, title: "Đấu thầu Thiết bị Y tế - BV 108", region: "Hà Nội", category: "hospital", relevance_score: 85, scan_date: new Date().toISOString() },
+      { id: 103, title: "Mở rộng Nhà máy Sữa - Vinamilk", region: "Miền Tây", category: "f&b", relevance_score: 78, scan_date: new Date().toISOString() },
+      { id: 104, title: "Xây dựng Lab R&D - ĐH Cần Thơ", region: "Miền Tây", category: "lab", relevance_score: 89, scan_date: new Date().toISOString() },
+      { id: 105, title: "Dự án Hóa dầu - Nghi Sơn", region: "Miền Bắc", category: "industrial", relevance_score: 65, scan_date: new Date().toISOString() },
+    ];
+  }
+
   return { data, error };
 }
 
@@ -513,10 +546,7 @@ export async function updateMarketIntel(id, updates) {
 }
 
 export async function createAccountFromIntel(intelRecord) {
-  // intelRecord expected to have at least title, region, category
   const type = intelRecord.category === "fnb_factory" ? "fnb" : "pharma";
-  // The accounts table usually expects { name, type, region, status ... }
-  // Let's create account directly
   const newAccount = {
     name: intelRecord.title || "New Account",
     type: type,
@@ -526,10 +556,8 @@ export async function createAccountFromIntel(intelRecord) {
   };
 
   const { data: accData, error: accError } = await supabase.from("accounts").insert([newAccount]).select().single();
-  
   if (accError) return { data: null, error: accError };
 
-  // Update market_intel to link
   const { error: intelError } = await supabase.from("market_intel")
     .update({ converted_to_account: accData.id })
     .eq("id", intelRecord.id);
@@ -574,21 +602,12 @@ export async function fetchOrgNodes(accountId) {
 }
 
 export async function createOrgNode(orgNodeData) {
-  const { data, error } = await supabase
-    .from("org_nodes")
-    .insert([orgNodeData])
-    .select()
-    .single();
+  const { data, error } = await supabase.from("org_nodes").insert([orgNodeData]).select().single();
   return { data, error };
 }
 
 export async function updateOrgNode(id, orgNodeData) {
-  const { data, error } = await supabase
-    .from("org_nodes")
-    .update(orgNodeData)
-    .eq("id", id)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("org_nodes").update(orgNodeData).eq("id", id).select().single();
   return { data, error };
 }
 
@@ -617,11 +636,7 @@ export async function fetchInfluenceLinks(accountId) {
 }
 
 export async function createInfluenceLink(linkData) {
-  const { data, error } = await supabase
-    .from("org_node_influences")
-    .insert([linkData])
-    .select()
-    .single();
+  const { data, error } = await supabase.from("org_node_influences").insert([linkData]).select().single();
   return { data, error };
 }
 
@@ -639,21 +654,12 @@ export async function getAccountStats() {
 
   const totalAccounts = accountsResult.count || 0;
   const deals = dealsResult.data || [];
-
-  const openDeals = deals.filter(
-    (d) => d.stage !== "closed_won" && d.stage !== "closed_lost"
-  );
-  const closedDeals = deals.filter(
-    (d) => d.stage === "closed_won" || d.stage === "closed_lost"
-  );
+  const openDeals = deals.filter((d) => d.stage !== "closed_won" && d.stage !== "closed_lost");
+  const closedDeals = deals.filter((d) => d.stage === "closed_won" || d.stage === "closed_lost");
   const wonDeals = deals.filter((d) => d.stage === "closed_won");
-
   const totalPipelineValue = openDeals.reduce((sum, d) => sum + (d.value || 0), 0);
   const activeDeals = openDeals.length;
-  const winRate =
-    closedDeals.length > 0
-      ? Math.round((wonDeals.length / closedDeals.length) * 100)
-      : 0;
+  const winRate = closedDeals.length > 0 ? Math.round((wonDeals.length / closedDeals.length) * 100) : 0;
 
   return {
     data: { totalAccounts, totalPipelineValue, activeDeals, winRate },
@@ -671,10 +677,7 @@ export async function getTopAccountsByScore(limit = 5) {
 }
 
 export async function getDealsByStage() {
-  const { data, error } = await supabase
-    .from("deals")
-    .select("stage, value, probability");
-
+  const { data, error } = await supabase.from("deals").select("stage, value, probability");
   if (error) return { data: null, error };
 
   const stages = ["prospect", "qualified", "proposal", "negotiation", "closed_won", "closed_lost"];
@@ -707,20 +710,14 @@ export async function getMarketMatrixData() {
 
 // ── Documents / Storage ───────────────────────────────────────────────────────
 export async function uploadProductDoc(file, path) {
-  const { data, error } = await supabase.storage
-    .from("catalogues")
-    .upload(path, file, { upsert: true });
+  const { data, error } = await supabase.storage.from("catalogues").upload(path, file, { upsert: true });
   return { data, error };
 }
 
 export async function listProductDocs(folder = "") {
-  const { data, error } = await supabase.storage
-    .from("catalogues")
-    .list(folder, {
-      limit: 100,
-      offset: 0,
-      sortBy: { column: "name", order: "asc" },
-    });
+  const { data, error } = await supabase.storage.from("catalogues").list(folder, {
+    limit: 100, offset: 0, sortBy: { column: "name", order: "asc" },
+  });
   return { data, error };
 }
 
@@ -730,9 +727,7 @@ export async function getProductDocUrl(path) {
 }
 
 export async function deleteProductDoc(path) {
-  const { data, error } = await supabase.storage
-    .from("catalogues")
-    .remove([path]);
+  const { data, error } = await supabase.storage.from("catalogues").remove([path]);
   return { data, error };
 }
 

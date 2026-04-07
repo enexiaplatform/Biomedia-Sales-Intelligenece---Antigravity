@@ -119,7 +119,7 @@ export default function Competitors({ showToast }) {
           </div>
 
           {competitors.length === 0 ? (
-            <div className="text-center py-16 text-sm text-gray-400">Chưa có đối thủ nào được theo dõi</div>
+            <div className="text-center py-16 text-sm text-[#707070]">Chưa có đối thủ nào được theo dõi</div>
           ) : (
             <div className="space-y-3">
               {competitors.map((comp) => (
@@ -319,7 +319,7 @@ export default function Competitors({ showToast }) {
           </div>
 
           {winLoss.length === 0 ? (
-            <div className="text-center py-16 text-sm text-gray-400">Chưa có kết quả W/L nào</div>
+            <div className="text-center py-16 text-sm text-[#707070]">Chưa có kết quả W/L nào</div>
           ) : (
             <div className="card table-container">
               <table className="table">
@@ -341,15 +341,15 @@ export default function Competitors({ showToast }) {
                       <td>{wl.deals?.name || "—"}</td>
                       <td>{wl.competitors?.name || "—"}</td>
                       <td>
-                        <span className={`badge ${wl.outcome === "won" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                        <span className={`badge ${wl.outcome === "won" ? "bg-green-500/15 text-green-400 border-green-500/20" : "bg-red-500/15 text-red-400 border-red-500/20"}`}>
                           {wl.outcome === "won" ? "Thắng" : "Thua"}
                         </span>
                       </td>
                       <td className="max-w-xs">
-                        <p className="text-sm text-gray-700 line-clamp-2">{wl.reason || "—"}</p>
+                        <p className="text-sm text-[#B0B0B0] line-clamp-2">{wl.reason || "—"}</p>
                       </td>
                       <td className="max-w-xs">
-                        <p className="text-sm text-gray-600 line-clamp-2">{wl.lessons || "—"}</p>
+                        <p className="text-sm text-[#B0B0B0] line-clamp-2">{wl.lessons || "—"}</p>
                       </td>
                       <td>
                         <button
@@ -358,7 +358,7 @@ export default function Competitors({ showToast }) {
                             setWinLoss((p) => p.filter((w) => w.id !== wl.id));
                             showToast("Đã xóa");
                           }}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-[#707070] hover:text-red-500"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -420,9 +420,9 @@ export default function Competitors({ showToast }) {
       {/* Delete Confirm */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
+          <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl p-6 max-w-sm w-full">
             <h3 className="font-semibold mb-2">Xóa đối thủ?</h3>
-            <p className="text-sm text-gray-600 mb-5">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
+            <p className="text-sm text-[#B0B0B0] mb-5">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1">Hủy</button>
               <button onClick={() => handleDeleteCompetitor(deleteTarget.id)} className="btn-danger flex-1">Xóa</button>
@@ -457,10 +457,10 @@ function CompetitorModal({ competitor, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="font-semibold">{competitor ? "Sửa đối thủ" : "Thêm đối thủ"}</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
@@ -525,10 +525,10 @@ function BattlecardModal({ competitorId, competitorName, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="font-semibold">Thêm tiêu chí vs {competitorName}</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
@@ -588,10 +588,10 @@ function WinLossModal({ competitors, deals, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="font-semibold">Thêm kết quả Thắng/Thua</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">

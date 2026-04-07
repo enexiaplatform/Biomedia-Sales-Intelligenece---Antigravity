@@ -132,8 +132,8 @@ export default function AICoach() {
       {/* Left Panel - Context */}
       <div className="w-72 shrink-0 flex flex-col gap-4 overflow-y-auto">
         <div className="card p-4">
-          <h3 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
-            <Brain size={15} className="text-purple-600" />
+          <h3 className="font-semibold text-[#F0F0F0] text-sm mb-3 flex items-center gap-2">
+            <Brain size={15} className="text-[#8B0000]" />
             Ngữ cảnh AI
           </h3>
 
@@ -184,21 +184,21 @@ export default function AICoach() {
 
           {/* Context Summary */}
           {(selectedAccount || selectedDeal || selectedCompetitor) && (
-            <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
+            <div className="mt-4 space-y-2 border-t border-[#2A2A2A] pt-4">
               {selectedAccount && (
-                <div className="text-[11px] bg-blue-50/50 text-blue-700 px-3 py-2 rounded-xl border border-blue-100 flex items-center gap-2">
+                <div className="text-[11px] bg-[#8B0000]/10 text-[#F0F0F0] px-3 py-2 rounded-xl border border-[#8B0000]/20 flex items-center gap-2">
                   <User size={12} />
                   <span className="font-bold truncate">{selectedAccount.name}</span>
                 </div>
               )}
               {selectedDeal && (
-                <div className="text-[11px] bg-emerald-50/50 text-emerald-700 px-3 py-2 rounded-xl border border-emerald-100 flex items-center gap-2">
+                <div className="text-[11px] bg-[#1E1E1E] text-[#F0F0F0] px-3 py-2 rounded-xl border border-[#2A2A2A] flex items-center gap-2">
                   <Bot size={12} />
                   <span className="font-bold truncate">{selectedDeal.name} · {selectedDeal.probability}%</span>
                 </div>
               )}
               {selectedCompetitor && (
-                <div className="text-[11px] bg-red-50/50 text-red-700 px-3 py-2 rounded-xl border border-red-100 flex items-center gap-2">
+                <div className="text-[11px] bg-red-500/10 text-red-400 px-3 py-2 rounded-xl border border-red-500/20 flex items-center gap-2">
                   <Trash2 size={12} />
                   <span className="font-bold truncate">{selectedCompetitor.name}</span>
                 </div>
@@ -215,7 +215,7 @@ export default function AICoach() {
                     4. CHIẾN THUẬT 7 NGÀY TỚI: Hành động cụ thể để thắng deal này.`;
                     sendMessage(prompt);
                   }}
-                  className="w-full mt-2 btn-primary !bg-purple-600 !border-purple-500 shadow-lg shadow-purple-500/20 text-[10px] font-black uppercase tracking-widest h-10 flex items-center justify-center gap-2"
+                  className="w-full mt-2 btn-primary !bg-[#8B0000] !border-[#8B0000]/50 shadow-lg shadow-[#8B0000]/20 text-[10px] font-black uppercase tracking-widest h-10 flex items-center justify-center gap-2"
                 >
                   <Brain size={14} />
                   Phân tích Chiến Lược
@@ -227,7 +227,7 @@ export default function AICoach() {
 
         {/* Quick Prompts */}
         <div className="card p-4">
-          <h3 className="font-semibold text-gray-900 text-sm mb-3">Câu hỏi nhanh</h3>
+          <h3 className="font-semibold text-[#F0F0F0] text-sm mb-3">Câu hỏi nhanh</h3>
           <div className="space-y-2">
             {QUICK_PROMPTS.map((qp) => (
               <button
@@ -237,7 +237,7 @@ export default function AICoach() {
                   sendMessage(msg);
                 }}
                 disabled={loading}
-                className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors disabled:opacity-50"
+                className="w-full text-left px-3 py-2 text-sm bg-[#1E1E1E] text-[#B0B0B0] hover:bg-[#8B0000]/10 hover:text-[#F0F0F0] rounded-lg transition-colors disabled:opacity-50"
               >
                 {qp.icon} {qp.label}
               </button>
@@ -251,12 +251,12 @@ export default function AICoach() {
         {/* Chat Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="flex items-center gap-2">
-            <Brain size={18} className="text-purple-600" />
-            <span className="font-semibold text-gray-900">AI Sales Coach</span>
-            <span className="badge bg-purple-100 text-purple-700 text-xs">Claude</span>
+            <Brain size={18} className="text-[#8B0000]" />
+            <span className="font-semibold text-[#F0F0F0]">AI Sales Coach</span>
+            <span className="badge bg-[#8B0000]/10 text-[#8B0000] border-[#8B0000]/20 text-xs">Claude</span>
           </div>
           {messages.length > 0 && (
-            <button onClick={clearConversation} className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1">
+            <button onClick={clearConversation} className="text-xs text-[#707070] hover:text-red-500 flex items-center gap-1">
               <Trash2 size={13} /> Xóa hội thoại
             </button>
           )}
@@ -266,9 +266,9 @@ export default function AICoach() {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-16">
-              <Brain size={40} className="mx-auto text-gray-300 mb-3" />
-              <h3 className="font-medium text-gray-500 mb-2">Xin chào Henry!</h3>
-              <p className="text-sm text-gray-400 max-w-sm mx-auto">
+              <Brain size={40} className="mx-auto text-[#404040] mb-3" />
+              <h3 className="font-medium text-[#B0B0B0] mb-2">Xin chào Henry!</h3>
+              <p className="text-sm text-[#B0B0B0] max-w-sm mx-auto">
                 Tôi là AI Sales Coach của bạn. Chọn ngữ cảnh ở bên trái và hỏi tôi bất cứ điều gì về tài khoản, deal hay chiến lược.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
@@ -276,7 +276,7 @@ export default function AICoach() {
                   <button
                     key={qp.label}
                     onClick={() => sendMessage(qp.prompt(selectedAccount, selectedDeal, selectedCompetitor))}
-                    className="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600 rounded-full text-sm transition-colors"
+                    className="px-3 py-1.5 bg-[#1E1E1E] text-[#B0B0B0] hover:bg-[#8B0000]/10 hover:text-[#F0F0F0] rounded-full text-sm transition-colors"
                   >
                     {qp.icon} {qp.label}
                   </button>
@@ -291,8 +291,8 @@ export default function AICoach() {
               className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role === "assistant" && (
-                <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center shrink-0 mt-1">
-                  <Bot size={14} className="text-purple-700" />
+                <div className="w-7 h-7 rounded-full bg-[#1E1E1E] flex items-center justify-center shrink-0 mt-1">
+                  <Bot size={14} className="text-[#707070]" />
                 </div>
               )}
 
@@ -300,15 +300,15 @@ export default function AICoach() {
                 <div
                   className={`rounded-xl px-4 py-3 text-sm
                     ${msg.role === "user"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#8B0000] text-white"
                       : msg.isError
-                        ? "bg-red-50 text-red-700 border border-red-200"
-                        : "bg-gray-100 text-gray-800"
+                        ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                        : "bg-[#1E1E1E] text-[#F0F0F0]"
                     }`}
                 >
                   <div className="whitespace-pre-wrap">{msg.content}</div>
                 </div>
-                <div className={`flex items-center gap-2 mt-1 text-xs text-gray-400
+                <div className={`flex items-center gap-2 mt-1 text-xs text-[#707070]
                   ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.ts && format(msg.ts, "HH:mm")}
@@ -317,15 +317,15 @@ export default function AICoach() {
                       onClick={() => handleCopy(msg.content, idx)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      {copied === idx ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                      {copied === idx ? <Check size={12} className="text-[#22C55E]" /> : <Copy size={12} />}
                     </button>
                   )}
                 </div>
               </div>
 
               {msg.role === "user" && (
-                <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-1">
-                  <User size={14} className="text-blue-700" />
+                <div className="w-7 h-7 rounded-full bg-[#1E1E1E] flex items-center justify-center shrink-0 mt-1">
+                  <User size={14} className="text-[#B0B0B0]" />
                 </div>
               )}
             </div>
@@ -336,9 +336,9 @@ export default function AICoach() {
               <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center">
                 <Bot size={14} className="text-purple-700" />
               </div>
-              <div className="bg-gray-100 rounded-xl px-4 py-3 flex items-center gap-2">
+              <div className="bg-[#1E1E1E] rounded-xl px-4 py-3 flex items-center gap-2">
                 <LoadingSpinner size="sm" />
-                <span className="text-sm text-gray-500">Đang suy nghĩ...</span>
+                <span className="text-sm text-[#B0B0B0]">Đang suy nghĩ...</span>
               </div>
             </div>
           )}
@@ -371,7 +371,7 @@ export default function AICoach() {
               <Send size={15} />
             </button>
           </div>
-          <div className="text-xs text-gray-400 mt-1.5 text-center">
+          <div className="text-xs text-[#707070] mt-1.5 text-center">
             Trả lời bằng tiếng Việt · Claude claude-sonnet-4-20250514 · Phản hồi giới hạn 2-3 đoạn
           </div>
         </div>

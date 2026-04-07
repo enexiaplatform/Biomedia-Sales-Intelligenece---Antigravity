@@ -109,7 +109,7 @@ export default function AccountDetail({ showToast }) {
     return (
       <div className="text-center py-16">
         <AlertCircle size={32} className="mx-auto text-gray-400 mb-3" />
-        <p className="text-gray-600 mb-4">Không tìm thấy tài khoản</p>
+        <p className="text-[#B0B0B0] mb-4">Không tìm thấy tài khoản</p>
         <Link to="/accounts" className="btn-secondary">← Quay lại</Link>
       </div>
     );
@@ -119,16 +119,16 @@ export default function AccountDetail({ showToast }) {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <button onClick={() => navigate("/accounts")} className="mt-1 text-gray-400 hover:text-gray-600">
+        <button onClick={() => navigate("/accounts")} className="mt-1 text-[#707070] hover:text-[#B0B0B0]">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl font-bold text-gray-900">{account.name}</h1>
-            <span className="badge bg-blue-100 text-blue-700">{account.type}</span>
+            <h1 className="text-xl font-bold text-[#F0F0F0]">{account.name}</h1>
+            <span className="badge bg-[#8B0000]/10 text-[#8B0000] border-[#8B0000]/20">{account.type}</span>
             <ScoreBadge score={account.score} />
           </div>
-          <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 flex-wrap">
+          <div className="flex items-center gap-4 mt-1 text-sm text-[#B0B0B0] flex-wrap">
             {account.region && <span>{account.region}</span>}
             {account.website && (
               <a href={account.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
@@ -154,7 +154,7 @@ export default function AccountDetail({ showToast }) {
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors
-              ${tab === t ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+              ${tab === t ? "border-[#8B0000] text-[#8B0000]" : "border-transparent text-[#707070] hover:text-[#B0B0B0]"}`}
           >
             {t}
           </button>
@@ -165,7 +165,7 @@ export default function AccountDetail({ showToast }) {
       {tab === "Tổng quan" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className="card p-5 space-y-4">
-            <h3 className="font-semibold text-gray-900">Thông tin công ty</h3>
+            <h3 className="font-semibold text-[#F0F0F0]">Thông tin công ty</h3>
             <InfoRow label="Địa chỉ" value={account.address} />
             <InfoRow label="Phân khúc" value={account.segment} />
             <InfoRow label="Quy mô" value={account.size} />
@@ -174,10 +174,10 @@ export default function AccountDetail({ showToast }) {
           </div>
 
           <div className="card p-5 space-y-4">
-            <h3 className="font-semibold text-gray-900">Đánh giá</h3>
+            <h3 className="font-semibold text-[#F0F0F0]">Đánh giá</h3>
             <div>
               <div className="label">Điểm tài khoản: <ScoreBadge score={account.score} /></div>
-              {account.score_reason && <p className="text-sm text-gray-600 mt-1">{account.score_reason}</p>}
+              {account.score_reason && <p className="text-sm text-[#B0B0B0] mt-1">{account.score_reason}</p>}
             </div>
             <InfoRow label="Điểm đau" value={account.pain_points} />
             <InfoRow label="Nhu cầu hiện tại" value={account.current_needs} />
@@ -240,9 +240,9 @@ export default function AccountDetail({ showToast }) {
                   </div>
                   <div className="mt-2 space-y-1">
                     <RoleTagBadge role={c.role} />
-                    {c.email && <div className="text-xs text-gray-600">{c.email}</div>}
-                    {c.phone && <div className="text-xs text-gray-600">{c.phone}</div>}
-                    {c.notes && <div className="text-xs text-gray-500 italic mt-1">{c.notes}</div>}
+                    {c.email && <div className="text-xs text-[#707070]">{c.email}</div>}
+                    {c.phone && <div className="text-xs text-[#707070]">{c.phone}</div>}
+                    {c.notes && <div className="text-xs text-[#707070] italic mt-1">{c.notes}</div>}
                   </div>
                 </div>
               ))}
@@ -499,9 +499,9 @@ function DeleteConfirmModal({ message, onConfirm, onCancel }) {
   const [loading, setLoading] = useState(false);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
-        <h3 className="font-semibold text-gray-900 mb-3">Xác nhận xóa</h3>
-        <p className="text-sm text-gray-600 mb-5">{message}</p>
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl p-6 max-w-sm w-full">
+        <h3 className="font-semibold text-[#F0F0F0] mb-3">Xác nhận xóa</h3>
+        <p className="text-sm text-[#B0B0B0] mb-5">{message}</p>
         <div className="flex gap-3">
           <button onClick={onCancel} className="btn-secondary flex-1" disabled={loading}>Hủy</button>
           <button onClick={async () => { setLoading(true); await onConfirm(); setLoading(false); }} className="btn-danger flex-1" disabled={loading}>
@@ -528,10 +528,10 @@ function AccountEditModal({ account, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-4">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-2xl my-4">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="font-semibold">Chỉnh sửa: {account.name}</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -595,10 +595,10 @@ function ContactModal({ contact, accountId, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="font-semibold">{contact ? "Sửa liên hệ" : "Thêm liên hệ"}</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
           <div>
@@ -659,10 +659,10 @@ function InteractionModal({ accountId, contacts, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="font-semibold">Thêm tương tác</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -729,10 +729,10 @@ function DealModal({ deal, accountId, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+      <div className="bg-[#161616] border border-[#2A2A2A] rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h2 className="font-semibold">{deal ? "Sửa deal" : "Thêm deal"}</h2>
-          <button onClick={onClose} className="text-gray-400 text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] text-xl">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
           <div>

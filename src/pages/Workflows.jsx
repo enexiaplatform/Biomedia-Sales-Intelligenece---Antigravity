@@ -322,10 +322,10 @@ function WorkflowEditor({ workflow, accounts, onBack, onSave }) {
                       <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
                         {idx + 1}
                       </div>
-                      <button onClick={() => moveStep(step.id, -1)} disabled={idx === 0} className="text-gray-400 hover:text-gray-600 disabled:opacity-30">
+                      <button onClick={() => moveStep(step.id, -1)} disabled={idx === 0} className="text-[#707070] hover:text-[#B0B0B0] disabled:opacity-30">
                         <ChevronUp size={14} />
                       </button>
-                      <button onClick={() => moveStep(step.id, 1)} disabled={idx === form.steps.length - 1} className="text-gray-400 hover:text-gray-600 disabled:opacity-30">
+                      <button onClick={() => moveStep(step.id, 1)} disabled={idx === form.steps.length - 1} className="text-[#707070] hover:text-[#B0B0B0] disabled:opacity-30">
                         <ChevronDown size={14} />
                       </button>
                     </div>

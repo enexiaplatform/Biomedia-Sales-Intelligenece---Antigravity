@@ -843,12 +843,12 @@ function AccountModal({ account, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#161B22] rounded-xl shadow-2xl w-full max-w-2xl my-4 border border-[#30363D]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#30363D]">
-          <h2 className="font-semibold text-gray-900 dark:text-white">
+      <div className="bg-[#161616] rounded-xl shadow-2xl w-full max-w-2xl my-4 border border-[#2A2A2A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2A2A2A]">
+          <h2 className="font-semibold text-[#F0F0F0]">
             {account ? "Chỉnh sửa tài khoản" : "Thêm tài khoản mới"}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-white text-xl">×</button>
+          <button onClick={onClose} className="text-[#707070] hover:text-[#B0B0B0] text-xl">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
