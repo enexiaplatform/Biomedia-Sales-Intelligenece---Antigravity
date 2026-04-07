@@ -5,168 +5,238 @@
 /* Leaflet Styles */
 @import 'leaflet/dist/leaflet.css';
 
+/* ── GOOGLE FONT ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* ── DESIGN TOKENS ───────────────────────────────────────── */
 @layer base {
   :root {
-    --color-bg-base: #0D0D0D;
-    --color-bg-surface: #161616;
-    --color-bg-elevated: #1E1E1E;
-    --color-border: #2A2A2A;
-    --color-text-primary: #F0F0F0;
-    --color-text-secondary: #B0B0B0;
-    --color-text-tertiary: #707070;
-    --color-brand: #8B0000;
-    
-    --primary: #8B0000;
-    --primary-light: #A50000;
-    --primary-dark: #660000;
-  }
+    /* Brand */
+    --brand:          #DC2626;
+    --brand-dim:      #B91C1C;
+    --brand-light:    #EF4444;
+    --brand-bg:       rgba(220, 38, 38, 0.08);
+    --brand-border:   rgba(220, 38, 38, 0.18);
 
-  body {
-    background-color: var(--color-bg-base);
-    color: var(--color-text-primary);
-  }
+    /* Light Mode */
+    --bg-base:        #F5F5F7;
+    --bg-surface:     #FFFFFF;
+    --bg-elevated:    #F0F0F2;
+    --bg-overlay:     rgba(0, 0, 0, 0.04);
+    --border:         #E2E2E6;
+    --border-subtle:  #EBEBEE;
 
-  /* Fix all dim text globally */
-  .text-gray-400 { color: #B0B0B0 !important; }
-  .text-gray-500 { color: #909090 !important; }
-  .text-gray-600 { color: #707070 !important; }
+    --text-1:         #111114;
+    --text-2:         #606068;
+    --text-3:         #A0A0A8;
+
+    --shadow-sm:      0 1px 2px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-md:      0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+    --sidebar-bg:     #FAFAFA;
+    --sidebar-border: #E8E8EC;
+  }
 
   .dark {
-    --bg-main: var(--color-bg-base);
-    --bg-surface: var(--color-bg-surface);
-    --bg-surface-elevated: var(--color-bg-elevated);
-    --text-main: var(--color-text-primary);
-    --text-muted: var(--color-text-secondary);
-    --border-main: var(--color-border);
-    --ring-glow: rgba(139, 0, 0, 0.1);
-    
-    --success: #22C55E;
-    --warning: #F59E0B;
-    --error: #EF4444;
-    --info: #3B82F6;
+    --bg-base:        #0C0C0F;
+    --bg-surface:     #131318;
+    --bg-elevated:    #1A1A20;
+    --bg-overlay:     rgba(255, 255, 255, 0.03);
+    --border:         #25252C;
+    --border-subtle:  #1E1E24;
+
+    --text-1:         #F0F0F2;
+    --text-2:         #78787E;
+    --text-3:         #3C3C44;
+
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md:      0 4px 16px rgba(0,0,0,0.5);
+    --sidebar-bg:     #0E0E12;
+    --sidebar-border: #1F1F26;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text-main);
+    background-color: var(--bg-base);
+    color: var(--text-1);
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
-  * {
-    @apply box-border;
+  * { @apply box-border; }
+
+  h1, h2, h3, h4 {
+    color: var(--text-1);
+    font-weight: 600;
   }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
+/* ── COMPONENTS ──────────────────────────────────────────── */
 @layer components {
+
+  /* ── Buttons ── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8B0000] to-[#A50000] text-white rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10;
-    box-shadow: 0 4px 14px 0 rgba(139, 0, 0, 0.3);
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-brand text-white rounded-xl font-semibold text-sm
+           hover:bg-brand-dim active:scale-[0.97]
+           transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    box-shadow: 0 1px 3px rgba(220,38,38,0.3), 0 4px 10px rgba(220,38,38,0.15);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-slate-500 dark:text-[#8B949E] border border-black/5 dark:border-[#30363D] rounded-xl font-bold text-sm hover:bg-black/5 dark:hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md;
-    background-color: var(--bg-surface-elevated);
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           rounded-xl font-semibold text-sm
+           transition-all duration-150 active:scale-[0.97]
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    background: var(--bg-elevated);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    color: var(--text-1);
+    background: var(--bg-overlay);
+    border-color: var(--text-3);
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-bold text-sm hover:bg-red-600 hover:text-white transition-all active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           rounded-xl font-semibold text-sm text-red-500
+           transition-all duration-150 active:scale-[0.97];
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
   }
 
+  .btn-danger:hover {
+    @apply bg-red-600 text-white;
+    border-color: transparent;
+  }
+
+  /* ── Cards ── */
   .card {
-     @apply border rounded-2xl shadow-sm dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300;
-     background-color: var(--bg-surface);
-     border-color: var(--border-main);
+    @apply rounded-2xl transition-all duration-200;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
   }
 
-  .card-hover {
-    @apply hover:border-[#8B0000]/40 hover:shadow-[0_0_20px_rgba(139,0,0,0.15)] dark:hover:shadow-[0_0_30px_rgba(139,0,0,0.1)];
+  .card-hover:hover {
+    border-color: var(--brand-border);
+    box-shadow: 0 0 0 1px var(--brand-border), 0 4px 16px rgba(220,38,38,0.08);
   }
 
-  .glass-panel {
-     @apply backdrop-blur-2xl border rounded-2xl;
-     background-color: var(--bg-surface);
-     border-color: var(--border-main);
-     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  }
-
+  /* ── Inputs ── */
   .input {
-    @apply w-full px-4 py-3 border rounded-xl text-sm transition-all duration-300 outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]/50;
-    background-color: var(--bg-surface-elevated);
-    border-color: var(--border-main);
-    color: var(--text-main);
+    @apply w-full px-3.5 py-2.5 rounded-xl text-sm
+           outline-none transition-all duration-150;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-1);
   }
 
+  .input::placeholder { color: var(--text-3); }
+
+  .input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-bg);
+  }
+
+  .input:hover:not(:focus) { border-color: var(--text-3); }
+
+  /* ── Labels ── */
   .label {
-    @apply block text-[12px] font-bold text-slate-500 dark:text-[#8B949E] mb-2 uppercase tracking-[0.1em];
+    @apply block text-[11px] font-semibold mb-1.5 uppercase tracking-[0.08em];
+    color: var(--text-3);
   }
 
+  /* ── Badges ── */
   .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-current;
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5
+           rounded-full text-[11px] font-semibold;
+    border: 1px solid currentColor;
   }
 
-  .table {
-    @apply min-w-full;
-  }
+  /* ── Tables ── */
+  .table { @apply w-full; }
+
+  .table-container { @apply overflow-x-auto; }
 
   .table th {
-    @apply px-4 py-5 text-left text-[11px] font-black text-slate-500 dark:text-[#8B949E] uppercase tracking-widest bg-black/[0.02] dark:bg-white/[0.01] border-b;
-    border-color: var(--border-main);
+    @apply px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.07em];
+    color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-overlay);
   }
 
   .table td {
-    @apply px-4 py-5 text-sm border-b;
-    color: var(--text-muted);
-    border-color: var(--border-main);
+    @apply px-5 py-4 text-sm;
+    color: var(--text-2);
+    border-bottom: 1px solid var(--border-subtle);
   }
 
-  .table-zebra tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.015);
+  .table tr:last-child td { border-bottom: none; }
+
+  .table tbody tr {
+    transition: background 0.1s ease;
   }
 
-  .table tr:hover td {
-    @apply bg-black/[0.01] dark:bg-white/[0.02];
+  .table tbody tr:hover td {
+    background: var(--bg-overlay);
+    color: var(--text-1);
   }
 
-  /* KPI NUMBERS */
+  /* ── KPI Numbers ── */
   .kpi-value {
-    @apply text-3xl font-bold text-[#F0F0F0] tabular-nums;
+    @apply text-[28px] font-bold tabular-nums leading-none;
+    color: var(--text-1);
+    letter-spacing: -0.02em;
   }
-  
+
   .kpi-label {
-    @apply text-xs font-semibold text-[#707070] uppercase tracking-widest;
+    @apply text-[11px] font-semibold uppercase;
+    color: var(--text-3);
+    letter-spacing: 0.07em;
+  }
+
+  /* ── Section Header ── */
+  .section-title {
+    @apply text-[11px] font-semibold uppercase;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Glass Panel ── */
+  .glass-panel {
+    @apply rounded-2xl backdrop-blur-xl;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(128, 128, 128, 0.2);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(128, 128, 128, 0.3);
-}
-
-/* Animations */
+/* ── ANIMATIONS ──────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.25s ease-out forwards;
 }
 
 @keyframes spin {
@@ -174,39 +244,48 @@
 }
 
 .spinner {
-  @apply w-5 h-5 border-2 border-slate-300 dark:border-slate-700 border-t-red-600 rounded-full;
-  animation: spin 0.8s linear infinite;
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }
 
-/* Skeleton animation */
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
-}
-
-.skeleton {
-  @apply bg-slate-200 dark:bg-slate-800 rounded;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* Leaflet Dark Theme Overrides */
+/* ── LEAFLET DARK OVERRIDES ──────────────────────────────── */
 .leaflet-container {
-  @apply bg-[#0D0D0D] rounded-3xl overflow-hidden border border-[#2A2A2A];
+  background: var(--bg-base);
+  border-radius: 16px;
+  border: 1px solid var(--border);
   font-family: inherit;
 }
 
-.leaflet-popup-content-wrapper, .leaflet-popup-tip {
-  @apply bg-[#161616] text-[#F0F0F0] border border-[#2A2A2A] shadow-2xl backdrop-blur-md;
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--bg-surface);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
 }
 
-.leaflet-popup-content {
-  @apply m-0 p-0;
-}
+.leaflet-popup-content { margin: 0; padding: 0; }
 
 .leaflet-control-zoom {
-  @apply border-none shadow-xl rounded-xl overflow-hidden;
+  border: none !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm) !important;
 }
 
-.leaflet-control-zoom-in, .leaflet-control-zoom-out {
-  @apply bg-[#1E1E1E] text-[#F0F0F0] border-[#2A2A2A] hover:bg-[#2A2A2A] transition-colors !important;
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background: var(--bg-elevated) !important;
+  color: var(--text-2) !important;
+  border-color: var(--border) !important;
+  transition: background 0.15s ease !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background: var(--bg-overlay) !important;
+  color: var(--text-1) !important;
 }

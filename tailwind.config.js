@@ -4,44 +4,30 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "Inter", "sans-serif"]
+        sans: ["'Plus Jakarta Sans'", "Inter", "system-ui", "sans-serif"]
       },
       colors: {
         brand: {
-          primary: '#8B0000',
-          hover: '#A50000',
-          muted: '#8B000020',
+          DEFAULT: '#DC2626',
+          dim:     '#B91C1C',
+          light:   '#EF4444',
+          bg:      'rgba(220,38,38,0.08)',
+          border:  'rgba(220,38,38,0.2)',
         },
-        bg: {
-          base: '#0D0D0D',
-          surface: '#161616',
-          elevated: '#1E1E1E',
-          border: '#2A2A2A',
-          "border-subtle": '#1F1F1F',
-        },
-        text: {
-          primary: '#F0F0F0',
-          secondary: '#B0B0B0',
-          tertiary: '#707070',
-          disabled: '#404040',
-        },
-        status: {
-          success: '#22C55E',
-          warning: '#F59E0B',
-          error: '#EF4444',
-          info: '#3B82F6',
-        }
       },
       boxShadow: {
-        "glow": "0 0 20px rgba(139, 0, 0, 0.15)",
-        "glow-sm": "0 0 10px rgba(139, 0, 0, 0.1)",
-        "glow-lg": "0 0 40px rgba(139, 0, 0, 0.25)",
-        "glow-primary": "0 0 15px rgba(139, 0, 0, 0.3)",
-        "glow-red": "0 0 20px rgba(139, 0, 0, 0.3)",
+        "brand-sm":  "0 0 10px rgba(220,38,38,0.12)",
+        "brand":     "0 0 20px rgba(220,38,38,0.18)",
+        "brand-lg":  "0 0 40px rgba(220,38,38,0.24)",
       },
-      dropShadow: {
-        "glow": "0 0 10px rgba(139, 0, 0, 0.3)",
-        "glow-sm": "0 0 5px rgba(139, 0, 0, 0.2)",
+      animation: {
+        "fade-in": "fadeIn 0.3s ease-out forwards",
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0', transform: 'translateY(4px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        }
       }
     }
   },

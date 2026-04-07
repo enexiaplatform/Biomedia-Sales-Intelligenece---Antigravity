@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import {
   BarChart3,
   Users,
@@ -72,6 +73,8 @@ const navigationGroups = [
 ];
 
 export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme }) {
+  const { user, signOut } = useAuth();
+  
   // Step 2: Add Collapsed State
   const [collapsedGroups, setCollapsedGroups] = useState(() => {
     try {
@@ -189,7 +192,7 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-[#161B22] border border-black/5 dark:border-[#30363D] flex items-center justify-center text-[10px] font-black text-red-600 dark:text-[#8B0000]">AD</div>
                <div className="flex-1 min-w-0">
                  <div className="text-[11px] font-black text-slate-900 dark:text-slate-200 uppercase tracking-wide truncate">Admin User</div>
-                 <div className="text-[9px] font-bold text-slate-500 dark:text-[#8B949E] uppercase">Administrator</div>
+                 <div className="text-[9px] font-bold text-slate-500 dark:text-[#8B949E] uppercase truncate">{user?.email || 'Administrator'}</div>
                </div>
             </div>
             
@@ -203,7 +206,7 @@ export default function Sidebar({ open, onClose, onLogout, theme, onToggleTheme 
           </div>
           
           <button 
-            onClick={onLogout}
+            onClick={() => signOut()}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-[#8B949E] hover:bg-[#8B0000]/10 hover:text-[#8B0000] dark:hover:text-[#8B0000] transition-all border border-transparent dark:hover:border-[#8B0000]/20 hover:shadow-[0_0_15px_rgba(139,0,0,0.2)]"
           >
             <LogOut size={16} />

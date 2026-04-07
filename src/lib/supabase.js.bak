@@ -1,0 +1,111 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.warn("Supabase configuration is missing. The app will run in offline mode.");
+}
+
+const mockResult = { data: null, error: { message: "Supabase connection not configured. Running in offline mode." } };
+const mockQuery = {
+  select: () => mockQuery,
+  order: () => mockQuery,
+  limit: () => mockQuery,
+  eq: () => mockQuery,
+  gte: () => mockQuery,
+  lte: () => mockQuery,
+  ilike: () => mockQuery,
+  or: () => mockQuery,
+  in: () => mockQuery,
+  single: () => Promise.resolve(mockResult),
+  then: (resolve) => resolve(Promise.resolve(mockResult)),
+  insert: () => mockQuery,
+  update: () => mockQuery,
+  delete: () => mockQuery,
+  upsert: () => mockQuery,
+  status: 200,
+  statusText: "OK"
+};
+
+export const supabase = (supabaseUrl && supabaseKey) 
+  ? createClient(supabaseUrl, supabaseKey) 
+  : { 
+      from: () => mockQuery,
+      auth: { 
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      },
+      storage: {
+        from: () => ({
+          upload: () => Promise.resolve(mockResult),
+          list: () => Promise.resolve({ data: [], error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: "" } }),
+          remove: () => Promise.resolve(mockResult)
+        })
+      }
+    };
+
+// ── Accounts ──────────────────────────────────────────────────────────────────
+export async function fetchAccounts(filters = {}) {
+  let query = supabase
+    .from("accounts")
+    .select("*, contacts(count), deals(count), interactions(date)")
+    .order("updated_at", { ascending: false });
+
+  if (filters.type) query = query.eq("type", filters.type);
+  if (filters.region) query = query.eq("region", filters.region);
+  if (filters.scoreMin != null) query = query.gte("score", filters.scoreMin);
+  if (filters.scoreMax != null) query = query.lte("score", filters.scoreMax);
+  if (filters.search) query = query.ilike("name", `%${filters.search}%`);
+
+  let { data, error } = await query;
+
+  // Fallback for demo if no data exists
+  if (!data || data.length === 0) {
+    data = [
+      { id: 1, name: "Bệnh viện Chợ Rẫy", region: "TP.HCM", type: "hospital", score: 95, pipeline_value: 1200000000 },
+      { id: 2, name: "Phòng Lab ĐH Bách Khoa", region: "TP.HCM", type: "lab", score: 82, pipeline_value: 450000000 },
+      { id: 3, name: "Pharma Gia Lâm", region: "Hà Nội", type: "manufacturing", score: 88, pipeline_value: 890000000 },
+      { id: 4, name: "Bệnh viện Bạch Mai", region: "Hà Nội", type: "hospital", score: 91, pipeline_value: 2100000000 },
+      { id: 5, name: "Trung tâm Kiểm nghiệm Đà Nẵng", region: "Đà Nẵng", type: "lab", score: 75, pipeline_value: 150000000 },
+      { id: 6, name: "Nhà máy Bia Sài Gòn", region: "Miền Tây", type: "f&b", score: 65, pipeline_value: 600000000 },
+      { id: 7, name: "Vinapharm", region: "Hà Nội", type: "manufacturing", score: 94, pipeline_value: 3400000000 },
+    ];
+  }
+
+  return { data, error };
+}
+
+export async function fetchAccountById(id) {
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("*")
+    .eq("id", id)
+    .single();
+  return { data, error };
+}
+
+export async function createAccount(accountData) {
+  const { data, error } = await supabase
+    .from("accounts")
+    .insert([accountData])
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function updateAccount(id, accountData) {
+  const { data, error } = await supabase
+    .from("accounts")
+    .update(accountData)
+    .eq("id", id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function deleteAccount(id) {
+  const { error } = await supabase.from("accounts").delete().eq("id", id);
+  return { error };
+}

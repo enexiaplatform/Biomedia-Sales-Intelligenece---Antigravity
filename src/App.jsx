@@ -5,6 +5,9 @@ import Sidebar from "./components/SidebarVFinal";
 import QuickLogModal from "./components/QuickLogModal";
 import GlobalSearchModal from "./components/GlobalSearchModal";
 import MobileNav from "./components/MobileNav";
+
+// Auth
+import { useAuth } from './contexts/AuthContext';
 import Login from "./pages/Login";
 
 // Lazy Load Pages for Performance
@@ -47,14 +50,42 @@ const PageLoader = () => (
   </div>
 );
 
-export default function App() {
+// ============================================================================
+// PROTECTED ROUTE
+// ============================================================================
+
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-red-900 border-t-transparent rounded-full animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// ============================================================================
+// DASHBOARD LAYOUT
+// ============================================================================
+function DashboardLayout() {
   const [theme, setTheme] = useState(localStorage.getItem("biomedia_theme") || "dark");
-  const [isLogged, setIsLogged] = useState(localStorage.getItem("biomedia_auth") === "true");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const location = useLocation();
+  const { signOut } = useAuth();
 
   // Handle Theme Switching
   useEffect(() => {
@@ -68,14 +99,8 @@ export default function App() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  const handleLogin = () => {
-    localStorage.setItem("biomedia_auth", "true");
-    setIsLogged(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("biomedia_auth");
-    setIsLogged(false);
+  const handleLogout = async () => {
+    await signOut();
   };
 
   const pageTitle =
@@ -90,7 +115,6 @@ export default function App() {
   // Keyboard Shortcuts
   useEffect(() => {
     function handleKeyDown(e) {
-      if (!isLogged) return;
       const isMac = navigator.platform.toUpperCase().includes("MAC");
       const modifier = isMac ? e.metaKey : e.ctrlKey;
 
@@ -104,11 +128,7 @@ export default function App() {
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isLogged]);
-
-  if (!isLogged) {
-    return <Login onLogin={handleLogin} />;
-  }
+  }, []);
 
   return (
     <div className={`min-h-screen flex transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0D1117] text-white' : 'bg-slate-50 text-slate-900'}`}>
@@ -175,5 +195,24 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+// ============================================================================
+// APP ROOT
+// ============================================================================
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
