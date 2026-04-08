@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from "recharts";
-import { DollarSign, TrendingUp, Users, Target, Plus, AlertCircle, ChevronRight, Inbox } from "lucide-react";
-import { format, isThisMonth, parseISO } from "date-fns";
+import { DollarSign, TrendingUp, Users, Target, Plus, AlertCircle, ChevronRight, Inbox, ChevronDown, RefreshCw } from "lucide-react";
+import { format, isThisMonth, parseISO, differenceInDays } from "date-fns";
 import { vi } from "date-fns/locale";
 import CurrencyDisplay from "../components/CurrencyDisplay";
 import ScoreBadge from "../components/ScoreBadge";
+import { chatWithCoach } from "../lib/ai";
 import {
   getAccountStats,
   getTopAccountsByScore,
@@ -121,6 +122,13 @@ export default function Dashboard({ showToast }) {
   const [closingDeals, setClosingDeals]     = useState([]);
   const [error, setError]                   = useState("");
 
+  const [allDeals, setAllDeals]             = useState([]);
+  const [quota, setQuota]                   = useState(400000000);
+  const [briefing, setBriefing]             = useState(null);
+  const [briefingLoading, setBriefingLoading] = useState(false);
+  const [briefingError, setBriefingError]   = useState("");
+  const [showBriefing, setShowBriefing]     = useState(false);
+
   useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
@@ -146,12 +154,76 @@ export default function Dashboard({ showToast }) {
         return isThisMonth(parseISO(d.expected_close));
       });
       setClosingDeals(thisMonthDeals);
+      setAllDeals(dealsRes.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }
+
+  async function fetchBriefing() {
+    setBriefingLoading(true);
+    setBriefingError("");
+    try {
+      const activeDeals = allDeals.filter(d => d.stage !== 'closed_won' && d.stage !== 'closed_lost');
+      const activeValue = activeDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+      const coverage = quota > 0 ? (activeValue / quota).toFixed(1) : 0;
+      
+      const now = new Date();
+      const next7Days = activeDeals.filter(d => {
+        if (!d.expected_close) return false;
+        const diff = differenceInDays(parseISO(d.expected_close), now);
+        return diff >= 0 && diff <= 7;
+      }).map(d => `- ${d.name || 'Không tên'}: ${(d.value/1000000).toFixed(0)}tr`);
+
+      const overdueDealsCount = activeDeals.filter(d => {
+        if (!d.expected_close) return false;
+        return differenceInDays(now, parseISO(d.expected_close)) > 0;
+      }).length;
+
+      const top5Deals = [...activeDeals]
+        .sort((a,b) => (b.value || 0) - (a.value || 0))
+        .slice(0, 5)
+        .map(d => {
+          const daysLast = d.updated_at ? differenceInDays(now, parseISO(d.updated_at)) : 0;
+          return `- ${d.name || 'Không tên'} (${STAGE_LABELS[d.stage] || d.stage}), Last activity: ${daysLast} ngày`;
+        });
+
+      const prompt = `Bạn là AI Sales Coach cho Henry tại Biomedia Group Vietnam (bán thiết bị QC/vi sinh cho nhà máy dược và F&B).
+
+Dữ liệu pipeline hôm nay:
+- Tổng deals đang mở: ${activeDeals.length}
+- Pipeline coverage: ${coverage}×
+- Deals sắp đóng trong 7 ngày:
+${next7Days.length > 0 ? next7Days.join('\n') : "Không có"}
+- Deals quá hạn: ${overdueDealsCount}
+- Top 5 deals theo giá trị:
+${top5Deals.length > 0 ? top5Deals.join('\n') : "Không có"}
+
+Viết morning briefing ngắn gọn (150-200 từ) bằng tiếng Việt gồm:
+1. Tình trạng pipeline (1-2 câu)
+2. Top 3 việc cần làm hôm nay (cụ thể, actionable)
+3. 1 cảnh báo rủi ro nếu có
+
+Giọng văn: chuyên nghiệp, trực tiếp, như một sales manager giàu kinh nghiệm.`;
+
+      const aiReply = await chatWithCoach(prompt, {});
+      const timeStr = format(new Date(), "HH:mm");
+      setBriefing({ text: aiReply, time: timeStr });
+      if (!showBriefing) setShowBriefing(true);
+    } catch (err) {
+      setBriefingError(err.message || "Failed to fetch AI briefing.");
+    } finally {
+      setBriefingLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (allDeals.length > 0 && !briefing && !briefingLoading && !briefingError) {
+      fetchBriefing();
+    }
+  }, [allDeals]);
 
   if (loading) {
     return (
@@ -176,6 +248,131 @@ export default function Dashboard({ showToast }) {
 
   return (
     <div className="space-y-7 animate-fade-in">
+
+      {/* ── SECTION A: Pipeline Coverage KPI Bar ── */}
+      {(() => {
+        const activeDealsForCoverage = allDeals.filter(d => d.stage !== 'closed_won' && d.stage !== 'closed_lost');
+        const activeValue = activeDealsForCoverage.reduce((sum, d) => sum + (d.value || 0), 0);
+        const coverageRatio = quota > 0 ? (activeValue / quota) : 0;
+        
+        let coverageStatus = "Nguy hiểm";
+        let coverageBadgeColor = "bg-red-100 text-red-700 border border-red-200";
+        if (coverageRatio >= 4) {
+          coverageStatus = "Tốt";
+          coverageBadgeColor = "bg-green-100 text-green-700 border border-green-200";
+        } else if (coverageRatio >= 2) {
+          coverageStatus = "Cần chú ý";
+          coverageBadgeColor = "bg-amber-100 text-amber-700 border border-amber-200";
+        }
+
+        const wonThisMonthValue = allDeals.filter(d => {
+          if (d.stage !== 'closed_won' || !d.expected_close) return false;
+          return isThisMonth(parseISO(d.expected_close));
+        }).reduce((sum, d) => sum + (d.value || 0), 0);
+        
+        const monthProgress = quota > 0 ? Math.min(100, (wonThisMonthValue / quota) * 100) : 0;
+        let progressColor = "bg-red-500";
+        if (monthProgress >= 80) progressColor = "bg-green-500";
+        else if (monthProgress >= 40) progressColor = "bg-amber-500";
+
+        return (
+          <div className="card p-6 flex flex-col lg:flex-row gap-8 lg:items-center">
+            {/* Coverage Ratio */}
+            <div className="flex-1 border-b lg:border-b-0 lg:border-r border-black/5 dark:border-white/5 pb-5 lg:pb-0 lg:pr-8">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-3)' }}>Pipeline Coverage</div>
+                  <div className="flex items-end gap-3 mt-1 flex-wrap">
+                    <div className="text-4xl font-black tracking-tighter leading-none" style={{ color: 'var(--text-1)' }}>
+                      {coverageRatio.toFixed(1)}×
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${coverageBadgeColor}`}>
+                      {coverageStatus}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[11px] font-medium" style={{ color: 'var(--text-3)' }}>
+                Cần ít nhất 3× để đạt quota an toàn
+              </div>
+            </div>
+
+            {/* Progress */}
+            <div className="flex-1">
+              <div className="flex justify-between items-end mb-3">
+                <div className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-3)' }}>Tiến độ tháng này</div>
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: 'var(--text-2)' }}>
+                  <span>Đã đóng:</span> 
+                  <CurrencyDisplay value={wonThisMonthValue} className="font-bold" style={{ color: 'var(--text-1)' }} />
+                  <span className="mx-1">/</span>
+                  <span>Quota:</span>
+                  <input 
+                    type="number" 
+                    value={quota} 
+                    onChange={e => setQuota(parseInt(e.target.value) || 0)} 
+                    className="w-28 px-2 py-1 rounded text-[11px] font-bold outline-none transition-colors ml-1" 
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-1)', border: '1px solid var(--border)' }}
+                  />
+                </div>
+              </div>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                <div className={`h-full ${progressColor} transition-all duration-500`} style={{ width: `${monthProgress}%` }} />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── SECTION B: AI Morning Briefing ── */}
+      <div className="card p-0 overflow-hidden">
+        <div 
+          className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          onClick={() => setShowBriefing(!showBriefing)}
+        >
+          <div className="flex items-center gap-3">
+            <div className="text-xl">🤖</div>
+            <h3 className="font-bold uppercase tracking-widest text-[12px]" style={{ color: 'var(--text-1)' }}>
+              AI Briefing hôm nay
+            </h3>
+          </div>
+          <div className="flex items-center gap-3">
+            {briefing?.time && (
+              <span className="text-[11px] font-medium" style={{ color: 'var(--text-3)' }}>
+                Cập nhật lúc {briefing.time}
+              </span>
+            )}
+            <button 
+              onClick={(e) => { e.stopPropagation(); fetchBriefing(); }}
+              className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
+              disabled={briefingLoading}
+              style={{ color: 'var(--text-2)' }}
+            >
+              <RefreshCw size={14} className={briefingLoading ? "animate-spin" : ""} />
+            </button>
+            <ChevronDown size={16} style={{ color: 'var(--text-3)', transform: showBriefing ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </div>
+        </div>
+        
+        {showBriefing && (
+          <div className="px-6 pb-6 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+            {briefingLoading && !briefing ? (
+              <div className="animate-pulse space-y-3">
+                <div className="h-3 rounded w-3/4" style={{ background: 'var(--bg-elevated)' }}></div>
+                <div className="h-3 rounded w-full" style={{ background: 'var(--bg-elevated)' }}></div>
+                <div className="h-3 rounded w-5/6" style={{ background: 'var(--bg-elevated)' }}></div>
+              </div>
+            ) : briefingError ? (
+              <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl">
+                {briefingError}
+              </div>
+            ) : briefing ? (
+              <div className="p-5 bg-blue-50 dark:bg-blue-900/10 rounded-xl text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-1)' }}>
+                {briefing.text}
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

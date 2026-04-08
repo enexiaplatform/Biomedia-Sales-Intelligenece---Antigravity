@@ -26,7 +26,7 @@ export default function ProductManagement({ showToast }) {
   const [activeTab, setActiveTab] = useState("catalog");
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full px-6">
       <div className="flex items-center gap-3">
         <div className="p-3 rounded-lg" style={{ background: 'var(--brand-bg)', color: 'var(--brand)' }}>
           <Package size={24} />

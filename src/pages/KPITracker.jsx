@@ -60,7 +60,7 @@ export default function KPITracker({ showToast }) {
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-hide">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full px-6">
           {activeTab === "overview" && <KPIOverview showToast={showToast} />}
           {activeTab === "log" && <KPILogForm showToast={showToast} />}
           {activeTab === "trend" && <KPITrends showToast={showToast} />}

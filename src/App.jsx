@@ -163,7 +163,7 @@ function DashboardLayout() {
           </button>
         </header>
 
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 min-h-screen">
+        <div className="w-full px-6 py-8 min-h-screen">
           <Suspense fallback={<PageLoader />}>
             <div className="animate-fade-in">
               <Routes>

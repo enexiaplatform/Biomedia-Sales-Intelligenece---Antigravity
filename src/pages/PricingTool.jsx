@@ -30,7 +30,7 @@ export default function PricingTool({ showToast }) {
   const [activeTab, setActiveTab] = useState("catalog");
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 w-full px-6">
       {/* Navigation Tabs */}
       <div className="flex bg-surface-950/40 backdrop-blur-2xl rounded-2xl p-1.5 border border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] overflow-x-auto scrollbar-hide">
         {TABS.map((tab) => {

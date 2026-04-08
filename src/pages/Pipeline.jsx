@@ -1,399 +1,922 @@
-import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Target, DollarSign, TrendingUp, Award, X, Save, Calendar, FileText, AlertCircle } from "lucide-react";
-import { parseISO, isPast, format } from "date-fns";
-import CurrencyDisplay from "../components/CurrencyDisplay";
-import { PageLoader } from "../components/LoadingSpinner";
-import LoadingSpinner from "../components/LoadingSpinner";
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
-  fetchDeals, fetchAccounts, createDeal, updateDeal, deleteDeal
-} from "../lib/supabase";
+  Plus, X, AlertCircle, Zap, Search, Filter,
+  ArrowUpDown, ArrowUp, ArrowDown,
+  TrendingUp, DollarSign, Target, BarChart2, Trash2,
+  ChevronRight, Save, Clock, Briefcase, FileText
+} from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell, Legend,
+} from 'recharts';
+import { format, differenceInDays, parseISO, isValid, isPast, addMonths, startOfMonth } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { getDeals, createDeal, updateDeal, deleteDeal, getAccounts } from '../lib/supabase';
+import { getDealCoaching } from '../lib/ai';
+import LoadingSpinner, { PageLoader } from '../components/LoadingSpinner';
 
-const STAGES = [
-  { key: "prospect", label: "Tiềm năng", color: "bg-gray-100" },
-  { key: "qualified", label: "Đã xác nhận", color: "bg-blue-50" },
-  { key: "proposal", label: "Báo giá", color: "bg-yellow-50" },
-  { key: "negotiation", label: "Đàm phán", color: "bg-purple-50" },
-  { key: "closed_won", label: "Thắng", color: "bg-green-50" },
-  { key: "closed_lost", label: "Thua", color: "bg-red-50" }
-];
+// --- Constants ---
+const STAGE_LABEL = {
+  Prospect: 'Tiềm năng',
+  Qualified: 'Đã xác nhận',
+  Proposal: 'Báo giá',
+  Negotiation: 'Đàm phán',
+  'Closed Won': 'Thắng',
+  'Closed Lost': 'Thua',
+};
 
-export default function Pipeline({ showToast }) {
+const STAGE_COLOR = {
+  Prospect:      { bg: 'bg-slate-100',  text: 'text-slate-700',  hex: '#94a3b8' },
+  Qualified:     { bg: 'bg-blue-100',   text: 'text-blue-700',   hex: '#3b82f6' },
+  Proposal:      { bg: 'bg-amber-100',  text: 'text-amber-700',  hex: '#f59e0b' },
+  Negotiation:   { bg: 'bg-purple-100', text: 'text-purple-700', hex: '#8b5cf6' },
+  'Closed Won':  { bg: 'bg-green-100',  text: 'text-green-700',  hex: '#22c55e' },
+  'Closed Lost': { bg: 'bg-red-100',    text: 'text-red-700',    hex: '#ef4444' },
+};
+
+// --- Helpers ---
+const fmtShort = (v) => {
+  if (!v && v !== 0) return '—';
+  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}T`;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`;
+  return `${(v / 1_000).toFixed(0)}K`;
+};
+
+const fmt = (v) => {
+  if (!v && v !== 0) return '—';
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0 }).format(v);
+};
+
+const safeDate = (d) => {
+  if (!d) return null;
+  const p = typeof d === 'string' ? parseISO(d) : new Date(d);
+  return isValid(p) ? p : null;
+};
+
+export default function Pipeline() {
+  const [searchParams] = useSearchParams();
   const [deals, setDeals] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingDeal, setEditingDeal] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [dragging, setDragging] = useState(null);
-  const [dragOver, setDragOver] = useState(null);
+  const [error, setError] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [savingDeal, setSaving] = useState(false);
+  const [selectedDeal, setSelected] = useState(null);
+  const [coachLoading, setCoachL] = useState(false);
+  const [coachResult, setCoachR] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  useEffect(() => { load(); }, []);
+  // Filters
+  const [search, setSearch] = useState('');
+  const [stageFilter, setStageF] = useState('All');
+  const [accountFilter, setAccountF] = useState('All');
+  const [probMin, setProbMin] = useState('');
+  const [probMax, setProbMax] = useState('');
 
-  async function load() {
+  // Sort
+  const [sortField, setSortField] = useState('value');
+  const [sortDir, setSortDir] = useState('desc');
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
     setLoading(true);
-    const [dealsRes, accountsRes] = await Promise.all([
-      fetchDeals(),
-      fetchAccounts()
-    ]);
-    setDeals(dealsRes.data || []);
-    setAccounts(accountsRes.data || []);
-    setLoading(false);
-  }
-
-  async function handleStageChange(dealId, newStage) {
-    const { data } = await updateDeal(dealId, { stage: newStage });
-    if (data) {
-      setDeals((prev) => prev.map((d) => (d.id === dealId ? { ...d, stage: newStage } : d)));
+    try {
+      const [dealsRes, accountsRes] = await Promise.all([
+        getDeals(),
+        getAccounts()
+      ]);
+      setDeals(dealsRes.data || []);
+      setAccounts(accountsRes.data || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function handleDelete(id) {
-    setDeleting(true);
-    const { error } = await deleteDeal(id);
-    if (error) showToast(error.message, "error");
-    else {
-      setDeals((prev) => prev.filter((d) => d.id !== id));
-      showToast("Đã xóa deal");
+  // --- Filter & Sort Logic ---
+  const filteredDeals = useMemo(() => {
+    let result = [...deals];
+
+    // Search
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter(d => 
+        d.name?.toLowerCase().includes(s) || 
+        d.accounts?.name?.toLowerCase().includes(s) ||
+        d.product?.toLowerCase().includes(s)
+      );
     }
-    setDeleteTarget(null);
-    setDeleting(false);
-  }
 
-  function handleDragStart(e, deal) {
-    setDragging(deal);
-    e.dataTransfer.effectAllowed = "move";
-  }
-
-  function handleDragOver(e, stageKey) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOver(stageKey);
-  }
-
-  function handleDrop(e, stageKey) {
-    e.preventDefault();
-    if (dragging && dragging.stage !== stageKey) {
-      handleStageChange(dragging.id, stageKey);
+    // Stage
+    if (stageFilter !== 'All') {
+      result = result.filter(d => d.stage === stageFilter);
     }
-    setDragging(null);
-    setDragOver(null);
-  }
 
-  const openDeals = deals.filter((d) => d.stage !== "closed_won" && d.stage !== "closed_lost");
-  const closedWon = deals.filter((d) => d.stage === "closed_won");
-  const closedDeals = deals.filter((d) => d.stage === "closed_won" || d.stage === "closed_lost");
-  const totalValue = openDeals.reduce((sum, d) => sum + (d.value || 0), 0);
-  const weightedForecast = openDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
-  const winRate = closedDeals.length > 0 ? Math.round((closedWon.length / closedDeals.length) * 100) : 0;
+    // Account
+    if (accountFilter !== 'All') {
+      result = result.filter(d => d.account_id === accountFilter);
+    }
 
-  if (loading) return <PageLoader />;
+    // Probability
+    if (probMin !== '') {
+      result = result.filter(d => (d.probability || 0) >= parseInt(probMin));
+    }
+    if (probMax !== '') {
+      result = result.filter(d => (d.probability || 0) <= parseInt(probMax));
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      // Handle nested account name
+      if (sortField === 'account_name') {
+        valA = a.accounts?.name || '';
+        valB = b.accounts?.name || '';
+      }
+
+      // Handle calculated weighted value
+      if (sortField === 'weighted') {
+        valA = (a.value || 0) * ((a.probability || 0) / 100);
+        valB = (b.value || 0) * ((b.probability || 0) / 100);
+      }
+
+      if (typeof valA === 'string') {
+        valA = valA.toLowerCase();
+        valB = (valB || '').toLowerCase();
+        return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+
+      if (sortField === 'expected_close' || sortField === 'created_at') {
+        const dateA = safeDate(valA)?.getTime() || 0;
+        const dateB = safeDate(valB)?.getTime() || 0;
+        return sortDir === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+
+      return sortDir === 'asc' ? (valA || 0) - (valB || 0) : (valB || 0) - (valA || 0);
+    });
+
+    return result;
+  }, [deals, search, stageFilter, accountFilter, probMin, probMax, sortField, sortDir]);
+
+  // --- KPI Calculations ---
+  const kpis = useMemo(() => {
+    const activeDeals = deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost');
+    const totalPipeline = activeDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+    const weightedForecast = activeDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
+    
+    const wonCount = deals.filter(d => d.stage === 'Closed Won').length;
+    const lostCount = deals.filter(d => d.stage === 'Closed Lost').length;
+    const winRate = (wonCount + lostCount) > 0 ? (wonCount / (wonCount + lostCount)) * 100 : 0;
+
+    return { activeDeals: activeDeals.length, totalPipeline, weightedForecast, winRate, wonCount, lostCount };
+  }, [deals]);
+
+  const tableTotals = useMemo(() => {
+    const totalRaw = filteredDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+    const totalWeighted = filteredDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
+    return { totalRaw, totalWeighted };
+  }, [filteredDeals]);
+
+  // --- Handlers ---
+  const toggleSort = (field) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
+  };
+
+  const handleRowClick = (deal) => {
+    setCoachR(null);
+    setSelected(deal);
+  };
+
+  const handleAICoach = async () => {
+    if (!selectedDeal) return;
+    setCoachL(true);
+    setCoachR(null);
+    try {
+      const result = await getDealCoaching(selectedDeal);
+      setCoachR(result);
+    } catch (err) {
+      console.error(err);
+      setCoachR("Không thể kết nối với AI Coach lúc này.");
+    } finally {
+      setCoachL(false);
+    }
+  };
+
+  const handleUpdateNotes = async (notes) => {
+    setSavingDeal(true);
+    try {
+      const { data, error } = await updateDeal(selectedDeal.id, { notes });
+      if (!error) {
+        setDeals(prev => prev.map(d => d.id === selectedDeal.id ? { ...d, notes } : d));
+        setSelected(prev => ({ ...prev, notes }));
+      }
+    } finally {
+      setSavingDeal(false);
+    }
+  };
+
+  const handleDeleteDeal = async () => {
+    setSavingDeal(true);
+    try {
+      const { error } = await deleteDeal(selectedDeal.id);
+      if (!error) {
+        setDeals(prev => prev.filter(d => d.id !== selectedDeal.id));
+        setSelected(null);
+        setShowDeleteConfirm(false);
+      }
+    } finally {
+      setSavingDeal(false);
+    }
+  };
+
+  if (loading && deals.length === 0) return <PageLoader />;
 
   return (
-    <div className="flex flex-col h-full bg-surface-950 relative overflow-hidden">
-      {/* Background accents */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 blur-[150px] rounded-full -z-10" />
-      
-      {/* Header & Summary Bar */}
-      <div className="px-10 py-10 border-b border-white/5 bg-surface-900/40 backdrop-blur-3xl shrink-0 shadow-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-8 mb-10">
-          <div>
-            <h2 className="text-3xl font-black text-slate-100 uppercase tracking-tighter leading-none italic">Pipeline Strategic Board</h2>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mt-3 flex items-center gap-2">
-              <div className="w-1 h-1 bg-primary rounded-full animate-pulse" />
-              Real-time Funnel Analytics Engine
-            </p>
+    <div className="w-full bg-gray-50 min-h-screen pb-20">
+      {/* 1. Header Bar */}
+      <Header onAdd={() => setShowAdd(true)} />
+
+      <div className="w-full px-6 space-y-6">
+        {/* 2. KPI Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard title="Deals đang mở" value={kpis.activeDeals} sub="Cơ hội tiềm năng" icon={<BarChart2 className="text-blue-500" />} />
+          <KPICard title="Tổng pipeline" value={fmtShort(kpis.totalPipeline)} sub="Chưa tính trọng số" icon={<DollarSign className="text-emerald-500" />} />
+          <KPICard title="Dự báo weighted" value={fmtShort(kpis.weightedForecast)} sub="Tính theo xác suất" icon={<TrendingUp className="text-purple-500" />} />
+          <KPICard title="Tỷ lệ thắng" value={`${kpis.winRate.toFixed(1)}%`} sub={`${kpis.wonCount} thắng / ${kpis.lostCount} thua`} icon={<Target className="text-red-500" />} />
+        </div>
+
+        {/* 3. Filter Bar */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Tìm tên deal, tài khoản, sản phẩm..." 
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
-          <button onClick={() => { setEditingDeal(null); setModalOpen(true); }} className="btn-primary h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-glow shadow-primary/20 flex items-center gap-3">
-            <Plus size={18} /> Khởi tạo Deal mới
-          </button>
+          
+          <select 
+            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none"
+            value={stageFilter}
+            onChange={e => setStageF(e.target.value)}
+          >
+            <option value="All">Tất cả giai đoạn</option>
+            {Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+
+          <select 
+            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none max-w-[200px]"
+            value={accountFilter}
+            onChange={e => setAccountF(e.target.value)}
+          >
+            <option value="All">Tất cả tài khoản</option>
+            {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+
+          <div className="flex items-center gap-2">
+            <input 
+              type="number" 
+              placeholder="Min %" 
+              className="w-20 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none"
+              value={probMin}
+              onChange={e => setProbMin(e.target.value)}
+            />
+            <span className="text-gray-400">—</span>
+            <input 
+              type="number" 
+              placeholder="Max %" 
+              className="w-20 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none"
+              value={probMax}
+              onChange={e => setProbMax(e.target.value)}
+            />
+          </div>
+
+          <div className="ml-auto text-sm font-medium text-gray-500">
+            {filteredDeals.length} deals
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <SummaryCard label="Tổng deals mở" value={openDeals.length} icon={<Target size={16}/>} />
-          <SummaryCard label="Giá trị Pipeline" value={totalValue} formatter={v => <CurrencyDisplay value={v} />} icon={<DollarSign size={16}/>} />
-          <SummaryCard label="Dự báo trọng số" value={Math.round(weightedForecast)} formatter={v => <CurrencyDisplay value={v} />} icon={<TrendingUp size={16}/>} color="primary" />
-          <SummaryCard label="Tỷ lệ thắng (Lũy kế)" value={winRate} formatter={v => `${v}%`} icon={<Award size={16}/>} color="emerald" />
+        {/* 4. Sortable Table */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <Th label="Tên Deal" field="name" current={sortField} dir={sortDir} onSort={toggleSort} />
+                  <Th label="Tài khoản" field="account_name" current={sortField} dir={sortDir} onSort={toggleSort} />
+                  <Th label="Sản phẩm" field="product" current={sortField} dir={sortDir} onSort={toggleSort} />
+                  <Th label="Giai đoạn" field="stage" current={sortField} dir={sortDir} onSort={toggleSort} />
+                  <Th label="Giá trị" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" />
+                  <Th label="Xác suất" field="probability" current={sortField} dir={sortDir} onSort={toggleSort} align="center" />
+                  <Th label="Weighted" field="weighted" current={sortField} dir={sortDir} onSort={toggleSort} align="right" />
+                  <Th label="Đóng dự kiến" field="expected_close" current={sortField} dir={sortDir} onSort={toggleSort} />
+                  <Th label="Tuổi deal" field="created_at" current={sortField} dir={sortDir} onSort={toggleSort} />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filteredDeals.map(deal => (
+                  <tr 
+                    key={deal.id} 
+                    className="hover:bg-blue-50/30 cursor-pointer transition-colors"
+                    onClick={() => handleRowClick(deal)}
+                  >
+                    <td className="px-4 py-4 font-semibold text-gray-900">{deal.name}</td>
+                    <td className="px-4 py-4 text-gray-600">{deal.accounts?.name || '—'}</td>
+                    <td className="px-4 py-4 text-gray-500 text-sm italic">{deal.product || '—'}</td>
+                    <td className="px-4 py-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${STAGE_COLOR[deal.stage]?.bg || 'bg-gray-100'} ${STAGE_COLOR[deal.stage]?.text || 'text-gray-600'}`}>
+                        {STAGE_LABEL[deal.stage] || deal.stage}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right font-bold text-gray-900">{fmt(deal.value)}</td>
+                    <td className="px-4 py-4 text-center">
+                      <ProbBadge prob={deal.probability} />
+                    </td>
+                    <td className="px-4 py-4 text-right font-bold text-emerald-600">
+                      {fmt((deal.value || 0) * ((deal.probability || 0) / 100))}
+                    </td>
+                    <td className="px-4 py-4">
+                      <DateCell date={deal.expected_close} stage={deal.stage} />
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-400">
+                      {differenceInDays(new Date(), safeDate(deal.created_at) || new Date())}d
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50/50 font-bold border-t border-gray-100">
+                <tr>
+                  <td colSpan={4} className="px-4 py-4 text-right text-gray-500 uppercase tracking-wider text-[11px]">Tổng Pipeline Hiện Tại:</td>
+                  <td className="px-4 py-4 text-right text-gray-900">{fmt(tableTotals.totalRaw)}</td>
+                  <td></td>
+                  <td className="px-4 py-4 text-right text-emerald-700">{fmt(tableTotals.totalWeighted)}</td>
+                  <td colSpan={2}></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-10 scrollbar-hide">
-        <div className="flex gap-8 h-full min-w-max pb-4">
-          {STAGES.map((stage) => {
-            const stageDeals = deals.filter((d) => d.stage === stage.key);
-            const stageValue = stageDeals.reduce((sum, d) => sum + (d.value || 0), 0);
-            const isTarget = dragOver === stage.key;
-
-            return (
-              <div
-                key={stage.key}
-                className={`flex flex-col w-80 rounded-[2.5rem] transition-all duration-500 border backdrop-blur-sm
-                  ${isTarget ? "bg-white/10 border-primary shadow-glow shadow-primary/20 scale-[1.02]" : "bg-white/5 border-white/5"}`}
-                onDragOver={(e) => handleDragOver(e, stage.key)}
-                onDrop={(e) => handleDrop(e, stage.key)}
-                onDragLeave={() => setDragOver(null)}
-              >
-                <div className="p-6 border-b border-white/5 bg-white/5 rounded-t-[2.5rem]">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-100 italic flex items-center gap-2">
-                      <div className="w-1.5 h-3 bg-primary/40 rounded-full" />
-                      {stage.label}
-                    </span>
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-surface-950/50 text-slate-400 text-[10px] font-black border border-white/5">
-                      {stageDeals.length}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <CurrencyDisplay value={stageValue} className="text-xs font-bold text-slate-500 italic drop-shadow-glow-sm" />
-                    <span className="text-[8px] text-slate-700 font-black uppercase">Capital Allocation</span>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-hide">
-                  {stageDeals.map((deal) => (
-                    <DealCard
-                      key={deal.id}
-                      deal={deal}
-                      onDragStart={(e) => handleDragStart(e, deal)}
-                      onDragEnd={() => setDragging(null)}
-                      isDragging={dragging?.id === deal.id}
-                      onEdit={() => { setEditingDeal(deal); setModalOpen(true); }}
-                      onDelete={() => setDeleteTarget(deal)}
-                    />
-                  ))}
-                  {stageDeals.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center py-20 opacity-20 border-2 border-dashed border-white/5 rounded-3xl m-2">
-                      <Plus size={32} className="text-slate-500 mb-4" />
-                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 italic">Empty Stage</div>
-                    </div>
-                  )}
-                </div>
+        {/* 5. Analytics Section */}
+        {deals.length > 0 && (
+          <div className="pt-8 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+                <BarChart2 size={20} />
               </div>
-            );
-          })}
-        </div>
+              <h3 className="text-xl font-bold text-gray-900 italic uppercase tracking-tighter">Phân tích Pipeline</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <ChartCard title="Giá trị theo giai đoạn">
+                <ValueByStageChart deals={deals} />
+              </ChartCard>
+              <ChartCard title="Dự báo theo tháng">
+                <ForecastByMonthChart deals={deals} />
+              </ChartCard>
+              <ChartCard title="Số deal theo giai đoạn">
+                <CountByStageChart deals={deals} />
+              </ChartCard>
+              <ChartCard title="Phân bố xác suất">
+                <ProbDistributionChart deals={deals} />
+              </ChartCard>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Deal Modal */}
-      {modalOpen && (
-        <DealModal
-          deal={editingDeal}
-          accounts={accounts}
-          onClose={() => setModalOpen(false)}
-          onSave={(saved) => {
-            if (editingDeal) {
-              setDeals((prev) => prev.map((d) => (d.id === saved.id ? { ...d, ...saved } : d)));
-              showToast("Đã cập nhật deal");
-            } else {
-              setDeals((prev) => [saved, ...prev]);
-              showToast("Đã thêm deal");
-            }
-            setModalOpen(false);
-          }}
+      {/* 6. Side Drawer */}
+      {selectedDeal && (
+        <SideDrawer 
+          deal={selectedDeal} 
+          onClose={() => setSelected(null)} 
+          onSaveNotes={handleUpdateNotes}
+          saving={savingDeal}
+          onAICoach={handleAICoach}
+          coachLoading={coachLoading}
+          coachResult={coachResult}
+          onDelete={() => setShowDeleteConfirm(true)}
         />
       )}
 
-      {/* Delete Confirm */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/90 backdrop-blur-md p-4">
-          <div className="bg-surface-900 border border-white/10 rounded-[2.5rem] shadow-2xl p-10 max-w-sm w-full text-center">
-            <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+      {/* 7. Add Deal Modal */}
+      {showAdd && (
+        <AddDealModal 
+          accounts={accounts} 
+          onClose={() => setShowAdd(false)} 
+          onSave={async (data) => {
+            setSaving(true);
+            const res = await createDeal(data);
+            if (!res.error) {
+              await fetchData();
+              setShowAdd(false);
+            }
+            setSaving(false);
+          }}
+          saving={savingDeal}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <Modal onClose={() => setShowDeleteConfirm(false)}>
+          <div className="p-6 text-center">
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 size={24} />
             </div>
-            <h3 className="text-xl font-black text-slate-100 uppercase tracking-tighter mb-2">Hủy bỏ Deal?</h3>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed mb-8">Bạn có chắc chắn muốn xóa "<strong>{deleteTarget.name}</strong>"? Hành động này không thể hoàn tác.</p>
-            <div className="flex gap-4">
-              <button onClick={() => setDeleteTarget(null)} className="btn-secondary h-12 flex-1 uppercase tracking-widest text-[10px] font-black" disabled={deleting}>Hủy</button>
-              <button onClick={() => handleDelete(deleteTarget.id)} className="btn-danger h-12 flex-1 uppercase tracking-widest text-[10px] font-black flex items-center justify-center gap-2" disabled={deleting}>
-                {deleting ? <LoadingSpinner size="sm" /> : <Trash2 size={14}/>} Xác nhận xóa
+            <h3 className="text-lg font-bold mb-2">Xác nhận xóa Deal</h3>
+            <p className="text-gray-500 mb-6">Bạn có chắc muốn xóa <b>{selectedDeal?.name}</b>? Thao tác này không thể hoàn tác.</p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowDeleteConfirm(false)} 
+                className="flex-1 py-2 bg-gray-100 rounded-lg font-semibold"
+              >
+                Hủy
+              </button>
+              <button 
+                onClick={handleDeleteDeal} 
+                className="flex-1 py-2 bg-red-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
+                disabled={savingDeal}
+              >
+                {savingDeal ? <LoadingSpinner size="sm" /> : <Trash2 size={16} />} Xóa vĩnh viễn
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
 }
 
-function SummaryCard({ label, value, icon, formatter = v => v, color = "default" }) {
-  const colorClasses = {
-    primary: "text-primary drop-shadow-glow",
-    emerald: "text-emerald-400 drop-shadow-glow-sm",
-    default: "text-slate-100"
+// --- Sub-Components ---
+
+function Header({ onAdd }) {
+  return (
+    <div className="w-full h-20 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
+      <div>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase italic">Pipeline</h1>
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none">Quản lý toàn bộ cơ hội bán hàng</p>
+      </div>
+      <button 
+        onClick={onAdd}
+        className="btn-primary bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-red-200"
+      >
+        <Plus size={18} /> Tạo Deal Mới
+      </button>
+    </div>
+  );
+}
+
+function KPICard({ title, value, sub, icon }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{title}</span>
+        <div className="p-2 bg-gray-50 rounded-lg">{icon}</div>
+      </div>
+      <div className="text-3xl font-black tracking-tighter text-gray-900 mb-1">{value}</div>
+      <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">{sub}</div>
+    </div>
+  );
+}
+
+function Th({ label, field, current, dir, onSort, align = 'left' }) {
+  const isActive = current === field;
+  return (
+    <th 
+      className={`px-4 py-3 text-[11px] font-black uppercase tracking-widest text-gray-400 cursor-pointer hover:text-red-500 transition-colors ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : ''}`}
+      onClick={() => onSort(field)}
+    >
+      <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : ''}`}>
+        {label}
+        {isActive ? (
+          dir === 'asc' ? <ArrowUp size={12} className="text-red-500" /> : <ArrowDown size={12} className="text-red-500" />
+        ) : (
+          <ArrowUpDown size={12} className="opacity-0 group-hover:opacity-100" />
+        )}
+      </div>
+    </th>
+  );
+}
+
+function ProbBadge({ prob }) {
+  let color = 'text-gray-400 bg-gray-100';
+  if (prob >= 75) color = 'text-green-700 bg-green-100';
+  else if (prob >= 50) color = 'text-amber-700 bg-amber-100';
+  else if (prob >= 25) color = 'text-orange-700 bg-orange-100';
+  else color = 'text-red-700 bg-red-100';
+
+  return (
+    <span className={`inline-flex items-center justify-center min-w-[48px] px-2 py-0.5 rounded-md text-[11px] font-black tracking-tighter ${color}`}>
+      {prob}%
+    </span>
+  );
+}
+
+function DateCell({ date, stage }) {
+  if (!date) return <span className="text-gray-300 italic">—</span>;
+  const d = parseISO(date);
+  const overdue = isPast(d) && stage !== 'Closed Won' && stage !== 'Closed Lost';
+  
+  return (
+    <div className={`flex items-center gap-1 text-sm font-medium ${overdue ? 'text-red-500' : 'text-gray-600'}`}>
+      {format(d, 'dd/MM/yyyy')}
+      {overdue && <AlertCircle size={14} className="animate-pulse" />}
+    </div>
+  );
+}
+
+function ChartCard({ title, children }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <h4 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-8 border-l-4 border-red-500 pl-3">{title}</h4>
+      <div className="h-[300px]">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// --- Charts ---
+
+function ValueByStageChart({ deals }) {
+  const data = useMemo(() => {
+    return Object.keys(STAGE_LABEL).map(stage => {
+      const val = deals.filter(d => d.stage === stage).reduce((sum, d) => sum + (d.value || 0), 0);
+      return { name: STAGE_LABEL[stage], raw: stage, value: val };
+    });
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} layout="vertical" margin={{ left: 40, right: 40 }}>
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+        <XAxis type="number" hide />
+        <YAxis 
+          dataKey="name" 
+          type="category" 
+          axisLine={false} 
+          tickLine={false} 
+          tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }}
+        />
+        <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(v) => fmtShort(v)} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={STAGE_COLOR[entry.raw]?.hex || '#cbd5e1'} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ForecastByMonthChart({ deals }) {
+  const data = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 6; i++) {
+      const mDate = startOfMonth(addMonths(now, i));
+      const mStr = format(mDate, 'MM/yyyy');
+      
+      const mDeals = deals.filter(d => {
+        const close = safeDate(d.expected_close);
+        return close && format(startOfMonth(close), 'MM/yyyy') === mStr && d.stage !== 'Closed Lost';
+      });
+
+      const raw = mDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+      const weighted = mDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
+
+      months.push({ name: mStr, raw, weighted });
+    }
+    return months;
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 20 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={v => fmtShort(v)} />
+        <Tooltip formatter={(v) => fmtShort(v)} />
+        <Legend verticalAlign="top" height={36}/>
+        <Bar dataKey="raw" name="Pipeline" fill="#bfdbfe" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="weighted" name="Weighted" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function CountByStageChart({ deals }) {
+  const data = useMemo(() => {
+    return Object.keys(STAGE_LABEL).map(stage => ({
+      name: STAGE_LABEL[stage],
+      raw: stage,
+      count: deals.filter(d => d.stage === stage).length
+    }));
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <Tooltip cursor={{ fill: '#f8fafc' }} />
+        <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={40}>
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={STAGE_COLOR[entry.raw]?.hex || '#cbd5e1'} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ProbDistributionChart({ deals }) {
+  const data = useMemo(() => {
+    const buckets = [
+      { name: '0-25%', min: 0, max: 25, color: '#ef4444' },
+      { name: '26-50%', min: 26, max: 50, color: '#f59e0b' },
+      { name: '51-75%', min: 51, max: 75, color: '#3b82f6' },
+      { name: '76-100%', min: 76, max: 100, color: '#22c55e' },
+    ];
+    return buckets.map(b => ({
+      ...b,
+      count: deals.filter(d => (d.probability || 0) >= b.min && (d.probability || 0) <= b.max).length
+    }));
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <Tooltip cursor={{ fill: '#f8fafc' }} />
+        <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={40}>
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// --- Modals & Drawer ---
+
+function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoading, coachResult, onDelete }) {
+  const [notes, setNotes] = useState(deal.notes || '');
+
+  useEffect(() => {
+    setNotes(deal.notes || '');
+  }, [deal]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col p-8 overflow-y-auto animate-in slide-in-from-right duration-300">
+        <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <X size={20} />
+        </button>
+
+        <div className="mt-4 flex items-center gap-3 mb-1">
+          <div className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded">Strategic Deal</div>
+          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ID: {deal.id.slice(0, 8)}</span>
+        </div>
+        <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">{deal.name}</h2>
+        <div className="flex items-center gap-2 mb-8">
+          <Briefcase size={14} className="text-red-500" />
+          <span className="text-sm font-bold text-gray-700">{deal.accounts?.name || 'Chưa gán tài khoản'}</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6 bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
+          <DetailItem label="Giá trị" value={fmt(deal.value)} icon={<DollarSign size={14} />} />
+          <DetailItem label="Xác suất" value={<ProbBadge prob={deal.probability} />} icon={<Target size={14} />} />
+          <DetailItem label="Sản phẩm" value={deal.product || '—'} icon={<FileText size={14} />} />
+          <DetailItem label="Ngày dự kiến" value={deal.expected_close ? format(parseISO(deal.expected_close), 'dd/MM/yyyy') : '—'} icon={<Clock size={14} />} />
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+              <span className="w-1 h-3 bg-gray-300 rounded-full" /> Ghi chú chiến thuật
+            </h3>
+            <button 
+              onClick={() => onSaveNotes(notes)}
+              className="text-[10px] font-bold text-blue-600 uppercase hover:underline flex items-center gap-1"
+              disabled={saving}
+            >
+              {saving ? 'Đang lưu...' : <><Save size={10} /> Lưu ghi chú</>}
+            </button>
+          </div>
+          <textarea 
+            className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-xl text-sm italic focus:outline-none focus:ring-1 focus:ring-blue-200"
+            placeholder="Nhập thông tin tình báo, chiến lược..."
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-4">
+          <button 
+            onClick={onAICoach}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg shadow-blue-100 transition-all active:scale-95 disabled:opacity-50"
+            disabled={coachLoading}
+          >
+            {coachLoading ? <LoadingSpinner size="sm" /> : <Zap size={18} />} AI Deal Coach Analysis
+          </button>
+          
+          {coachResult && (
+            <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-widest mb-3">
+                <AlertCircle size={14} /> AI Recommendations
+              </div>
+              <div className="text-sm text-blue-900 leading-relaxed whitespace-pre-wrap">
+                {coachResult}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-auto pt-10">
+          <button 
+            onClick={onDelete}
+            className="w-full py-3 text-red-500 font-bold uppercase tracking-widest text-[10px] hover:bg-red-50 rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            <Trash2 size={14} /> Xóa Cơ Hội Này
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailItem({ label, value, icon }) {
+  return (
+    <div>
+      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+        {icon}{label}
+      </div>
+      <div className="text-sm text-gray-900 font-black tracking-tight">{value}</div>
+    </div>
+  );
+}
+
+function AddDealModal({ accounts, onClose, onSave, saving }) {
+  const [form, setForm] = useState({
+    name: '',
+    account_id: '',
+    product: '',
+    value: '',
+    stage: 'Prospect',
+    probability: 10,
+    expected_close: '',
+    notes: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.name || !form.account_id || !form.value) return;
+    onSave({
+      ...form,
+      value: parseInt(form.value) || 0,
+      probability: parseInt(form.probability) || 0
+    });
   };
 
   return (
-    <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem] shadow-xl relative overflow-hidden group">
-      <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 blur-3xl -z-10 group-hover:bg-primary/5 transition-all duration-700" />
-      <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 rounded-xl bg-surface-950/50 border border-white/5 text-slate-500 group-hover:text-primary transition-colors">
-          {icon}
-        </div>
-        <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{label}</div>
-      </div>
-      <div className={`text-2xl font-black italic tracking-tighter ${colorClasses[color]}`}>{formatter(value)}</div>
-    </div>
-  );
-}
+    <Modal onClose={onClose}>
+      <div className="p-8">
+        <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-1 mt-0">Tạo Deal Mới</h2>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8">Thêm cơ hội bán hàng vào pipeline</p>
 
-function DealCard({ deal, onDragStart, onDragEnd, isDragging, onEdit, onDelete }) {
-  const isOverdue = deal.expected_close && isPast(parseISO(deal.expected_close)) &&
-    deal.stage !== "closed_won" && deal.stage !== "closed_lost";
-
-  const probColor = deal.probability >= 70 ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
-    deal.probability >= 40 ? "text-blue-400 bg-blue-500/10 border-blue-500/20" : "text-slate-400 bg-white/5 border-white/10";
-
-  return (
-    <div
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      className={`bg-white/5 border border-white/10 rounded-[1.5rem] p-5 shadow-lg cursor-grab group transition-all duration-300
-        ${isDragging ? "opacity-20 scale-95" : "hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-2xl"}`}
-    >
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex-1 min-w-0">
-          <div className="font-black text-sm text-slate-100 uppercase tracking-tight italic line-clamp-1 group-hover:text-primary transition-colors">{deal.name}</div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-            <span className="w-1 h-1 bg-blue-500 rounded-full" />
-            {deal.accounts?.name || "Unassigned Account"}
-          </div>
-        </div>
-        <div className="hidden group-hover:flex gap-2 shrink-0 animate-in fade-in slide-in-from-right-2 duration-300">
-          <button onClick={onEdit} className="p-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-all border border-white/5"><Edit2 size={12} /></button>
-          <button onClick={onDelete} className="p-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-red-400 rounded-lg transition-all border border-white/5"><Trash2 size={12} /></button>
-        </div>
-      </div>
-
-      {deal.product && (
-        <div className="flex items-center gap-2 mb-4">
-          <FileText size={10} className="text-slate-600" />
-          <div className="text-[10px] text-slate-400 font-medium italic">{deal.product}</div>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between pt-4 border-t border-white/5">
-        <CurrencyDisplay value={deal.value} className="text-sm font-black text-slate-100 tracking-tighter" />
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tighter border ${probColor}`}>
-          {deal.probability}% Prob
-        </span>
-      </div>
-
-      {deal.expected_close && (
-        <div className={`flex items-center gap-2 text-[9px] mt-4 font-black uppercase tracking-widest ${isOverdue ? "text-red-400 animate-pulse" : "text-slate-600"}`}>
-          <Calendar size={10} />
-          {isOverdue ? "⚠️ QUÁ HẠN: " : "EXP: "} {deal.expected_close}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DealModal({ deal, accounts, onClose, onSave }) {
-  const STAGES_OPT = ["prospect", "qualified", "proposal", "negotiation", "closed_won", "closed_lost"];
-  const STAGE_LABELS = { prospect: "Tiềm năng", qualified: "Đã xác nhận", proposal: "Báo giá", negotiation: "Đàm phán", closed_won: "Thắng", closed_lost: "Thua" };
-
-  const [form, setForm] = useState({
-    name: deal?.name || "",
-    account_id: deal?.account_id || "",
-    product: deal?.product || "",
-    value: deal?.value || 0,
-    stage: deal?.stage || "prospect",
-    probability: deal?.probability ?? 50,
-    expected_close: deal?.expected_close || "",
-    notes: deal?.notes || ""
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!form.name.trim()) return setError("Tên deal là bắt buộc");
-    if (!form.account_id) return setError("Vui lòng chọn tài khoản");
-    setSaving(true);
-    const fn = deal ? updateDeal(deal.id, form) : createDeal(form);
-    const { data, error: err } = await fn;
-    setSaving(false);
-    if (err) return setError(err.message);
-    onSave(data);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/95 backdrop-blur-md p-4">
-      <div className="bg-surface-900 border border-white/10 rounded-[3rem] shadow-2xl w-full max-w-xl overflow-hidden relative group">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl -z-10 group-hover:bg-primary/10 transition-all duration-700" />
-        
-        <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-white/5">
-          <div>
-            <h2 className="font-black text-slate-100 uppercase tracking-tighter text-xl">{deal ? "Modify Strategic Deal" : "New Market Opportunity"}</h2>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Strategic Pipeline Update</p>
-          </div>
-          <button onClick={onClose} className="p-3 text-slate-500 hover:text-white hover:bg-white/5 rounded-2xl transition-all border border-transparent hover:border-white/10">
-            <X size={20}/>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-10 space-y-6 overflow-y-auto max-h-[75vh] scrollbar-hide">
-          {error && <div className="text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-400/10 border border-red-400/20 px-4 py-3 rounded-2xl flex items-center gap-2"><AlertCircle size={14}/>{error}</div>}
-
-          <div className="space-y-2">
-            <label className="label">Tên cơ hội (Deal Name) *</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="input !bg-surface-950/50" required placeholder="Nhập tên cơ hội chiến lược..." />
-          </div>
-
-          <div className="space-y-2">
-            <label className="label">Đối tác / Tài khoản *</label>
-            <select value={form.account_id} onChange={(e) => setForm((f) => ({ ...f, account_id: e.target.value }))} className="input !bg-surface-950/50 cursor-pointer font-bold uppercase tracking-tight">
-              <option value="" className="bg-surface-900 text-slate-600">-- Xác định đối tác chi tiết --</option>
-              {accounts.map((a) => <option key={a.id} value={a.id} className="bg-surface-900">{a.name}</option>)}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="label">Sản phẩm / Giải pháp</label>
-              <input value={form.product} onChange={(e) => setForm((f) => ({ ...f, product: e.target.value }))} className="input !bg-surface-950/50" placeholder="Product Line..." />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Tên Deal *</label>
+              <input 
+                type="text" 
+                required 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                value={form.name}
+                onChange={e => setForm({...form, name: e.target.value})}
+              />
             </div>
-            <div className="space-y-2">
-              <label className="label">Giá trị Deal (VNĐ)</label>
-              <input type="number" min={0} value={form.value} onChange={(e) => setForm((f) => ({ ...f, value: parseInt(e.target.value) || 0 }))} className="input !bg-surface-950/50 !text-primary !font-black" />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="label">Giai đoạn Pipeline</label>
-              <select value={form.stage} onChange={(e) => setForm((f) => ({ ...f, stage: e.target.value }))} className="input !bg-surface-950/50 cursor-pointer font-bold">
-                {STAGES_OPT.map((s) => <option key={s} value={s} className="bg-surface-900 uppercase">{STAGE_LABELS[s]}</option>)}
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Tài khoản *</label>
+              <select 
+                required 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none"
+                value={form.account_id}
+                onChange={e => setForm({...form, account_id: e.target.value})}
+              >
+                <option value="">Chọn tài khoản...</option>
+                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center mb-1">
-                <label className="label !mb-0">Xác suất (Win Probability)</label>
-                <span className="text-[10px] font-black text-primary drop-shadow-glow-sm">{form.probability}%</span>
-              </div>
-              <input type="range" min={0} max={100} value={form.probability} onChange={(e) => setForm((f) => ({ ...f, probability: parseInt(e.target.value) }))} className="w-full h-2 bg-surface-950/50 rounded-lg appearance-none cursor-pointer accent-primary" />
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Sản phẩm</label>
+              <input 
+                type="text" 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none"
+                value={form.product}
+                onChange={e => setForm({...form, product: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Giá trị (VND) *</label>
+              <input 
+                type="number" 
+                required 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900"
+                value={form.value}
+                onChange={e => setForm({...form, value: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Giai đoạn</label>
+              <select 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                value={form.stage}
+                onChange={e => setForm({...form, stage: e.target.value})}
+              >
+                {Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Xác suất (%)</label>
+              <input 
+                type="number" 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                value={form.probability}
+                onChange={e => setForm({...form, probability: e.target.value})}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Ngày đóng dự kiến</label>
+              <input 
+                type="date" 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                value={form.expected_close}
+                onChange={e => setForm({...form, expected_close: e.target.value})}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Ghi chú</label>
+              <textarea 
+                rows={3}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none"
+                value={form.notes}
+                onChange={e => setForm({...form, notes: e.target.value})}
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="label">Ngày đóng dự kiến (ETD/ETC)</label>
-            <input type="date" value={form.expected_close} onChange={(e) => setForm((f) => ({ ...f, expected_close: e.target.value }))} className="input !bg-surface-950/50 font-black cursor-pointer" />
-          </div>
-
-          <div className="space-y-2">
-            <label className="label">Ghi chú chiến thuật (Strategic Notes)</label>
-            <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={3} className="input !bg-surface-950/50 resize-none italic text-slate-400" placeholder="Thông tinh tình báo, chiến lược đàm phán..." />
-          </div>
-
-          <div className="pt-6 flex gap-4">
-            <button type="button" onClick={onClose} className="btn-secondary h-14 flex-1 font-black uppercase tracking-widest text-[10px]">Hủy bỏ</button>
-            <button type="submit" className="btn-primary h-14 flex-1 shadow-glow shadow-primary/20 font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3" disabled={saving}>
-              {saving ? <LoadingSpinner size="sm" /> : <Save size={18}/>} Lưu trữ Deal
+          <div className="flex gap-4 pt-4 border-t border-gray-100">
+            <button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-100 rounded-2xl font-black uppercase tracking-widest text-xs">Hủy</button>
+            <button 
+              type="submit" 
+              className="flex-1 py-3 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-lg shadow-red-100"
+              disabled={saving}
+            >
+              {saving ? <LoadingSpinner size="sm" /> : <Plus size={16} />} Tạo Deal
             </button>
           </div>
         </form>
+      </div>
+    </Modal>
+  );
+}
+
+function Modal({ children, onClose }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={onClose} />
+      <div className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        {children}
       </div>
     </div>
   );

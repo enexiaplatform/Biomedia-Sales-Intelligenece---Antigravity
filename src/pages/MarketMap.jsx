@@ -152,7 +152,7 @@ export default function MarketMap({ showToast }) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-12 scrollbar-hide animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="max-w-7xl mx-auto space-y-12">
+        <div className="w-full px-6 space-y-12">
           {activeTab === "matrix" && (
             <div className="space-y-10">
               <div className="flex flex-wrap items-center justify-between gap-6 bg-white/5 p-10 rounded-[3rem] border border-white/5 shadow-inner">
