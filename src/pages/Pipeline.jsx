@@ -4,7 +4,8 @@ import {
   Plus, X, AlertCircle, Zap, Search, Filter,
   ArrowUpDown, ArrowUp, ArrowDown,
   TrendingUp, DollarSign, Target, BarChart2, Trash2,
-  ChevronRight, Save, Clock, Briefcase, FileText
+  ChevronRight, Save, Clock, Briefcase, FileText,
+  List, AlignJustify, ChevronLeft
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -78,6 +79,20 @@ export default function Pipeline() {
   // Sort
   const [sortField, setSortField] = useState('value');
   const [sortDir, setSortDir] = useState('desc');
+
+  // Density & Pagination
+  const [density, setDensity] = useState(localStorage.getItem('pipeline_density') || 'compact');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, stageFilter, accountFilter, probMin, probMax]);
+
+  const handleDensityChange = (newMode) => {
+    setDensity(newMode);
+    localStorage.setItem('pipeline_density', newMode);
+  };
 
   useEffect(() => {
     fetchData();
@@ -184,6 +199,10 @@ export default function Pipeline() {
     const totalWeighted = filteredDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
     return { totalRaw, totalWeighted };
   }, [filteredDeals]);
+
+  const paginatedDeals = useMemo(() => {
+    return filteredDeals.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  }, [filteredDeals, page]);
 
   // --- Handlers ---
   const toggleSort = (field) => {
@@ -307,8 +326,26 @@ export default function Pipeline() {
             />
           </div>
 
-          <div className="ml-auto text-sm font-medium text-gray-500">
-            {filteredDeals.length} deals
+          <div className="ml-auto flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-500">
+              {filteredDeals.length} deals
+            </span>
+            <div className="flex items-center border border-gray-200 rounded-lg p-0.5 bg-gray-50">
+              <button 
+                onClick={() => handleDensityChange('comfortable')}
+                className={`p-1.5 rounded-md transition-colors ${density === 'comfortable' ? 'bg-white shadow-sm border border-gray-200/50 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                title="Rộng rãi"
+              >
+                <AlignJustify size={14} />
+              </button>
+              <button 
+                onClick={() => handleDensityChange('compact')}
+                className={`p-1.5 rounded-md transition-colors ${density === 'compact' ? 'bg-white shadow-sm border border-gray-200/50 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                title="Thu gọn"
+              >
+                <List size={14} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -318,58 +355,84 @@ export default function Pipeline() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
-                  <Th label="Tên Deal" field="name" current={sortField} dir={sortDir} onSort={toggleSort} />
-                  <Th label="Tài khoản" field="account_name" current={sortField} dir={sortDir} onSort={toggleSort} />
-                  <Th label="Sản phẩm" field="product" current={sortField} dir={sortDir} onSort={toggleSort} />
-                  <Th label="Giai đoạn" field="stage" current={sortField} dir={sortDir} onSort={toggleSort} />
-                  <Th label="Giá trị" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" />
-                  <Th label="Xác suất" field="probability" current={sortField} dir={sortDir} onSort={toggleSort} align="center" />
-                  <Th label="Weighted" field="weighted" current={sortField} dir={sortDir} onSort={toggleSort} align="right" />
-                  <Th label="Đóng dự kiến" field="expected_close" current={sortField} dir={sortDir} onSort={toggleSort} />
-                  <Th label="Tuổi deal" field="created_at" current={sortField} dir={sortDir} onSort={toggleSort} />
+                  <Th label="Tên Deal" field="name" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
+                  <Th label="Tài khoản" field="account_name" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
+                  <Th label="Sản phẩm" field="product" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
+                  <Th label="Giai đoạn" field="stage" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
+                  <Th label="Giá trị" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
+                  <Th label="Xác suất" field="probability" current={sortField} dir={sortDir} onSort={toggleSort} align="center" density={density} />
+                  <Th label="Weighted" field="weighted" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
+                  <Th label="Đóng" field="expected_close" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
+                  <Th label="Tuổi" field="created_at" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredDeals.map(deal => (
+              <tbody className="">
+                {paginatedDeals.map((deal, index) => {
+                  const tdClass = density === 'compact' ? 'px-3 py-1.5 text-xs' : 'px-4 py-4 text-sm';
+                  return (
                   <tr 
                     key={deal.id} 
-                    className="hover:bg-blue-50/30 cursor-pointer transition-colors"
+                    className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/30 cursor-pointer transition-colors border-b border-gray-100/80`}
                     onClick={() => handleRowClick(deal)}
                   >
-                    <td className="px-4 py-4 font-semibold text-gray-900">{deal.name}</td>
-                    <td className="px-4 py-4 text-gray-600">{deal.accounts?.name || '—'}</td>
-                    <td className="px-4 py-4 text-gray-500 text-sm italic">{deal.product || '—'}</td>
-                    <td className="px-4 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${STAGE_COLOR[deal.stage]?.bg || 'bg-gray-100'} ${STAGE_COLOR[deal.stage]?.text || 'text-gray-600'}`}>
-                        {STAGE_LABEL[deal.stage] || deal.stage}
-                      </span>
+                    <td className={`${tdClass} font-semibold text-gray-900`}>{deal.name}</td>
+                    <td className={`${tdClass} text-gray-600`}>{deal.accounts?.name || '—'}</td>
+                    <td className={`${tdClass} text-gray-400 italic`}>{deal.product || '—'}</td>
+                    <td className={`${tdClass}`}>
+                      <CompactStageBadge stage={deal.stage} />
                     </td>
-                    <td className="px-4 py-4 text-right font-bold text-gray-900">{fmt(deal.value)}</td>
-                    <td className="px-4 py-4 text-center">
+                    <td className={`${tdClass} text-right font-bold text-gray-900`}>{fmt(deal.value)}</td>
+                    <td className={`${tdClass} text-center`}>
                       <ProbBadge prob={deal.probability} />
                     </td>
-                    <td className="px-4 py-4 text-right font-bold text-emerald-600">
+                    <td className={`${tdClass} text-right font-bold text-emerald-600`}>
                       {fmt((deal.value || 0) * ((deal.probability || 0) / 100))}
                     </td>
-                    <td className="px-4 py-4">
+                    <td className={`${tdClass}`}>
                       <DateCell date={deal.expected_close} stage={deal.stage} />
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-400">
+                    <td className={`${tdClass} text-gray-400`}>
                       {differenceInDays(new Date(), safeDate(deal.created_at) || new Date())}d
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
               <tfoot className="bg-gray-50/50 font-bold border-t border-gray-100">
                 <tr>
-                  <td colSpan={4} className="px-4 py-4 text-right text-gray-500 uppercase tracking-wider text-[11px]">Tổng Pipeline Hiện Tại:</td>
-                  <td className="px-4 py-4 text-right text-gray-900">{fmt(tableTotals.totalRaw)}</td>
+                  <td colSpan={4} className="px-4 py-2 text-right text-gray-500 uppercase tracking-wider text-[11px]">Tổng Pipeline:</td>
+                  <td className="px-4 py-2 text-right text-gray-900 text-xs">{fmt(tableTotals.totalRaw)}</td>
                   <td></td>
-                  <td className="px-4 py-4 text-right text-emerald-700">{fmt(tableTotals.totalWeighted)}</td>
+                  <td className="px-4 py-2 text-right text-emerald-700 text-xs">{fmt(tableTotals.totalWeighted)}</td>
                   <td colSpan={2}></td>
                 </tr>
               </tfoot>
             </table>
+          </div>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-xs text-gray-500 font-medium whitespace-nowrap">
+            Hiển thị {Math.min(paginatedDeals.length, PAGE_SIZE)} / {filteredDeals.length} deals
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 text-xs font-medium border border-gray-200 bg-white rounded flex items-center gap-1 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <ChevronLeft size={14} /> Trước
+            </button>
+            <span className="text-xs font-medium text-gray-600 px-2 whitespace-nowrap">
+              Trang {page} / {Math.ceil(filteredDeals.length / PAGE_SIZE) || 1}
+            </span>
+            <button 
+              onClick={() => setPage(p => Math.min(Math.ceil(filteredDeals.length / PAGE_SIZE), p + 1))}
+              disabled={page >= Math.ceil(filteredDeals.length / PAGE_SIZE)}
+              className="px-3 py-1.5 text-xs font-medium border border-gray-200 bg-white rounded flex items-center gap-1 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Tiếp <ChevronRight size={14} />
+            </button>
           </div>
         </div>
 
@@ -526,11 +589,12 @@ function KPICard({ title, value, sub, icon }) {
   );
 }
 
-function Th({ label, field, current, dir, onSort, align = 'left' }) {
+function Th({ label, field, current, dir, onSort, align = 'left', density = 'compact' }) {
   const isActive = current === field;
+  const thClass = density === 'compact' ? 'px-3 py-2 text-[10px]' : 'px-4 py-3 text-[11px]';
   return (
     <th 
-      className={`px-4 py-3 text-[11px] font-black uppercase tracking-widest text-gray-400 cursor-pointer hover:text-red-500 transition-colors ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : ''}`}
+      className={`${thClass} font-black uppercase tracking-widest text-gray-400 cursor-pointer hover:text-red-500 transition-colors ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : ''}`}
       onClick={() => onSort(field)}
     >
       <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : ''}`}>
@@ -545,6 +609,16 @@ function Th({ label, field, current, dir, onSort, align = 'left' }) {
   );
 }
 
+function CompactStageBadge({ stage }) {
+  const meta = STAGE_COLOR[stage] || { hex: '#cbd5e1' };
+  return (
+    <div className="flex items-center gap-1.5 whitespace-nowrap">
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.hex }}></span>
+      <span className="text-[10px] font-medium text-gray-700">{STAGE_LABEL[stage] || stage}</span>
+    </div>
+  );
+}
+
 function ProbBadge({ prob }) {
   let color = 'text-gray-400 bg-gray-100';
   if (prob >= 75) color = 'text-green-700 bg-green-100';
@@ -553,9 +627,9 @@ function ProbBadge({ prob }) {
   else color = 'text-red-700 bg-red-100';
 
   return (
-    <span className={`inline-flex items-center justify-center min-w-[48px] px-2 py-0.5 rounded-md text-[11px] font-black tracking-tighter ${color}`}>
+    <div className={`mx-auto w-10 px-1.5 py-0.5 rounded text-[10px] font-semibold text-center ${color}`}>
       {prob}%
-    </span>
+    </div>
   );
 }
 
@@ -565,7 +639,7 @@ function DateCell({ date, stage }) {
   const overdue = isPast(d) && stage !== 'Closed Won' && stage !== 'Closed Lost';
   
   return (
-    <div className={`flex items-center gap-1 text-sm font-medium ${overdue ? 'text-red-500' : 'text-gray-600'}`}>
+    <div className={`flex items-center gap-1 font-medium whitespace-nowrap ${overdue ? 'text-red-500' : 'text-gray-600'}`}>
       {format(d, 'dd/MM/yyyy')}
       {overdue && <AlertCircle size={14} className="animate-pulse" />}
     </div>
