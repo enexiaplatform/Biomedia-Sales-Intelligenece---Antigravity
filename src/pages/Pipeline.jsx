@@ -9,6 +9,7 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, Legend,
+  ScatterChart, Scatter, ZAxis, ReferenceLine,
 } from 'recharts';
 import { format, differenceInDays, parseISO, isValid, isPast, addMonths, startOfMonth } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -396,6 +397,36 @@ export default function Pipeline() {
                 <ProbDistributionChart deals={deals} />
               </ChartCard>
             </div>
+
+            {/* Deal Aging Section */}
+            <div className="pt-6 border-t border-gray-100 mt-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                  <Clock size={20} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 italic uppercase tracking-tighter flex items-center gap-2">
+                  🕒 Analytic Deal Aging
+                  <div className="group relative cursor-pointer text-gray-400 hover:text-purple-500">
+                    <AlertCircle size={16} />
+                    <div className="absolute left-1/2 -content-center bottom-full mb-2 -translate-x-1/2 w-64 p-3 bg-gray-900 text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 pointer-events-none shadow-xl">
+                      <strong>Biểu đồ góc phần tư:</strong><br/>
+                      🔥 Đẩy mạnh: Gấp & Giá trị cao<br/>
+                      ⚠️ Cần can thiệp: Lâu & Giá trị cao<br/>
+                      🗑️ Xem xét loại bỏ: Lâu & Giá trị thấp<br/>
+                      ✓ Bình thường: Mới & Giá trị thấp
+                    </div>
+                  </div>
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <ChartCard title="Độ trễ vs. Giá trị (Góc phần tư)">
+                  <DealAgeScatterChart deals={deals} />
+                </ChartCard>
+                <ChartCard title="Mức độ trễ theo giai đoạn">
+                  <DealAgeHeatmapChart deals={deals} />
+                </ChartCard>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -673,6 +704,120 @@ function ProbDistributionChart({ deals }) {
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function DealAgeScatterChart({ deals }) {
+  const data = useMemo(() => {
+    const activeDeals = deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost');
+    return activeDeals.map(d => {
+      const days = differenceInDays(new Date(), safeDate(d.updated_at) || safeDate(d.created_at) || new Date());
+      return {
+        id: d.id,
+        name: d.name,
+        account: d.accounts?.name || '—',
+        stage: d.stage,
+        value: d.value || 0,
+        days: days,
+        probability: d.probability || 0,
+        expected_close: d.expected_close,
+      };
+    });
+  }, [deals]);
+
+  const { avgDays, avgValue } = useMemo(() => {
+    if (data.length === 0) return { avgDays: 0, avgValue: 0 };
+    const totalDays = data.reduce((sum, d) => sum + d.days, 0);
+    const totalVal = data.reduce((sum, d) => sum + d.value, 0);
+    return {
+      avgDays: totalDays / data.length,
+      avgValue: totalVal / data.length,
+    };
+  }, [data]);
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const d = payload[0].payload;
+      return (
+        <div className="bg-white p-3 rounded-xl shadow-xl border border-gray-100 text-sm">
+          <div className="font-bold text-gray-900 mb-1">{d.name}</div>
+          <div className="text-gray-500 mb-2">{d.account}</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            <span className="text-gray-400">Giai đoạn:</span>
+            <span className="font-medium text-right">{STAGE_LABEL[d.stage] || d.stage}</span>
+            <span className="text-gray-400">Giá trị:</span>
+            <span className="font-medium text-right">{new Intl.NumberFormat('vi-VN').format(d.value)} đ</span>
+            <span className="text-gray-400">Đã ở giai đoạn:</span>
+            <span className="font-medium text-right">{d.days} ngày</span>
+            <span className="text-gray-400">Xác suất:</span>
+            <span className="font-medium text-right">{d.probability}%</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+        <XAxis type="number" dataKey="days" name="Ngày" unit="d" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} domain={[0, 'dataMax + 10']} />
+        <YAxis type="number" dataKey="value" name="Giá trị" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={v => fmtShort(v)} />
+        <ZAxis type="number" dataKey="probability" range={[30, 250]} />
+        <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+        
+        {avgDays > 0 && avgValue > 0 && (
+          <>
+            <ReferenceLine x={avgDays} stroke="#cbd5e1" strokeDasharray="3 3" />
+            <ReferenceLine y={avgValue} stroke="#cbd5e1" strokeDasharray="3 3" />
+          </>
+        )}
+        
+        {data.map((entry, index) => (
+          <Scatter key={`scatter-${index}`} name={entry.name} data={[entry]} fill={STAGE_COLOR[entry.stage]?.hex || '#cbd5e1'} />
+        ))}
+      </ScatterChart>
+    </ResponsiveContainer>
+  );
+}
+
+function DealAgeHeatmapChart({ deals }) {
+  const data = useMemo(() => {
+    const activeDeals = deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost');
+    
+    const stagesDict = {};
+    Object.keys(STAGE_LABEL).filter(s => s !== 'Closed Won' && s !== 'Closed Lost').forEach(s => {
+      stagesDict[s] = { name: STAGE_LABEL[s], raw: s, '0-14d': 0, '15-30d': 0, '31-60d': 0, '60d+': 0 };
+    });
+
+    activeDeals.forEach(d => {
+      const days = differenceInDays(new Date(), safeDate(d.updated_at) || safeDate(d.created_at) || new Date());
+      if (!stagesDict[d.stage]) return;
+
+      if (days <= 14) stagesDict[d.stage]['0-14d']++;
+      else if (days <= 30) stagesDict[d.stage]['15-30d']++;
+      else if (days <= 60) stagesDict[d.stage]['31-60d']++;
+      else stagesDict[d.stage]['60d+']++;
+    });
+
+    return Object.values(stagesDict);
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+        <XAxis type="number" hide />
+        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} />
+        <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+        <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px' }} />
+        <Bar dataKey="0-14d" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="15-30d" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="31-60d" stackId="a" fill="#ea580c" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="60d+" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

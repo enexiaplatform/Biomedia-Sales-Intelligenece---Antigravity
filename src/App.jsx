@@ -5,6 +5,8 @@ import Sidebar from "./components/SidebarVFinal";
 import QuickLogModal from "./components/QuickLogModal";
 import GlobalSearchModal from "./components/GlobalSearchModal";
 import MobileNav from "./components/MobileNav";
+import CommandPalette from "./components/CommandPalette";
+import { getAccounts, getDeals } from "./lib/supabase";
 
 // Auth
 import { useAuth } from './contexts/AuthContext';
@@ -86,6 +88,21 @@ function DashboardLayout() {
   const location = useLocation();
   const { signOut } = useAuth();
 
+  const [accounts, setAccounts] = useState([]);
+  const [deals, setDeals] = useState([]);
+
+  useEffect(() => {
+    async function loadData() {
+      const [accRes, dealRes] = await Promise.all([
+        getAccounts(),
+        getDeals()
+      ]);
+      if (accRes.data) setAccounts(accRes.data);
+      if (dealRes.data) setDeals(dealRes.data);
+    }
+    loadData();
+  }, []);
+
   // Handle Theme Switching
   useEffect(() => {
     const root = window.document.documentElement;
@@ -117,7 +134,6 @@ function DashboardLayout() {
       const isMac = navigator.platform.toUpperCase().includes("MAC");
       const modifier = isMac ? e.metaKey : e.ctrlKey;
 
-      if (modifier && e.key === "k") { e.preventDefault(); setSearchOpen((v) => !v); }
       if (modifier && e.key === "l") { e.preventDefault(); setQuickLogOpen((v) => !v); }
       if (e.key === "Escape") {
         setSearchOpen(false);
@@ -193,6 +209,12 @@ function DashboardLayout() {
         onMenuClick={() => setSidebarOpen(true)}
         onSearchClick={() => setSearchOpen(true)}
         onAddClick={() => setQuickLogOpen(true)}
+      />
+
+      <CommandPalette 
+        accounts={accounts} 
+        deals={deals} 
+        onOpenQuickLog={() => setQuickLogOpen(true)} 
       />
 
       <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
