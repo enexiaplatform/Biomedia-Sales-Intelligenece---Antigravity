@@ -378,25 +378,28 @@ export default function Accounts({ showToast }) {
       <div className="card overflow-x-auto min-h-[500px] flex flex-col">
         <table className="table table-zebra w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr>
-              <th className="w-[220px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("name")}>
-                Tên tài khoản {sortConfig.key === "name_asc" ? "▲" : sortConfig.key === "name_desc" ? "▼" : ""}
+          <thead className="sticky top-0 z-10 shadow-sm" style={{ background: 'var(--bg-elevated)' }}>
+            <tr style={{ background: '#0D1117' }}>
+              <th className="w-[200px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b cursor-pointer hover:bg-white/5 transition-colors" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("name")}>
+                <div className="flex items-center gap-1">
+                  Tài khoản {sortConfig.key === "name_asc" ? "▲" : sortConfig.key === "name_desc" ? "▼" : ""}
+                </div>
               </th>
-              <th className="w-[100px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Loại</th>
-              <th className="w-[140px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Phân khúc</th>
-              <th className="w-[120px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Khu vực</th>
-              <th className="w-[120px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Vùng</th>
-              <th className="w-[80px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("score")}>
+              <th className="w-[90px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Loại</th>
+              <th className="w-[120px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Phân khúc</th>
+              <th className="w-[110px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Khu vực</th>
+              <th className="w-[100px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Vùng</th>
+              <th className="w-[70px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b cursor-pointer hover:bg-white/5 transition-colors text-center" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("score")}>
                 Điểm {sortConfig.key === "score_asc" ? "▲" : sortConfig.key === "score_desc" ? "▼" : ""}
               </th>
-              <th className="w-[140px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("pipeline")}>
-                Pipeline (VND) {sortConfig.key === "pipeline_asc" ? "▲" : sortConfig.key === "pipeline_desc" ? "▼" : ""}
+              <th className="w-[130px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b cursor-pointer hover:bg-white/5 transition-colors text-right" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("pipeline")}>
+                Pipeline {sortConfig.key === "pipeline_asc" ? "▲" : sortConfig.key === "pipeline_desc" ? "▼" : ""}
               </th>
-              <th className="w-[80px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Liên hệ</th>
-              <th className="w-[140px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b cursor-pointer hover:bg-white/5" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("interaction")}>
-                Tương tác gần nhất {sortConfig.key === "interaction_asc" ? "▲" : sortConfig.key === "interaction_desc" ? "▼" : ""}
+              <th className="w-[70px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b text-center" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>L.Hệ</th>
+              <th className="w-[120px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b cursor-pointer hover:bg-white/5 transition-colors" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("interaction")}>
+                Tương tác {sortConfig.key === "interaction_asc" ? "▲" : sortConfig.key === "interaction_desc" ? "▼" : ""}
               </th>
-              <th className="w-[80px] text-[9px] font-semibold uppercase tracking-widest px-4 py-3 border-b text-right" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Actions</th>
+              <th className="w-[80px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b text-right" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }}>Hệ thống</th>
             </tr>
           </thead>
           <tbody className="flex-1">
@@ -423,48 +426,53 @@ export default function Accounts({ showToast }) {
                  </td>
                </tr>
             ) : (
-              currentData.map(acc => {
+              currentData.map((acc, index) => {
                 const daysInactive = acc.last_interaction ? differenceInDays(new Date(), new Date(acc.last_interaction)) : 999;
                 return (
-                  <tr key={acc.id} onClick={(e) => handleRowClick(e, acc.id)} className="border-b transition-colors cursor-pointer group hover:bg-white/[0.02]" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <td className="text-sm font-medium px-4 py-3 relative" style={{ color: 'var(--text-1)' }}>
+                  <tr 
+                    key={acc.id} 
+                    onClick={(e) => handleRowClick(e, acc.id)} 
+                    className={`border-b transition-colors cursor-pointer group hover:bg-brand/[0.05] ${index % 2 === 0 ? 'bg-transparent' : 'bg-black/5 dark:bg-white/[0.02]'}`} 
+                    style={{ borderColor: 'var(--border-subtle)' }}
+                  >
+                    <td className="text-xs font-semibold px-3 py-1.5 relative truncate max-w-[200px]" style={{ color: 'var(--text-1)' }} title={acc.name}>
                       <EditableCell account={acc} field="name" />
                     </td>
-                    <td>
+                    <td className="px-3 py-1.5">
                       <EditableCell account={acc} field="type" type="select" options={ACCOUNT_TYPES} />
                     </td>
-                    <td>
-                       <EditableCell account={acc} field="segment" type="select" options={uniqueSegments.length > 0 ? uniqueSegments : ["Manufacturing", "Hospital", "Research Lab", "University", "Government", "F&B Factory", "Other"]} />
+                    <td className="px-3 py-1.5 truncate max-w-[120px]">
+                       <EditableCell account={acc} field="segment" type="select" options={uniqueSegments.length > 0 ? uniqueSegments : ["Pharma", "Industrial", "Government", "F&B", "Hospital", "Research", "Other"]} />
                     </td>
-                    <td>
-                       <EditableCell account={acc} field="region" type="select" options={uniqueRegions.length > 0 ? uniqueRegions : REGIONS_CONST} />
+                    <td className="px-3 py-1.5 truncate max-w-[110px]">
+                       <EditableCell account={acc} field="region" type="select" options={uniqueRegions.length > 0 ? uniqueRegions : ["Miền Bắc", "Miền Trung", "Miền Nam"]} />
                     </td>
-                    <td>
-                       <EditableCell account={acc} field="zone" type="select" options={["Miền Bắc", "Miền Trung", "Miền Nam"]} />
+                    <td className="px-3 py-1.5">
+                       <EditableCell account={acc} field="zone" type="select" options={["North 1", "North 2", "Central", "South 1", "South 2"]} />
                     </td>
-                    <td>
+                    <td className="px-3 py-1.5 text-center">
                        <EditableCell account={acc} field="score" type="number" />
                     </td>
-                    <td className="font-bold">
-                       {acc.pipeline_value > 0 ? <CurrencyDisplay value={acc.pipeline_value} /> : <span style={{ color: 'var(--text-2)' }}>—</span>}
+                    <td className="px-3 py-1.5 text-right font-bold text-xs" style={{ color: 'var(--text-1)' }}>
+                       {acc.pipeline_value > 0 ? <CurrencyDisplay value={acc.pipeline_value} showSGD={true} /> : <span style={{ color: 'var(--text-2)' }}>—</span>}
                     </td>
-                    <td className="font-bold" style={{ color: 'var(--text-2)' }}>
+                    <td className="px-3 py-1.5 text-center font-bold text-xs" style={{ color: 'var(--text-2)' }}>
                        {acc.contacts_count > 0 ? acc.contacts_count : "—"}
                     </td>
-                    <td className="px-4 py-3">
-                       <span className={`text-xs ${daysInactive > 30 ? "text-red-400 font-bold" : ""}`} style={daysInactive <= 30 ? { color: 'var(--text-2)' } : {}}>
-                         {acc.last_interaction ? format(new Date(acc.last_interaction), "dd/MM/yyyy") : "Chưa có"}
+                    <td className="px-3 py-1.5">
+                       <span className={`text-[11px] ${daysInactive > 30 ? "text-red-400 font-bold" : ""}`} style={daysInactive <= 30 ? { color: 'var(--text-2)' } : {}}>
+                         {acc.last_interaction ? format(new Date(acc.last_interaction), "dd/MM/yy") : "—"}
                        </span>
                     </td>
-                    <td className="text-right flex items-center justify-end gap-2 pr-4 py-3">
-                      <button onClick={(e) => { e.stopPropagation(); setEditingCell({ rowId: acc.id, field: 'name' }); }} className="hover:text-amber-500 transition-colors" style={{ color: 'var(--text-3)' }} title="Sửa nhanh">
-                        <Edit2 size={16} />
+                    <td className="px-3 py-1.5 text-right flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={(e) => { e.stopPropagation(); setEditingCell({ rowId: acc.id, field: 'name' }); }} className="hover:text-amber-500 transition-colors p-1" style={{ color: 'var(--text-3)' }}>
+                        <Edit2 size={13} />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${acc.id}`); }} className="hover:text-white transition-colors" style={{ color: 'var(--text-3)' }} title="Xem chi tiết">
-                        <Eye size={16} />
+                      <button onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${acc.id}`); }} className="hover:text-white transition-colors p-1" style={{ color: 'var(--text-3)' }}>
+                        <Eye size={13} />
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(acc); }} className="hover:text-red-500 transition-colors" style={{ color: 'var(--text-3)' }} title="Xóa tài khoản">
-                        <Trash2 size={16} />
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(acc); }} className="hover:text-red-500 transition-colors p-1" style={{ color: 'var(--text-3)' }}>
+                        <Trash2 size={13} />
                       </button>
                     </td>
                   </tr>

@@ -303,11 +303,11 @@ Giọng văn: chuyên nghiệp, trực tiếp, như một sales manager giàu ki
                 <div className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-3)' }}>Tiến độ tháng này</div>
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: 'var(--text-2)' }}>
                   <span>Đã đóng:</span> 
-                  <CurrencyDisplay value={wonThisMonthValue} className="font-bold" style={{ color: 'var(--text-1)' }} />
+                  <CurrencyDisplay value={wonThisMonthValue} showSGD={true} className="font-bold" style={{ color: 'var(--text-1)' }} />
                   <span className="mx-1">/</span>
                   <span>Quota:</span>
                   <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg border border-transparent hover:border-brand-border transition-all group">
-                    <CurrencyDisplay value={quota} className="font-bold text-[11px]" />
+                    <CurrencyDisplay value={quota} showSGD={true} className="font-bold text-[11px]" />
                     <input 
                       type="number" 
                       value={quota} 
@@ -379,7 +379,7 @@ Giọng văn: chuyên nghiệp, trực tiếp, như một sales manager giàu ki
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Tổng pipeline"    value={<CurrencyDisplay value={stats?.totalPipelineValue} />} icon={DollarSign} />
+        <StatCard title="Tổng pipeline"    value={<CurrencyDisplay value={stats?.totalPipelineValue} showSGD={true} />} icon={DollarSign} />
         <StatCard title="Deal đang mở"     value={stats?.activeDeals ?? 0}   icon={TrendingUp} />
         <StatCard title="Tỷ lệ thắng"      value={`${stats?.winRate ?? 0}%`} icon={Target} />
         <StatCard title="Tổng tài khoản"   value={stats?.totalAccounts ?? 0} icon={Users} />
@@ -462,7 +462,7 @@ Giọng văn: chuyên nghiệp, trực tiếp, như một sales manager giàu ki
                     </div>
                   </div>
                   <div className="text-right ml-4 flex-shrink-0">
-                    <CurrencyDisplay value={deal.value} className="text-[13px] font-semibold" style={{ color: 'var(--text-1)' }} />
+                    <CurrencyDisplay value={deal.value} showSGD={true} className="text-[13px] font-semibold" style={{ color: 'var(--text-1)' }} />
                     <div
                       className="text-[11px] mt-0.5 font-medium"
                       style={{ color: deal.probability >= 60 ? '#22C55E' : '#F59E0B' }}

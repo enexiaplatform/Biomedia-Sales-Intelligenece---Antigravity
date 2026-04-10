@@ -191,7 +191,7 @@ function DashboardLayout() {
                 <Route path="/pipeline" element={<Pipeline showToast={showToast} />} />
                 <Route path="/market-map" element={<MarketMap showToast={showToast} />} />
                 <Route path="/competitors" element={<Competitors />} />
-                <Route path="/workflows" element={<Workflows />} />
+                <Route path="/workflows" element={<Workflows showToast={showToast} />} />
                 <Route path="/pricing" element={<PricingTool showToast={showToast} />} />
                 <Route path="/kpi" element={<KPITracker />} />
                 <Route path="/market-scan" element={<MarketScan />} />

@@ -5,7 +5,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown,
   TrendingUp, DollarSign, Target, BarChart2, Trash2,
   ChevronRight, Save, Clock, Briefcase, FileText,
-  List, AlignJustify, ChevronLeft
+  List, AlignJustify, ChevronLeft, Edit2
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -17,6 +17,7 @@ import { vi } from 'date-fns/locale';
 import { getDeals, createDeal, updateDeal, deleteDeal, getAccounts } from '../lib/supabase';
 import { getDealCoaching } from '../lib/ai';
 import LoadingSpinner, { PageLoader } from '../components/LoadingSpinner';
+import { VND_TO_SGD_RATE } from '../lib/constants';
 
 // --- Constants ---
 const STAGE_LABEL = {
@@ -50,6 +51,12 @@ const fmt = (v) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0 }).format(v);
 };
 
+const fmtSGD = (v) => {
+  if (!v && v !== 0) return '—';
+  const sgdValue = v * VND_TO_SGD_RATE;
+  return `≈ ${new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', maximumFractionDigits: 0 }).format(sgdValue)}`;
+};
+
 const safeDate = (d) => {
   if (!d) return null;
   const p = typeof d === 'string' ? parseISO(d) : new Date(d);
@@ -65,6 +72,7 @@ export default function Pipeline() {
   const [showAdd, setShowAdd] = useState(false);
   const [savingDeal, setSaving] = useState(false);
   const [selectedDeal, setSelected] = useState(null);
+  const [editingDeal, setEditingDeal] = useState(null);
   const [coachLoading, setCoachL] = useState(false);
   const [coachResult, setCoachR] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -248,13 +256,29 @@ export default function Pipeline() {
   };
 
   const handleDeleteDeal = async () => {
+    const dealToDelete = selectedDeal || editingDeal;
+    if (!dealToDelete) return;
     setSavingDeal(true);
     try {
-      const { error } = await deleteDeal(selectedDeal.id);
+      const { error } = await deleteDeal(dealToDelete.id);
       if (!error) {
-        setDeals(prev => prev.filter(d => d.id !== selectedDeal.id));
+        setDeals(prev => prev.filter(d => d.id !== dealToDelete.id));
         setSelected(null);
+        setEditingDeal(null);
         setShowDeleteConfirm(false);
+      }
+    } finally {
+      setSavingDeal(false);
+    }
+  };
+
+  const handleUpdateDeal = async (data) => {
+    setSavingDeal(true);
+    try {
+      const { error } = await updateDeal(editingDeal.id, data);
+      if (!error) {
+        await fetchData();
+        setEditingDeal(null);
       }
     } finally {
       setSavingDeal(false);
@@ -272,8 +296,18 @@ export default function Pipeline() {
         {/* 2. KPI Bar */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard title="Deals đang mở" value={kpis.activeDeals} sub="Cơ hội tiềm năng" icon={<BarChart2 className="text-blue-500" />} />
-          <KPICard title="Tổng pipeline" value={fmtShort(kpis.totalPipeline)} sub="Chưa tính trọng số" icon={<DollarSign className="text-emerald-500" />} />
-          <KPICard title="Dự báo weighted" value={fmtShort(kpis.weightedForecast)} sub="Tính theo xác suất" icon={<TrendingUp className="text-purple-500" />} />
+          <KPICard 
+            title="Tổng pipeline" 
+            value={fmtShort(kpis.totalPipeline)} 
+            sub={<div className="flex flex-col"><span>VND (Chưa tính trọng số)</span><span className="text-gray-400 normal-case">{fmtSGD(kpis.totalPipeline)}</span></div>} 
+            icon={<DollarSign className="text-emerald-500" />} 
+          />
+          <KPICard 
+            title="Dự báo weighted" 
+            value={fmtShort(kpis.weightedForecast)} 
+            sub={<div className="flex flex-col"><span>VND (Tính theo xác suất)</span><span className="text-gray-400 normal-case">{fmtSGD(kpis.weightedForecast)}</span></div>} 
+            icon={<TrendingUp className="text-purple-500" />} 
+          />
           <KPICard title="Tỷ lệ thắng" value={`${kpis.winRate.toFixed(1)}%`} sub={`${kpis.wonCount} thắng / ${kpis.lostCount} thua`} icon={<Target className="text-red-500" />} />
         </div>
 
@@ -364,6 +398,7 @@ export default function Pipeline() {
                   <Th label="Weighted" field="weighted" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
                   <Th label="Đóng" field="expected_close" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                   <Th label="Tuổi" field="created_at" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
+                  <th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody className="">
@@ -381,12 +416,16 @@ export default function Pipeline() {
                     <td className={`${tdClass}`}>
                       <CompactStageBadge stage={deal.stage} />
                     </td>
-                    <td className={`${tdClass} text-right font-bold text-gray-900`}>{fmt(deal.value)}</td>
+                    <td className={`${tdClass} text-right font-bold text-gray-900`}>
+                      <div>{fmt(deal.value)}</div>
+                      <div className="text-[10px] text-gray-400 font-normal">{fmtSGD(deal.value)}</div>
+                    </td>
                     <td className={`${tdClass} text-center`}>
                       <ProbBadge prob={deal.probability} />
                     </td>
                     <td className={`${tdClass} text-right font-bold text-emerald-600`}>
-                      {fmt((deal.value || 0) * ((deal.probability || 0) / 100))}
+                      <div>{fmt((deal.value || 0) * ((deal.probability || 0) / 100))}</div>
+                      <div className="text-[10px] text-gray-400 font-normal">{fmtSGD((deal.value || 0) * ((deal.probability || 0) / 100))}</div>
                     </td>
                     <td className={`${tdClass}`}>
                       <DateCell date={deal.expected_close} stage={deal.stage} />
@@ -394,16 +433,30 @@ export default function Pipeline() {
                     <td className={`${tdClass} text-gray-400`}>
                       {differenceInDays(new Date(), safeDate(deal.created_at) || new Date())}d
                     </td>
+                    <td className={`${tdClass} text-center`}>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setEditingDeal(deal); }}
+                        className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                    </td>
                   </tr>
                 )})}
               </tbody>
               <tfoot className="bg-gray-50/50 font-bold border-t border-gray-100">
                 <tr>
                   <td colSpan={4} className="px-4 py-2 text-right text-gray-500 uppercase tracking-wider text-[11px]">Tổng Pipeline:</td>
-                  <td className="px-4 py-2 text-right text-gray-900 text-xs">{fmt(tableTotals.totalRaw)}</td>
+                  <td className="px-4 py-2 text-right text-gray-900 text-xs">
+                    <div>{fmt(tableTotals.totalRaw)}</div>
+                    <div className="text-[10px] text-gray-400 font-normal">{fmtSGD(tableTotals.totalRaw)}</div>
+                  </td>
                   <td></td>
-                  <td className="px-4 py-2 text-right text-emerald-700 text-xs">{fmt(tableTotals.totalWeighted)}</td>
-                  <td colSpan={2}></td>
+                  <td className="px-4 py-2 text-right text-emerald-700 text-xs">
+                    <div>{fmt(tableTotals.totalWeighted)}</div>
+                    <div className="text-[10px] text-gray-400 font-normal">{fmtSGD(tableTotals.totalWeighted)}</div>
+                  </td>
+                  <td colSpan={3}></td>
                 </tr>
               </tfoot>
             </table>
@@ -523,6 +576,18 @@ export default function Pipeline() {
             setSaving(false);
           }}
           saving={savingDeal}
+        />
+      )}
+
+      {/* 8. Edit Deal Modal */}
+      {editingDeal && (
+        <EditDealModal 
+          deal={editingDeal}
+          accounts={accounts} 
+          onClose={() => setEditingDeal(null)} 
+          onSave={handleUpdateDeal}
+          saving={savingDeal}
+          onDelete={() => setShowDeleteConfirm(true)}
         />
       )}
 
@@ -1123,6 +1188,151 @@ function AddDealModal({ accounts, onClose, onSave, saving }) {
               disabled={saving}
             >
               {saving ? <LoadingSpinner size="sm" /> : <Plus size={16} />} Tạo Deal
+            </button>
+          </div>
+        </form>
+      </div>
+    </Modal>
+  );
+}
+
+function EditDealModal({ deal, accounts, onClose, onSave, saving, onDelete }) {
+  const [form, setForm] = useState({
+    name: deal.name || '',
+    account_id: deal.account_id || '',
+    product: deal.product || '',
+    value: deal.value || '',
+    stage: deal.stage || 'Prospect',
+    probability: deal.probability || 10,
+    expected_close: deal.expected_close || '',
+    notes: deal.notes || ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.name || !form.account_id || !form.value) return;
+    onSave({
+      ...form,
+      value: parseInt(form.value) || 0,
+      probability: parseInt(form.probability) || 0
+    });
+  };
+
+  return (
+    <Modal onClose={onClose}>
+      <div className="p-8">
+        <div className="flex justify-between items-start mb-1 mt-0">
+          <div>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-1 mt-0">Chỉnh sửa Deal</h2>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8">Cập nhật thông tin cơ hội bán hàng</p>
+          </div>
+          <button 
+            type="button" 
+            onClick={onDelete}
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+            title="Xóa deal"
+          >
+            <Trash2 size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Tên Deal *</label>
+              <input 
+                type="text" 
+                required 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                value={form.name}
+                onChange={e => setForm({...form, name: e.target.value})}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Tài khoản *</label>
+              <select 
+                required 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none"
+                value={form.account_id}
+                onChange={e => setForm({...form, account_id: e.target.value})}
+              >
+                <option value="">Chọn tài khoản...</option>
+                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Sản phẩm</label>
+              <input 
+                type="text" 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none"
+                value={form.product}
+                onChange={e => setForm({...form, product: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Giá trị (VND) *</label>
+              <input 
+                type="number" 
+                required 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900"
+                value={form.value}
+                onChange={e => setForm({...form, value: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Giai đoạn</label>
+              <select 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                value={form.stage}
+                onChange={e => setForm({...form, stage: e.target.value})}
+              >
+                {Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Xác suất (%)</label>
+              <input 
+                type="number" 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                value={form.probability}
+                onChange={e => setForm({...form, probability: e.target.value})}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Ngày đóng dự kiến</label>
+              <input 
+                type="date" 
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                value={form.expected_close}
+                onChange={e => setForm({...form, expected_close: e.target.value})}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Ghi chú</label>
+              <textarea 
+                rows={3}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none"
+                value={form.notes}
+                onChange={e => setForm({...form, notes: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4 border-t border-gray-100">
+            <button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-100 rounded-2xl font-black uppercase tracking-widest text-xs">Hủy</button>
+            <button 
+              type="submit" 
+              className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+              disabled={saving}
+            >
+              {saving ? <LoadingSpinner size="sm" /> : <Save size={16} />} Lưu thay đổi
             </button>
           </div>
         </form>
