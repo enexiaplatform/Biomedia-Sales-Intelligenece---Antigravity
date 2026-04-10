@@ -620,15 +620,16 @@ function CompactStageBadge({ stage }) {
 }
 
 function ProbBadge({ prob }) {
+  const p = prob ?? 0;
   let color = 'text-gray-400 bg-gray-100';
-  if (prob >= 75) color = 'text-green-700 bg-green-100';
-  else if (prob >= 50) color = 'text-amber-700 bg-amber-100';
-  else if (prob >= 25) color = 'text-orange-700 bg-orange-100';
+  if (p >= 75) color = 'text-green-700 bg-green-100';
+  else if (p >= 50) color = 'text-amber-700 bg-amber-100';
+  else if (p >= 25) color = 'text-orange-700 bg-orange-100';
   else color = 'text-red-700 bg-red-100';
 
   return (
     <div className={`mx-auto w-10 px-1.5 py-0.5 rounded text-[10px] font-semibold text-center ${color}`}>
-      {prob}%
+      {p}%
     </div>
   );
 }

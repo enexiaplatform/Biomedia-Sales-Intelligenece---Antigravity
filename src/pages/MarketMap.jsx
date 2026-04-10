@@ -12,7 +12,7 @@ import MapMarker from "../components/MapMarker";
 import { getCoordsByRegion, addJitter } from "../utils/geo";
 import "leaflet/dist/leaflet.css";
 
-const MATRIX_SEGMENTS = ["Pharma QC", "Lab Chemicals", "F&B Testing", "Pharma Manufacturing"];
+const MATRIX_SEGMENTS = ["Pharma", "Industrial", "Government/Nonprofit", "Hospital", "Food & Beverage"];
 const MATRIX_REGIONS = ["Hà Nội", "TP.HCM", "Miền Trung"];
 
 const PENETRATION_CONFIG = {

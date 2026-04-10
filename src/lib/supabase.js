@@ -19,6 +19,7 @@ const mockQuery = {
   or: () => mockQuery,
   in: () => mockQuery,
   is: () => mockQuery,
+  range: () => mockQuery,
   single: () => Promise.resolve(mockResult),
   then: (resolve) => resolve(Promise.resolve(mockResult)),
   insert: () => mockQuery,
@@ -68,7 +69,7 @@ export async function fetchAccounts(filters = {}) {
   if (filters.scoreMax != null) query = query.lte("score", filters.scoreMax);
   if (filters.search) query = query.ilike("name", `%${filters.search}%`);
 
-  let { data, error } = await query;
+  let { data, error } = await query.range(0, 1999);
 
   // Fallback for demo if no data exists
   if (!data || data.length === 0) {
@@ -133,7 +134,8 @@ export async function fetchAllContacts() {
   const { data, error } = await supabase
     .from("contacts")
     .select("*, accounts(name)")
-    .order("name");
+    .order("name")
+    .range(0, 1999);
   return { data, error };
 }
 
@@ -171,7 +173,7 @@ export async function fetchInteractions(accountId = null, limit = 100) {
 
   if (accountId) query = query.eq("account_id", accountId);
 
-  const { data, error } = await query;
+  const { data, error } = await query.range(0, 1999);
   return { data, error };
 }
 
@@ -217,7 +219,7 @@ export async function fetchDeals(accountId = null) {
 
   if (accountId) query = query.eq("account_id", accountId);
 
-  const { data, error } = await query;
+  const { data, error } = await query.range(0, 1999);
   return { data, error };
 }
 
@@ -500,7 +502,8 @@ export async function fetchKPITarget(period) {
 }
 
 export async function upsertKPITarget(kpiData) {
-  const { data, error } = await supabase.from("kpi_targets").upsert(kpiData).select().single();
+  // Use period as the conflict key if id is missing
+  const { data, error } = await supabase.from("kpi_targets").upsert(kpiData, { onConflict: 'period' }).select().single();
   return { data, error };
 }
 
@@ -510,7 +513,8 @@ export async function fetchKPIActuals(period) {
 }
 
 export async function upsertKPIActual(kpiActualData) {
-  const { data, error } = await supabase.from("kpi_actuals").upsert(kpiActualData).select().single();
+  // Use period and week as conflict keys
+  const { data, error } = await supabase.from("kpi_actuals").upsert(kpiActualData, { onConflict: 'period,week' }).select().single();
   return { data, error };
 }
 

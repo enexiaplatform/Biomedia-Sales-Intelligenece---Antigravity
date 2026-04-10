@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Eye, Trash2, AlertCircle, Users } from "lucide-react";
+import { Plus, Search, Eye, Trash2, AlertCircle, Users, Edit2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -12,11 +12,11 @@ import ScoreBadge from "../components/ScoreBadge";
 import LoadingSpinner, { PageLoader } from "../components/LoadingSpinner";
 import CurrencyDisplay from "../components/CurrencyDisplay";
 
-const ACCOUNT_TYPES = ["pharma", "lab", "hospital", "f&b", "university", "other"];
+const ACCOUNT_TYPES = ["pharma", "lab", "hospital", "fnb", "university", "government", "research", "service", "other"];
 const SIZES = ["small", "medium", "large", "enterprise"];
 const TYPE_COLORS = {
   pharma: "#8B5CF6", // purple
-  "f&b": "#F59E0B", // amber
+  fnb: "#F59E0B", // amber
   research: "#3B82F6", // blue
   government: "#10B981", // green
   industrial: "#6B7280", // gray
@@ -77,10 +77,10 @@ export default function Accounts({ showToast }) {
   async function loadAll() {
     setLoading(true);
     const [accountsRes, dealsRes, contactsRes, interactionsRes] = await Promise.all([
-      supabase.from('accounts').select('*').is('is_duplicate_of', null),
-      supabase.from('deals').select('account_id, value, stage'),
-      supabase.from('contacts').select('account_id'),
-      supabase.from('interactions').select('account_id, date').order('date', { ascending: false })
+      supabase.from('accounts').select('*').is('is_duplicate_of', null).range(0, 1999),
+      supabase.from('deals').select('account_id, value, stage').range(0, 1999),
+      supabase.from('contacts').select('account_id').range(0, 1999),
+      supabase.from('interactions').select('account_id, date').order('date', { ascending: false }).range(0, 1999)
     ]);
 
     if (accountsRes.error) {
@@ -248,8 +248,7 @@ export default function Accounts({ showToast }) {
     if (!isEditing) {
       return (
         <div 
-          className="editable-cell cursor-pointer hover:bg-white/5 border border-transparent px-2 py-1 -ml-2 rounded transition-colors w-full h-full min-h-[24px] flex items-center"
-          onClick={() => setEditingCell({ rowId: account.id, field })}
+          className="editable-cell border border-transparent px-2 py-1 -ml-2 rounded transition-colors w-full h-full min-h-[24px] flex items-center"
         >
           {field === 'type' ? (
              <span className="badge" style={{ backgroundColor: `${TYPE_COLORS[account.type?.toLowerCase()] || TYPE_COLORS.other}20`, color: TYPE_COLORS[account.type?.toLowerCase()] || TYPE_COLORS.other, borderColor: `${TYPE_COLORS[account.type?.toLowerCase()] || TYPE_COLORS.other}40` }}>
@@ -458,6 +457,9 @@ export default function Accounts({ showToast }) {
                        </span>
                     </td>
                     <td className="text-right flex items-center justify-end gap-2 pr-4 py-3">
+                      <button onClick={(e) => { e.stopPropagation(); setEditingCell({ rowId: acc.id, field: 'name' }); }} className="hover:text-amber-500 transition-colors" style={{ color: 'var(--text-3)' }} title="Sửa nhanh">
+                        <Edit2 size={16} />
+                      </button>
                       <button onClick={(e) => { e.stopPropagation(); navigate(`/accounts/${acc.id}`); }} className="hover:text-white transition-colors" style={{ color: 'var(--text-3)' }} title="Xem chi tiết">
                         <Eye size={16} />
                       </button>
@@ -608,6 +610,15 @@ function AnalyticsDashboard({ accounts }) {
     return dB - dA;
   });
 
+  const [darkPage, setDarkPage] = useState(1);
+  const [inactivePage, setInactivePage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  const paginatedDark = darkAccounts.slice((darkPage - 1) * PAGE_SIZE, darkPage * PAGE_SIZE);
+  const paginatedInactive = inactiveAccounts.slice((inactivePage - 1) * PAGE_SIZE, inactivePage * PAGE_SIZE);
+  const totalDarkPages = Math.ceil(darkAccounts.length / PAGE_SIZE);
+  const totalInactivePages = Math.ceil(inactiveAccounts.length / PAGE_SIZE);
+
   return (
     <div className="mt-8 pt-8 border-t" style={{ borderColor: 'var(--border)' }}>
       <div className="mb-6">
@@ -744,24 +755,47 @@ function AnalyticsDashboard({ accounts }) {
             {darkAccounts.length === 0 ? (
                <div className="flex items-center justify-center h-full text-sm font-bold text-[#2EA043] uppercase tracking-widest py-10">✅ Tất cả tài khoản đã có liên hệ</div>
             ) : (
-              <table className="w-full text-left table-zebra text-sm border-collapse">
-                <thead className="sticky top-0 border-b" style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
-                   <tr>
-                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tên</th>
-                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Khu vực</th>
-                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Điểm</th>
-                   </tr>
-                </thead>
-                <tbody>
-                   {darkAccounts.map(a => (
-                     <tr key={a.id} className="border-b hover:bg-white/5 cursor-pointer" style={{ borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)' }}>
-                        <td className="p-3 font-bold max-w-[150px] truncate" style={{ color: 'var(--text-1)' }}><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
-                        <td className="p-3 font-bold text-xs uppercase" style={{ color: 'var(--text-2)' }}>{a.region || "—"}</td>
-                        <td className="p-3"><ScoreBadge score={a.score} /></td>
+              <>
+                <table className="w-full text-left table-zebra text-sm border-collapse">
+                  <thead className="sticky top-0 border-b" style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
+                     <tr>
+                       <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tên</th>
+                       <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Khu vực</th>
+                       <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Điểm</th>
                      </tr>
-                   ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                     {paginatedDark.map(a => (
+                       <tr key={a.id} className="border-b hover:bg-white/5 cursor-pointer" style={{ borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)' }}>
+                          <td className="p-3 font-bold max-w-[150px] truncate" style={{ color: 'var(--text-1)' }}><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
+                          <td className="p-3 font-bold text-xs uppercase" style={{ color: 'var(--text-2)' }}>{a.region || "—"}</td>
+                          <td className="p-3"><ScoreBadge score={a.score} /></td>
+                       </tr>
+                     ))}
+                  </tbody>
+                </table>
+                {totalDarkPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-2 border-t" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+                    <button 
+                      onClick={() => setDarkPage(p => Math.max(1, p - 1))} 
+                      disabled={darkPage === 1}
+                      className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest disabled:opacity-30"
+                      style={{ color: 'var(--text-2)' }}
+                    >
+                      Trước
+                    </button>
+                    <span className="text-[10px] font-black" style={{ color: 'var(--text-3)' }}>{darkPage} / {totalDarkPages}</span>
+                    <button 
+                      onClick={() => setDarkPage(p => Math.min(totalDarkPages, p + 1))} 
+                      disabled={darkPage === totalDarkPages}
+                      className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest disabled:opacity-30"
+                      style={{ color: 'var(--text-2)' }}
+                    >
+                      Tiếp
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -776,29 +810,52 @@ function AnalyticsDashboard({ accounts }) {
             {inactiveAccounts.length === 0 ? (
                <div className="flex items-center justify-center h-full text-sm font-bold text-[#2EA043] uppercase tracking-widest py-10">✅ Tất cả tài khoản đang hoạt động tốt</div>
             ) : (
-              <table className="w-full text-left table-zebra text-sm border-collapse">
-                <thead className="sticky top-0 border-b" style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
-                   <tr>
-                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tên</th>
-                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tương tác cuối</th>
-                     <th className="p-3 text-[10px] font-bold uppercase tracking-widest text-right" style={{ color: 'var(--text-2)' }}>Ngày im lặng</th>
-                   </tr>
-                </thead>
-                <tbody>
-                   {inactiveAccounts.map(a => {
-                     const days = a.last_interaction ? differenceInDays(new Date(), new Date(a.last_interaction)) : 999;
-                     return (
-                       <tr key={a.id} className="border-b hover:bg-white/5 cursor-pointer" style={{ borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)' }}>
-                          <td className="p-3 font-bold max-w-[150px] truncate" style={{ color: 'var(--text-1)' }}><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
-                          <td className="p-3 font-bold text-xs uppercase" style={{ color: 'var(--text-2)' }}>{a.last_interaction ? format(new Date(a.last_interaction), "dd/MM/yyyy") : "Chưa có"}</td>
-                          <td className={`p-3 text-right font-bold ${days > 60 ? "text-[#EF4444]" : "text-[#D29922]"}`}>
-                            {days === 999 ? "Chưa bao giờ" : `${days} ngày`}
-                          </td>
-                       </tr>
-                     )
-                   })}
-                </tbody>
-              </table>
+              <>
+                <table className="w-full text-left table-zebra text-sm border-collapse">
+                  <thead className="sticky top-0 border-b" style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
+                     <tr>
+                       <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tên</th>
+                       <th className="p-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Tương tác cuối</th>
+                       <th className="p-3 text-[10px] font-bold uppercase tracking-widest text-right" style={{ color: 'var(--text-2)' }}>Ngày im lặng</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {paginatedInactive.map(a => {
+                       const days = a.last_interaction ? differenceInDays(new Date(), new Date(a.last_interaction)) : 999;
+                       return (
+                         <tr key={a.id} className="border-b hover:bg-white/5 cursor-pointer" style={{ borderColor: 'color-mix(in srgb, var(--border) 50%, transparent)' }}>
+                            <td className="p-3 font-bold max-w-[150px] truncate" style={{ color: 'var(--text-1)' }}><Link to={`/accounts/${a.id}`}>{a.name}</Link></td>
+                            <td className="p-3 font-bold text-xs uppercase" style={{ color: 'var(--text-2)' }}>{a.last_interaction ? format(new Date(a.last_interaction), "dd/MM/yyyy") : "Chưa có"}</td>
+                            <td className={`p-3 text-right font-bold ${days > 60 ? "text-[#EF4444]" : "text-[#D29922]"}`}>
+                              {days === 999 ? "Chưa bao giờ" : `${days} ngày`}
+                            </td>
+                         </tr>
+                       )
+                     })}
+                  </tbody>
+                </table>
+                {totalInactivePages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-2 border-t" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+                    <button 
+                      onClick={() => setInactivePage(p => Math.max(1, p - 1))} 
+                      disabled={inactivePage === 1}
+                      className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest disabled:opacity-30"
+                      style={{ color: 'var(--text-2)' }}
+                    >
+                      Trước
+                    </button>
+                    <span className="text-[10px] font-black" style={{ color: 'var(--text-3)' }}>{inactivePage} / {totalInactivePages}</span>
+                    <button 
+                      onClick={() => setInactivePage(p => Math.min(totalInactivePages, p + 1))} 
+                      disabled={inactivePage === totalInactivePages}
+                      className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest disabled:opacity-30"
+                      style={{ color: 'var(--text-2)' }}
+                    >
+                      Tiếp
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

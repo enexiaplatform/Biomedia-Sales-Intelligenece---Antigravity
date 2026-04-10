@@ -278,8 +278,10 @@ function KPILogForm({ showToast }) {
   const [loading, setLoading] = useState(true);
   const currentPeriod = format(new Date(), "yyyy-MM");
   
+  const currentWeekOfMonth = Math.ceil(new Date().getDate() / 7);
+  
   const [form, setForm] = useState({ 
-    period: currentPeriod, week: 1, calls_count: 0, visits_count: 0, 
+    period: currentPeriod, week: currentWeekOfMonth, calls_count: 0, visits_count: 0, 
     demos_count: 0, revenue_closed: 0, deals_closed: 0 
   });
 
@@ -569,7 +571,7 @@ function KPIForecast() {
     activeDeals.forEach(d => {
       const val = d.value || 0;
       weighted += val * ((d.probability || 0)/100);
-      if(d.stage === 'negotiation' || d.stage === 'proposal') bestCase += val;
+      bestCase += val; // Best case = total value of all active pipeline deals
       if((d.probability || 0) >= 70) committed += val;
     });
 

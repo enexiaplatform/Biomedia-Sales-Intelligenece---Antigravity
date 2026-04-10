@@ -17,7 +17,8 @@ import {
   fetchInfluenceLinks,
   createInfluenceLink,
   deleteInfluenceLink,
-  fetchDeals
+  fetchDeals,
+  fetchCompetitors
 } from '../lib/supabase';
 import { callAISalesCoach } from '../lib/ai';
 import OrgChartView, { buildTree } from '../components/OrgChart';
@@ -317,16 +318,16 @@ export default function BDTool() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6">
+      {/* Premium Header */}
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6 mb-8 border-b border-white/5 pb-8">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
-              <Network className="text-primary" size={24} />
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-glow-sm">
+              <Network className="text-primary" size={28} />
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">BD Tool</h1>
-              <p className="text-slate-400 text-sm">Org Chart, Budget Intelligence & Stakeholder Map</p>
+              <h1 className="text-3xl font-black text-slate-100 uppercase tracking-tighter">BD Tool</h1>
+              <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1">Business Development Intelligence</p>
             </div>
           </div>
         </div>

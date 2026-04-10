@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import Sidebar from "./components/SidebarVFinal";
-import QuickLogModal from "./components/QuickLogModal";
+import SmartInboxModal from "./components/SmartInboxModal";
 import GlobalSearchModal from "./components/GlobalSearchModal";
 import MobileNav from "./components/MobileNav";
 import CommandPalette from "./components/CommandPalette";
@@ -27,6 +27,7 @@ const AICoach = lazy(() => import("./pages/AICoach"));
 const ProductManagement = lazy(() => import("./pages/ProductManagement"));
 const BDTool = lazy(() => import("./pages/BDTool"));
 const GMSimulator = lazy(() => import("./pages/GMSimulator"));
+const LabTools = lazy(() => import("./pages/LabTools"));
 
 const PAGE_TITLES = {
   "/": "Dashboard",
@@ -41,7 +42,8 @@ const PAGE_TITLES = {
   "/ai-coach": "AI Sales Coach",
   "/products": "Sản Phẩm",
   "/bd-tool": "BD Tool",
-  "/gm-hub": "GM Simulator"
+  "/gm-hub": "GM Simulator",
+  "/lab-tools": "Công cụ Lab"
 };
 
 const PageLoader = () => (
@@ -197,6 +199,7 @@ function DashboardLayout() {
                 <Route path="/products" element={<ProductManagement />} />
                 <Route path="/bd-tool" element={<BDTool />} />
                 <Route path="/gm-hub" element={<GMSimulator />} />
+                <Route path="/lab-tools" element={<LabTools />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
@@ -218,7 +221,11 @@ function DashboardLayout() {
       />
 
       <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <QuickLogModal open={quickLogOpen} onClose={() => setQuickLogOpen(false)} />
+      <SmartInboxModal 
+        open={quickLogOpen} 
+        onClose={() => setQuickLogOpen(false)} 
+        showToast={showToast}
+      />
 
       {/* Toast */}
       {toast && (

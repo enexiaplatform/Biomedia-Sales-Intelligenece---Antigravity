@@ -306,13 +306,16 @@ Giọng văn: chuyên nghiệp, trực tiếp, như một sales manager giàu ki
                   <CurrencyDisplay value={wonThisMonthValue} className="font-bold" style={{ color: 'var(--text-1)' }} />
                   <span className="mx-1">/</span>
                   <span>Quota:</span>
-                  <input 
-                    type="number" 
-                    value={quota} 
-                    onChange={e => setQuota(parseInt(e.target.value) || 0)} 
-                    className="w-28 px-2 py-1 rounded text-[11px] font-bold outline-none transition-colors ml-1" 
-                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-1)', border: '1px solid var(--border)' }}
-                  />
+                  <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg border border-transparent hover:border-brand-border transition-all group">
+                    <CurrencyDisplay value={quota} className="font-bold text-[11px]" />
+                    <input 
+                      type="number" 
+                      value={quota} 
+                      onChange={e => setQuota(parseInt(e.target.value) || 0)} 
+                      className="w-16 bg-transparent text-[11px] font-bold outline-none border-none p-0 focus:w-28 transition-all" 
+                      style={{ color: 'var(--text-1)' }}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Brain, GitBranch, X } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronDown, ChevronUp, Brain, GitBranch, X, TrendingUp } from "lucide-react";
 import { PageLoader } from "../components/LoadingSpinner";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
@@ -92,7 +92,19 @@ export default function Competitors({ showToast }) {
   if (loading) return <PageLoader />;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
+      {/* Premium Header */}
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6 mb-8 border-b border-white/5 pb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 shadow-glow-sm">
+            <TrendingUp className="text-red-500" size={28} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-slate-100 uppercase tracking-tighter">ĐỐI THỦ CẠNH TRANH</h1>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1">Competitive Intelligence</p>
+          </div>
+        </div>
+      </div>
       <div className="flex gap-2 p-1 rounded-2xl border border-surface-700/50 w-fit shadow-xl" style={{ background: 'var(--bg-elevated)' }}>
         <button
           onClick={() => setActiveTab("competitors")}

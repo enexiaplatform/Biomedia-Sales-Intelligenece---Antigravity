@@ -39,7 +39,7 @@ export default function VACCCoach() {
       setInsight(response);
     } catch (err) {
       console.error(err);
-      setInsight("Lỗi kết nối AI Coach. Vui lòng thử lại sau.");
+      setInsight("AI Coach hiện chưa sẵn sàng. Vui lòng kiểm tra API Key hoặc liên hệ Admin để được hỗ trợ.");
     } finally {
       setLoading(false);
     }
