@@ -222,7 +222,7 @@ export default function Accounts({ showToast }) {
   };
 
   const handleRowClick = (e, id) => {
-    if (e.target.closest('.editable-cell') || e.target.closest('button')) return;
+    if (e.target.closest('button') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     navigate(`/accounts/${id}`);
   };
 

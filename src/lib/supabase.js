@@ -55,6 +55,38 @@ export const supabase = (supabaseUrl && supabaseKey)
       }
     };
 
+// Helper to fetch all rows from a table by looping through ranges
+async function fetchAll(tableName, queryBuilder) {
+  let allData = [];
+  let from = 0;
+  let to = 999;
+  let finished = false;
+  let lastError = null;
+
+  while (!finished) {
+    const { data, error } = await queryBuilder.range(from, to);
+    if (error) {
+      lastError = error;
+      finished = true;
+    } else {
+      if (!data || data.length === 0) {
+        finished = true;
+      } else {
+        allData = [...allData, ...data];
+        if (data.length < 1000) {
+          finished = true;
+        } else {
+          from += 1000;
+          to += 1000;
+        }
+      }
+    }
+    // Safety cap to avoid infinite loops
+    if (allData.length >= 10000) finished = true;
+  }
+  return { data: allData, error: lastError };
+}
+
 // ── Accounts ──────────────────────────────────────────────────────────────────
 export async function fetchAccounts(filters = {}) {
   let query = supabase
@@ -69,7 +101,7 @@ export async function fetchAccounts(filters = {}) {
   if (filters.scoreMax != null) query = query.lte("score", filters.scoreMax);
   if (filters.search) query = query.ilike("name", `%${filters.search}%`);
 
-  let { data, error } = await query.range(0, 1999);
+  let { data, error } = await fetchAll("accounts", query);
 
   // Fallback for demo if no data exists
   if (!data || data.length === 0) {
@@ -120,7 +152,6 @@ export async function deleteAccount(id) {
   return { error };
 }
 
-// ── Contacts ──────────────────────────────────────────────────────────────────
 export async function fetchContacts(accountId) {
   const { data, error } = await supabase
     .from("contacts")
@@ -131,12 +162,12 @@ export async function fetchContacts(accountId) {
 }
 
 export async function fetchAllContacts() {
-  const { data, error } = await supabase
+  const query = supabase
     .from("contacts")
     .select("*, accounts(name)")
-    .order("name")
-    .range(0, 1999);
-  return { data, error };
+    .order("name");
+
+  return await fetchAll("contacts", query);
 }
 
 export async function createContact(contactData) {
@@ -210,7 +241,6 @@ export async function deleteInteraction(id) {
   return { error };
 }
 
-// ── Deals ─────────────────────────────────────────────────────────────────────
 export async function fetchDeals(accountId = null) {
   let query = supabase
     .from("deals")
@@ -219,8 +249,7 @@ export async function fetchDeals(accountId = null) {
 
   if (accountId) query = query.eq("account_id", accountId);
 
-  const { data, error } = await query.range(0, 1999);
-  return { data, error };
+  return await fetchAll("deals", query);
 }
 
 export async function fetchDealById(id) {

@@ -298,13 +298,12 @@ export default function Pipeline() {
           <KPICard title="Deals đang mở" value={kpis.activeDeals} sub="Cơ hội tiềm năng" icon={<BarChart2 className="text-blue-500" />} />
           <KPICard 
             title="Tổng pipeline" 
-            value={fmtShort(kpis.totalPipeline)} 
-            sub={<div className="flex flex-col"><span>VND (Chưa tính trọng số)</span><span className="text-gray-400 normal-case">{fmtSGD(kpis.totalPipeline)}</span></div>} 
+            value={fmt(kpis.totalPipeline)} 
+            sub={fmtSGD(kpis.totalPipeline)} 
             icon={<DollarSign className="text-emerald-500" />} 
           />
           <KPICard 
             title="Dự báo weighted" 
-            value={fmtShort(kpis.weightedForecast)} 
             sub={<div className="flex flex-col"><span>VND (Tính theo xác suất)</span><span className="text-gray-400 normal-case">{fmtSGD(kpis.weightedForecast)}</span></div>} 
             icon={<TrendingUp className="text-purple-500" />} 
           />
@@ -435,8 +434,9 @@ export default function Pipeline() {
                     </td>
                     <td className={`${tdClass} text-center`}>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setEditingDeal(deal); }}
+                        onClick={(e) => { e.stopPropagation(); setSelected(deal); setIsEditing(true); }}
                         className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+                        title="Chỉnh sửa nhanh"
                       >
                         <Edit2 size={14} />
                       </button>
@@ -558,6 +558,8 @@ export default function Pipeline() {
           coachLoading={coachLoading}
           coachResult={coachResult}
           onDelete={() => setShowDeleteConfirm(true)}
+          accounts={accounts}
+          onUpdateDeal={handleUpdateDeal}
         />
       )}
 
@@ -965,20 +967,60 @@ function DealAgeHeatmapChart({ deals }) {
 
 // --- Modals & Drawer ---
 
-function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoading, coachResult, onDelete }) {
+function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoading, coachResult, onDelete, accounts, onUpdateDeal }) {
   const [notes, setNotes] = useState(deal.notes || '');
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState({
+    value: deal.value || 0,
+    stage: deal.stage || 'prospect',
+    probability: deal.probability || 0,
+    expected_close: deal.expected_close || ''
+  });
 
   useEffect(() => {
     setNotes(deal.notes || '');
+    setForm({
+      value: deal.value || 0,
+      stage: deal.stage || 'prospect',
+      probability: deal.probability || 0,
+      expected_close: deal.expected_close || ''
+    });
+    setIsEditing(false);
   }, [deal]);
+
+  const handleSave = async () => {
+    await onUpdateDeal(deal.id, form);
+    setIsEditing(false);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col p-8 overflow-y-auto animate-in slide-in-from-right duration-300">
-        <button onClick={onClose} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <X size={20} />
-        </button>
+        <div className="flex justify-between items-center mb-4">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X size={20} />
+          </button>
+          {!isEditing ? (
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="px-3 py-1.5 bg-gray-50 text-blue-600 rounded-xl text-[11px] font-black uppercase hover:bg-blue-50 transition-colors flex items-center gap-2"
+            >
+              <Edit2 size={12} /> Chỉnh sửa
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-gray-400 text-[11px] font-black uppercase hover:underline">Hủy</button>
+              <button 
+                onClick={handleSave}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
+                disabled={saving}
+              >
+                {saving ? 'Đang lưu...' : 'Lưu'}
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="mt-4 flex items-center gap-3 mb-1">
           <div className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded">Strategic Deal</div>
@@ -991,10 +1033,72 @@ function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoadin
         </div>
 
         <div className="grid grid-cols-2 gap-6 bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
-          <DetailItem label="Giá trị" value={fmt(deal.value)} icon={<DollarSign size={14} />} />
-          <DetailItem label="Xác suất" value={<ProbBadge prob={deal.probability} />} icon={<Target size={14} />} />
-          <DetailItem label="Sản phẩm" value={deal.product || '—'} icon={<FileText size={14} />} />
-          <DetailItem label="Ngày dự kiến" value={deal.expected_close ? format(parseISO(deal.expected_close), 'dd/MM/yyyy') : '—'} icon={<Clock size={14} />} />
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><DollarSign size={14} />Giá trị</div>
+            {isEditing ? (
+              <input 
+                type="number" 
+                className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold"
+                value={form.value} 
+                onChange={e => setForm({...form, value: parseInt(e.target.value) || 0})} 
+              />
+            ) : (
+              <div className="text-sm text-gray-900 font-black tracking-tight">
+                {fmt(deal.value)}
+                <div className="text-[10px] text-gray-400 font-normal mt-0.5">{fmtSGD(deal.value)}</div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><Target size={14} />Giai đoạn / Xác suất</div>
+            {isEditing ? (
+              <div className="flex flex-col gap-2">
+                <select 
+                  className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs"
+                  value={form.stage}
+                  onChange={e => setForm({...form, stage: e.target.value})}
+                >
+                  {Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="range" min="0" max="100" step="5"
+                    className="flex-1"
+                    value={form.probability}
+                    onChange={e => setForm({...form, probability: parseInt(e.target.value)})}
+                  />
+                  <span className="text-xs font-bold w-8">{form.probability}%</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CompactStageBadge stage={deal.stage} />
+                <ProbBadge prob={deal.probability} />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><FileText size={14} />Sản phẩm</div>
+            <div className="text-sm text-gray-900 font-bold">{deal.product || '—'}</div>
+          </div>
+
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><Clock size={14} />Ngày dự kiến</div>
+            {isEditing ? (
+              <input 
+                type="date" 
+                className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm"
+                value={form.expected_close || ''} 
+                onChange={e => setForm({...form, expected_close: e.target.value})} 
+              />
+            ) : (
+              <div className="text-sm text-gray-900 font-bold">
+                {deal.expected_close ? format(parseISO(deal.expected_close), 'dd/MM/yyyy') : '—'}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4 mb-8">

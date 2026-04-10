@@ -306,15 +306,11 @@ Giọng văn: chuyên nghiệp, trực tiếp, như một sales manager giàu ki
                   <CurrencyDisplay value={wonThisMonthValue} showSGD={true} className="font-bold" style={{ color: 'var(--text-1)' }} />
                   <span className="mx-1">/</span>
                   <span>Quota:</span>
-                  <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg border border-transparent hover:border-brand-border transition-all group">
+                  <div className="flex items-center gap-1.5 p-1.5 bg-black/5 dark:bg-white/5 rounded-lg border border-transparent hover:border-brand-border transition-all cursor-pointer" onClick={() => {
+                    const val = prompt("Nhập Quota mới (VND):", quota);
+                    if (val !== null) setQuota(parseInt(val) || 0);
+                  }}>
                     <CurrencyDisplay value={quota} showSGD={true} className="font-bold text-[11px]" />
-                    <input 
-                      type="number" 
-                      value={quota} 
-                      onChange={e => setQuota(parseInt(e.target.value) || 0)} 
-                      className="w-16 bg-transparent text-[11px] font-bold outline-none border-none p-0 focus:w-28 transition-all" 
-                      style={{ color: 'var(--text-1)' }}
-                    />
                   </div>
                 </div>
               </div>

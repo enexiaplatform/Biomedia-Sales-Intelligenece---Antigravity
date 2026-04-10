@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, ChevronUp, ChevronDown, Download, Printer, ArrowLeft, GitBranch } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronUp, ChevronDown, Download, Printer, ArrowLeft, Share2 } from "lucide-react";
 import { PageLoader } from "../components/LoadingSpinner";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
@@ -125,7 +125,7 @@ export default function Workflows({ showToast }) {
       <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6 mb-8 border-b border-white/5 pb-8">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-glow-sm">
-            <GitBranch className="text-blue-500" size={28} />
+            <Share2 className="text-blue-500" size={28} />
           </div>
           <div>
             <h1 className="text-3xl font-black text-slate-100 uppercase tracking-tighter">QUY TRÌNH</h1>
