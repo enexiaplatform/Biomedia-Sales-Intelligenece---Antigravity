@@ -377,7 +377,6 @@ export default function Accounts({ showToast }) {
       {/* Section 3 - Table */}
       <div className="card overflow-x-auto min-h-[500px] flex flex-col">
         <table className="table table-zebra w-full text-left border-collapse min-w-[1000px]">
-          <thead>
           <thead className="sticky top-0 z-10 shadow-sm" style={{ background: 'var(--bg-elevated)' }}>
             <tr style={{ background: '#0D1117' }}>
               <th className="w-[200px] text-[10px] font-black uppercase tracking-widest px-3 py-2 border-b cursor-pointer hover:bg-white/5 transition-colors" style={{ color: 'var(--text-3)', borderColor: 'var(--border)' }} onClick={() => handleSort("name")}>
