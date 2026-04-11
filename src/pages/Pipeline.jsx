@@ -103,6 +103,9 @@ export default function Pipeline() {
   const [coachLoading, setCoachL] = useState(false);
   const [coachResult, setCoachR] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [dealToDelete, setDealToDelete] = useState(null);
+  const [deletingDeal, setDeletingDeal] = useState(false);
+  const [toast, setToast] = useState(null); // { message, type }
 
   // SGD/VND Exchange Rate
   const [sgdRate, setSgdRate] = useState(22000);
@@ -467,18 +470,33 @@ export default function Pipeline() {
   };
 
   const handleDeleteDeal = async () => {
-    if (!selectedDeal) return;
-    setSavingDeal(true);
+    if (!dealToDelete) return;
+    setDeletingDeal(true);
+    const dealName = dealToDelete.name;
     try {
-      const { error } = await deleteDeal(selectedDeal.id);
+      const { error } = await deleteDeal(dealToDelete.id);
       if (!error) {
-        setDeals(prev => prev.filter(d => d.id !== selectedDeal.id));
-        setSelected(null);
+        setDeals(prev => prev.filter(d => d.id !== dealToDelete.id));
+        // Close drawer if it was showing this deal
+        if (selectedDeal?.id === dealToDelete.id) setSelected(null);
+        setDealToDelete(null);
         setShowDeleteConfirm(false);
+        // Show toast
+        setToast({ message: `Đã xóa deal "${dealName}"`, type: 'success' });
+        setTimeout(() => setToast(null), 3500);
+      } else {
+        setToast({ message: 'Xóa thất bại. Vui lòng thử lại.', type: 'error' });
+        setTimeout(() => setToast(null), 3500);
       }
     } finally {
-      setSavingDeal(false);
+      setDeletingDeal(false);
     }
+  };
+
+  const openDeleteConfirm = (e, deal) => {
+    e.stopPropagation();
+    setDealToDelete(deal);
+    setShowDeleteConfirm(true);
   };
 
   if (loading && deals.length === 0) return <PageLoader />;
@@ -684,13 +702,22 @@ export default function Pipeline() {
                       {differenceInDays(new Date(), safeDate(deal.created_at) || new Date())}d
                     </td>
                     <td className={`${tdClass} text-center`}>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelected(deal); }}
-                        className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
-                        title="Mở chi tiết"
-                      >
-                        <Edit2 size={14} />
-                      </button>
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelected(deal); }}
+                          className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+                          title="Mở chi tiết / chỉnh sửa"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button 
+                          onClick={(e) => openDeleteConfirm(e, deal)}
+                          className="p-1 hover:bg-red-50 rounded text-red-300 hover:text-red-600 transition-colors"
+                          title="Xóa deal"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )})}
@@ -948,31 +975,60 @@ export default function Pipeline() {
 
 
       {/* Delete Confirmation */}
-      {showDeleteConfirm && (
-        <Modal onClose={() => setShowDeleteConfirm(false)}>
-          <div className="p-6 text-center">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Trash2 size={24} />
-            </div>
-            <h3 className="text-lg font-bold mb-2">Xác nhận xóa Deal</h3>
-            <p className="text-gray-500 mb-6">Bạn có chắc muốn xóa <b>{selectedDeal?.name}</b>? Thao tác này không thể hoàn tác.</p>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setShowDeleteConfirm(false)} 
-                className="flex-1 py-2 bg-gray-100 rounded-lg font-semibold"
-              >
-                Hủy
-              </button>
-              <button 
-                onClick={handleDeleteDeal} 
-                className="flex-1 py-2 bg-red-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
-                disabled={savingDeal}
-              >
-                {savingDeal ? <LoadingSpinner size="sm" /> : <Trash2 size={16} />} Xóa vĩnh viễn
-              </button>
+      {showDeleteConfirm && dealToDelete && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => { setShowDeleteConfirm(false); setDealToDelete(null); }}
+          />
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Trash2 size={18} />
+                </div>
+                <h3 className="text-base font-black text-gray-900">Xóa deal?</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                Bạn có chắc muốn xóa deal{' '}
+                <span className="font-bold text-gray-800">&ldquo;{dealToDelete.name}&rdquo;</span>?{' '}
+                Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => { setShowDeleteConfirm(false); setDealToDelete(null); }}
+                  className="flex-1 py-2.5 border border-gray-200 bg-white text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button 
+                  onClick={handleDeleteDeal}
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-red-100 transition-all active:scale-95 disabled:opacity-60"
+                  disabled={deletingDeal}
+                >
+                  {deletingDeal ? <LoadingSpinner size="sm" /> : <Trash2 size={14} />}
+                  Xóa
+                </button>
+              </div>
             </div>
           </div>
-        </Modal>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl text-sm font-bold animate-in slide-in-from-bottom-4 duration-300 ${
+          toast.type === 'success'
+            ? 'bg-gray-900 text-white'
+            : 'bg-red-600 text-white'
+        }`}>
+          {toast.type === 'success' ? (
+            <span className="text-emerald-400">✓</span>
+          ) : (
+            <AlertCircle size={16} className="text-red-200" />
+          )}
+          {toast.message}
+        </div>
       )}
 
       {/* 9. Import Modal */}
