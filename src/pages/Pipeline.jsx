@@ -502,7 +502,7 @@ export default function Pipeline() {
   if (loading && deals.length === 0) return <PageLoader />;
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen pb-20">
+    <div className="w-full bg-gray-50 min-h-screen flex flex-col">
       {/* 1. Header Bar */}
       <Header 
         onAdd={() => setShowAdd(true)} 
@@ -514,8 +514,10 @@ export default function Pipeline() {
         onOpenRateModal={() => setShowRateModal(true)}
       />
 
-      <div className="w-full px-6 space-y-6">
-        {/* 2. KPI Bar */}
+      <div className="flex items-start flex-1 w-full">
+        {/* Left Pane - Main Content */}
+        <div className="flex-1 min-w-0 p-6 pb-20 space-y-6">
+          {/* 2. KPI Bar */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard title="Deals đang mở" value={kpis.activeDealsCount} sub="Cơ hội tiềm năng" icon={<BarChart2 className="text-blue-500" />} />
           <KPICard 
@@ -933,21 +935,26 @@ export default function Pipeline() {
           </div>
         )}
       </div>
+        )}
+        </div>
 
-      {/* 6. Side Drawer */}
-      {selectedDeal && (
-        <SideDrawer 
-          deal={selectedDeal} 
-          onClose={() => setSelected(null)} 
-          onAICoach={handleAICoach}
-          coachLoading={coachLoading}
-          coachResult={coachResult}
-          onDelete={() => setShowDeleteConfirm(true)}
-          accounts={accounts}
-          onUpdateDeal={handleUpdateDeal}
-          saveSuccess={saveSuccess}
-        />
-      )}
+        {/* Right Pane - Side Drawer */}
+        {selectedDeal && (
+          <div className="sticky top-20 w-fit shrink-0 h-[calc(100vh-80px)] border-l border-gray-200 shadow-xl z-40 bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.05)]">
+            <SideDrawer 
+              deal={selectedDeal} 
+              onClose={() => setSelected(null)} 
+              onAICoach={handleAICoach}
+              coachLoading={coachLoading}
+              coachResult={coachResult}
+              onDelete={() => setShowDeleteConfirm(true)}
+              accounts={accounts}
+              onUpdateDeal={handleUpdateDeal}
+              saveSuccess={saveSuccess}
+            />
+          </div>
+        )}
+      </div>
 
       {/* 7. Add Deal Modal */}
       {showAdd && (
@@ -1463,9 +1470,7 @@ function SideDrawer({ deal, onClose, saving, onAICoach, coachLoading, coachResul
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col p-8 overflow-y-auto animate-in slide-in-from-right duration-300">
+    <div className="w-[450px] lg:w-[500px] xl:w-[550px] h-full bg-white flex flex-col p-8 overflow-y-auto animate-in fade-in slide-in-from-right duration-300">
         <div className="flex justify-between items-center mb-4">
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X size={20} />
@@ -1674,7 +1679,6 @@ function SideDrawer({ deal, onClose, saving, onAICoach, coachLoading, coachResul
             <Trash2 size={14} /> Xóa Cơ Hội Này
           </button>
         </div>
-      </div>
     </div>
   );
 }
