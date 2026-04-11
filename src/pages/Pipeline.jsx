@@ -935,8 +935,6 @@ export default function Pipeline() {
           </div>
         )}
       </div>
-        )}
-        </div>
 
         {/* Right Pane - Side Drawer */}
         {selectedDeal && (
