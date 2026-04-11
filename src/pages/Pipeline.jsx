@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Plus, X, AlertCircle, Zap, Search, Filter,
   ArrowUpDown, ArrowUp, ArrowDown,
   TrendingUp, DollarSign, Target, BarChart2, Trash2,
   ChevronRight, Save, Clock, Briefcase, FileText,
-  List, AlignJustify, ChevronLeft, Edit2
+  List, AlignJustify, ChevronLeft, Edit2, Settings
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -14,7 +14,7 @@ import {
 } from 'recharts';
 import { format, differenceInDays, parseISO, isValid, isPast, addMonths, startOfMonth } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { getDeals, createDeal, updateDeal, deleteDeal, getAccounts } from '../lib/supabase';
+import { supabase, getDeals, createDeal, updateDeal, deleteDeal, getAccounts } from '../lib/supabase';
 import { getDealCoaching } from '../lib/ai';
 import LoadingSpinner, { PageLoader } from '../components/LoadingSpinner';
 import { VND_TO_SGD_RATE } from '../lib/constants';
@@ -79,6 +79,11 @@ const fmtSGD = (v) => {
   }).format(v);
 };
 
+const fmtSGDNum = (v) => {
+  if (!v && v !== 0) return '—';
+  return new Intl.NumberFormat('en-SG', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v) + ' SGD';
+};
+
 const safeDate = (d) => {
   if (!d) return null;
   const p = typeof d === 'string' ? parseISO(d) : new Date(d);
@@ -98,6 +103,10 @@ export default function Pipeline() {
   const [coachLoading, setCoachL] = useState(false);
   const [coachResult, setCoachR] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // SGD/VND Exchange Rate
+  const [sgdRate, setSgdRate] = useState(22000);
+  const [showRateModal, setShowRateModal] = useState(false);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -130,9 +139,41 @@ export default function Pipeline() {
     localStorage.setItem('pipeline_density', newMode);
   };
 
+  // Fetch SGD rate from app_settings
+  const fetchSgdRate = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'sgd_vnd_rate')
+        .single();
+      if (!error && data?.value) {
+        const parsed = parseFloat(data.value);
+        if (!isNaN(parsed) && parsed > 0) setSgdRate(parsed);
+      }
+    } catch (err) {
+      console.warn('Could not fetch SGD rate, using fallback:', err.message);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
-  }, []);
+    fetchSgdRate();
+  }, [fetchSgdRate]);
+
+  // Save SGD rate to Supabase
+  const handleSaveRate = async (newRate) => {
+    try {
+      await supabase
+        .from('app_settings')
+        .update({ value: String(newRate) })
+        .eq('key', 'sgd_vnd_rate');
+      setSgdRate(newRate);
+    } catch (err) {
+      console.error('Failed to save rate:', err);
+    }
+    setShowRateModal(false);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -238,6 +279,13 @@ export default function Pipeline() {
     return result;
   }, [deals, search, stageFilter, accountFilter, probMin, probMax, sortField, sortDir, activeTab]);
 
+  // --- toSGD helper (needs sgdRate in scope) ---
+  const toSGD = useCallback((deal) => {
+    if (!deal) return 0;
+    if (deal.currency === 'SGD') return deal.value || 0;
+    return Math.round((deal.value || 0) / sgdRate);
+  }, [sgdRate]);
+
   // --- KPI Calculations ---
   const kpis = useMemo(() => {
     const activeDeals = deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost');
@@ -251,6 +299,10 @@ export default function Pipeline() {
     const weightedForecastVND = vndDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
     const weightedForecastSGD = sgdDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
     
+    // SGD equivalent totals (all deals converted)
+    const totalPipelineSGDEquiv = activeDeals.reduce((sum, d) => sum + toSGD(d), 0);
+    const weightedSGDEquiv = activeDeals.reduce((sum, d) => sum + toSGD(d) * ((d.probability || 0) / 100), 0);
+
     const wonCount = deals.filter(d => d.stage === 'Closed Won').length;
     const lostCount = deals.filter(d => d.stage === 'Closed Lost').length;
     const winRate = (wonCount + lostCount) > 0 ? (wonCount / (wonCount + lostCount)) * 100 : 0;
@@ -259,11 +311,13 @@ export default function Pipeline() {
       activeDealsCount: activeDeals.length, 
       totalPipelineVND, 
       totalPipelineSGD,
+      totalPipelineSGDEquiv,
       weightedForecastVND, 
       weightedForecastSGD,
+      weightedSGDEquiv,
       winRate, wonCount, lostCount 
     };
-  }, [deals]);
+  }, [deals, toSGD]);
 
   const tableTotals = useMemo(() => {
     const vnd = filteredDeals.filter(d => (d.currency || 'VND') === 'VND');
@@ -438,6 +492,8 @@ export default function Pipeline() {
         onImportClick={handleImportClick}
         onImport={handleFileChange}
         csvInputRef={csvInputRef}
+        sgdRate={sgdRate}
+        onOpenRateModal={() => setShowRateModal(true)}
       />
 
       <div className="w-full px-6 space-y-6">
@@ -449,12 +505,12 @@ export default function Pipeline() {
             value={
               <div className="flex flex-col gap-0.5">
                 <span className="text-2xl font-black">{fmt(kpis.totalPipelineVND)}</span>
-                <span className="text-sm font-semibold text-blue-500">
-                  SGD: {new Intl.NumberFormat('en-SG').format(kpis.totalPipelineSGD)} SGD
+                <span className="text-sm font-semibold text-emerald-500">
+                  ≈ {fmtSGDNum(kpis.totalPipelineSGDEquiv)}
                 </span>
               </div>
             }
-            sub="VND + SGD tracked separately" 
+            sub={`Tỉ giá: 1 SGD = ${new Intl.NumberFormat('vi-VN').format(sgdRate)} ₫`}
             icon={<DollarSign className="text-emerald-500" />} 
           />
           <KPICard 
@@ -462,8 +518,8 @@ export default function Pipeline() {
             value={
               <div className="flex flex-col gap-0.5">
                 <span className="text-2xl font-black">{fmt(kpis.weightedForecastVND)}</span>
-                <span className="text-sm font-semibold text-blue-500">
-                  SGD: {new Intl.NumberFormat('en-SG').format(Math.round(kpis.weightedForecastSGD))} SGD
+                <span className="text-sm font-semibold text-purple-500">
+                  ≈ {fmtSGDNum(Math.round(kpis.weightedSGDEquiv))}
                 </span>
               </div>
             }
@@ -607,8 +663,12 @@ export default function Pipeline() {
                     <td className={`${tdClass} text-right font-bold text-gray-900`}>
                       {(deal.currency || 'VND') === 'VND' ? fmt(deal.value) : '—'}
                     </td>
-                    <td className={`${tdClass} text-right font-bold text-blue-600`}>
-                      {deal.currency === 'SGD' ? fmtSGD(deal.value) : '—'}
+                    <td className={`${tdClass} text-right font-mono`}>
+                      {deal.currency === 'SGD' ? (
+                        <span className="font-bold text-blue-600">{fmtSGD(deal.value)}</span>
+                      ) : (
+                        <span className="text-gray-400 text-[11px]">{fmtSGDNum(toSGD(deal))}</span>
+                      )}
                     </td>
                     <td className={`${tdClass} text-center`}>
                       <ProbBadge prob={deal.probability} />
@@ -641,8 +701,13 @@ export default function Pipeline() {
                   <td className="px-4 py-2 text-right text-gray-900 text-xs">
                     {tableTotals.vndRaw > 0 ? fmt(tableTotals.vndRaw) : '—'}
                   </td>
-                  <td className="px-4 py-2 text-right text-blue-700 text-xs">
-                    {tableTotals.sgdRaw > 0 ? fmtSGD(tableTotals.sgdRaw) : '—'}
+                  <td className="px-4 py-2 text-right text-xs">
+                    <div className="flex flex-col items-end gap-0.5">
+                      {tableTotals.sgdRaw > 0 && <span className="text-blue-700">{fmtSGD(tableTotals.sgdRaw)}</span>}
+                      <span className="text-gray-400 font-normal text-[10px]">
+                        ≈ {fmtSGDNum(filteredDeals.reduce((s, d) => s + toSGD(d), 0))}
+                      </span>
+                    </div>
                   </td>
                   <td></td>
                   <td className="px-4 py-2 text-right text-emerald-700 text-xs text-nowrap">
@@ -921,13 +986,22 @@ export default function Pipeline() {
           progress={importProgress}
         />
       )}
+
+      {/* 10. Exchange Rate Modal */}
+      {showRateModal && (
+        <ExchangeRateModal
+          currentRate={sgdRate}
+          onClose={() => setShowRateModal(false)}
+          onSave={handleSaveRate}
+        />
+      )}
     </div>
   );
 }
 
 // --- Sub-Components ---
 
-function Header({ onAdd, onExport, onImportClick, onImport, csvInputRef }) {
+function Header({ onAdd, onExport, onImportClick, onImport, csvInputRef, sgdRate, onOpenRateModal }) {
   return (
     <div className="w-full h-20 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
       <div>
@@ -942,6 +1016,15 @@ function Header({ onAdd, onExport, onImportClick, onImport, csvInputRef }) {
           accept=".csv" 
           onChange={onImport} 
         />
+        {/* Exchange Rate Button */}
+        <button
+          onClick={onOpenRateModal}
+          className="px-3 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl font-bold flex items-center gap-1.5 hover:bg-amber-100 transition-colors text-xs whitespace-nowrap"
+          title="Cập nhật tỉ giá SGD/VND"
+        >
+          <Settings size={13} />
+          1 SGD = {new Intl.NumberFormat('vi-VN').format(sgdRate)} ₫
+        </button>
         <button 
           onClick={onExport}
           className="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors"
@@ -2127,6 +2210,88 @@ function Modal({ children, onClose }) {
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden">
         {children}
+      </div>
+    </div>
+  );
+}
+
+// ── Exchange Rate Modal ────────────────────────────────────────────────────────
+function ExchangeRateModal({ currentRate, onClose, onSave }) {
+  const [inputRate, setInputRate] = useState(String(currentRate));
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    const val = parseFloat(inputRate.replace(/,/g, ''));
+    if (isNaN(val) || val <= 0) return;
+    setSaving(true);
+    await onSave(val);
+    setSaving(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg">
+              <Settings size={16} />
+            </div>
+            <h3 className="text-base font-black uppercase tracking-tight text-gray-900">Cập nhật tỉ giá</h3>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+          <p className="text-xs text-gray-500">Tỉ giá này được dùng để quy đổi các deal VND sang SGD tương đương trong toàn bộ Pipeline.</p>
+          
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">
+              1 SGD = ? VND
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-500 whitespace-nowrap">1 SGD =</span>
+              <input
+                type="number"
+                className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400"
+                value={inputRate}
+                onChange={e => setInputRate(e.target.value)}
+                placeholder="22000"
+                min="1"
+                step="100"
+              />
+              <span className="text-sm font-bold text-gray-500">₫</span>
+            </div>
+          </div>
+
+          {inputRate && !isNaN(parseFloat(inputRate)) && (
+            <div className="px-3 py-2 bg-amber-50 rounded-lg border border-amber-100 text-xs text-amber-700">
+              Ví dụ: 100,000,000 VND ≈ {new Intl.NumberFormat('en-SG').format(Math.round(100_000_000 / parseFloat(inputRate)))} SGD
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md shadow-amber-100 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {saving ? <LoadingSpinner size="sm" /> : <Save size={14} />}
+            Lưu tỉ giá
+          </button>
+        </div>
       </div>
     </div>
   );
