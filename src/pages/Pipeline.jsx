@@ -111,7 +111,6 @@ export default function Pipeline() {
   const [showImport, setShowImport] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
-  const csvInputRef = React.useRef(null);
 
   // Sort
   const [sortField, setSortField] = useState('value');
