@@ -29,6 +29,26 @@ const STAGE_LABEL = {
   'Closed Lost': 'Thua',
 };
 
+// Convert UI -> DB
+const stageToDb = {
+  'Prospect': 'prospect',
+  'Qualified': 'qualified', 
+  'Proposal': 'proposal',
+  'Negotiation': 'negotiation',
+  'Closed Won': 'closed_won',
+  'Closed Lost': 'closed_lost',
+};
+
+// Convert DB -> UI
+const stageFromDb = {
+  'prospect': 'Prospect',
+  'qualified': 'Qualified',
+  'proposal': 'Proposal',
+  'negotiation': 'Negotiation',
+  'closed_won': 'Closed Won',
+  'closed_lost': 'Closed Lost',
+};
+
 const STAGE_COLOR = {
   Prospect:      { bg: 'bg-slate-100',  text: 'text-slate-700',  hex: '#94a3b8' },
   Qualified:     { bg: 'bg-blue-100',   text: 'text-blue-700',   hex: '#3b82f6' },
@@ -53,8 +73,10 @@ const fmt = (v) => {
 
 const fmtSGD = (v) => {
   if (!v && v !== 0) return '—';
-  const sgdValue = v * VND_TO_SGD_RATE;
-  return `≈ ${new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', maximumFractionDigits: 0 }).format(sgdValue)}`;
+  return new Intl.NumberFormat('en-SG', {
+    style: 'currency', currency: 'SGD',
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
+  }).format(v);
 };
 
 const safeDate = (d) => {
@@ -70,7 +92,7 @@ export default function Pipeline() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [savingDeal, setSaving] = useState(false);
+  const [savingDeal, setSavingDeal] = useState(false);
   const [selectedDeal, setSelected] = useState(null);
   const [editingDeal, setEditingDeal] = useState(null);
   const [coachLoading, setCoachL] = useState(false);
@@ -83,6 +105,12 @@ export default function Pipeline() {
   const [accountFilter, setAccountF] = useState('All');
   const [probMin, setProbMin] = useState('');
   const [probMax, setProbMax] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const csvInputRef = React.useRef(null);
 
   // Sort
   const [sortField, setSortField] = useState('value');
@@ -106,21 +134,27 @@ export default function Pipeline() {
     fetchData();
   }, []);
 
-  async function fetchData() {
+  const fetchData = async () => {
     setLoading(true);
     try {
       const [dealsRes, accountsRes] = await Promise.all([
         getDeals(),
         getAccounts()
       ]);
-      setDeals(dealsRes.data || []);
+      if (!dealsRes.error) {
+        const mapped = (dealsRes.data || []).map(d => ({
+          ...d,
+          stage: stageFromDb[d.stage] || d.stage
+        }));
+        setDeals(mapped);
+      }
       setAccounts(accountsRes.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   // --- Filter & Sort Logic ---
   const filteredDeals = useMemo(() => {
@@ -154,6 +188,16 @@ export default function Pipeline() {
       result = result.filter(d => (d.probability || 0) <= parseInt(probMax));
     }
 
+    // Tab Filter
+    if (activeTab === 'prospect') {
+      result = result.filter(d => d.stage === 'Prospect');
+    } else if (activeTab === 'lead') {
+      result = result.filter(d => d.stage === 'Qualified');
+    } else if (activeTab === 'opportunity') {
+      const oppStages = ['Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
+      result = result.filter(d => oppStages.includes(d.stage));
+    }
+
     // Sort
     result.sort((a, b) => {
       let valA = a[sortField];
@@ -169,6 +213,11 @@ export default function Pipeline() {
       if (sortField === 'weighted') {
         valA = (a.value || 0) * ((a.probability || 0) / 100);
         valB = (b.value || 0) * ((b.probability || 0) / 100);
+      }
+
+      if (sortField === 'value' || sortField === 'weighted') {
+        // Simple numeric comparison for these
+        return sortDir === 'asc' ? (valA || 0) - (valB || 0) : (valB || 0) - (valA || 0);
       }
 
       if (typeof valA === 'string') {
@@ -187,25 +236,45 @@ export default function Pipeline() {
     });
 
     return result;
-  }, [deals, search, stageFilter, accountFilter, probMin, probMax, sortField, sortDir]);
+  }, [deals, search, stageFilter, accountFilter, probMin, probMax, sortField, sortDir, activeTab]);
 
   // --- KPI Calculations ---
   const kpis = useMemo(() => {
     const activeDeals = deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost');
-    const totalPipeline = activeDeals.reduce((sum, d) => sum + (d.value || 0), 0);
-    const weightedForecast = activeDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
+    
+    const vndDeals = activeDeals.filter(d => (d.currency || 'VND') === 'VND');
+    const sgdDeals = activeDeals.filter(d => d.currency === 'SGD');
+
+    const totalPipelineVND = vndDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+    const totalPipelineSGD = sgdDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+
+    const weightedForecastVND = vndDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
+    const weightedForecastSGD = sgdDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
     
     const wonCount = deals.filter(d => d.stage === 'Closed Won').length;
     const lostCount = deals.filter(d => d.stage === 'Closed Lost').length;
     const winRate = (wonCount + lostCount) > 0 ? (wonCount / (wonCount + lostCount)) * 100 : 0;
 
-    return { activeDeals: activeDeals.length, totalPipeline, weightedForecast, winRate, wonCount, lostCount };
+    return { 
+      activeDealsCount: activeDeals.length, 
+      totalPipelineVND, 
+      totalPipelineSGD,
+      weightedForecastVND, 
+      weightedForecastSGD,
+      winRate, wonCount, lostCount 
+    };
   }, [deals]);
 
   const tableTotals = useMemo(() => {
-    const totalRaw = filteredDeals.reduce((sum, d) => sum + (d.value || 0), 0);
-    const totalWeighted = filteredDeals.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0);
-    return { totalRaw, totalWeighted };
+    const vnd = filteredDeals.filter(d => (d.currency || 'VND') === 'VND');
+    const sgd = filteredDeals.filter(d => d.currency === 'SGD');
+
+    return {
+      vndRaw: vnd.reduce((sum, d) => sum + (d.value || 0), 0),
+      vndWeighted: vnd.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0),
+      sgdRaw: sgd.reduce((sum, d) => sum + (d.value || 0), 0),
+      sgdWeighted: sgd.reduce((sum, d) => sum + (d.value || 0) * ((d.probability || 0) / 100), 0),
+    };
   }, [filteredDeals]);
 
   const paginatedDeals = useMemo(() => {
@@ -242,43 +311,116 @@ export default function Pipeline() {
     }
   };
 
-  const handleUpdateNotes = async (notes) => {
+  const handleUpdateDeal = async (dealId, updates) => {
     setSavingDeal(true);
     try {
-      const { data, error } = await updateDeal(selectedDeal.id, { notes });
+      const dbUpdates = { ...updates };
+      if (dbUpdates.stage) dbUpdates.stage = stageToDb[dbUpdates.stage] || dbUpdates.stage;
+
+      const { error } = await updateDeal(dealId, dbUpdates);
       if (!error) {
-        setDeals(prev => prev.map(d => d.id === selectedDeal.id ? { ...d, notes } : d));
-        setSelected(prev => ({ ...prev, notes }));
+        setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates } : d));
+        setSelected(prev => ({ ...prev, ...updates }));
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
       }
     } finally {
       setSavingDeal(false);
     }
+  };
+
+  const exportCSV = () => {
+    const headers = ['Deal Name','Account','Product','Stage','Value','Currency','Probability (%)','Weighted','Expected Close','Notes','Created At'];
+    const rows = filteredDeals.map(d => [
+      d.name, 
+      d.accounts?.name || '', 
+      d.product || '',
+      STAGE_LABEL[d.stage] || d.stage,
+      d.value || 0, 
+      d.currency || 'VND',
+      d.probability || 0,
+      ((d.value||0)*(d.probability||0)/100).toFixed(0),
+      d.expected_close || '',
+      (d.notes || '').replace(/\n/g,' '),
+      d.created_at || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pipeline_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    csvInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCsvFile(file);
+    setShowImport(true);
+  };
+
+  const [csvFile, setCsvFile] = useState(null);
+
+  const executeImport = async (data) => {
+    setImporting(true);
+    setImportProgress({ current: 0, total: data.length });
+    
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      const account = accounts.find(a => a.name.toLowerCase() === row.accountName?.toLowerCase());
+      
+      if (!account) {
+        failCount++;
+        setImportProgress(prev => ({ ...prev, current: i + 1 }));
+        continue;
+      }
+
+      const newDeal = {
+        name: row.name,
+        account_id: account.id,
+        product: row.product || '',
+        value: parseInt(row.value) || 0,
+        currency: row.currency || 'VND',
+        stage: stageToDb[row.stage] || row.stage, // Map here
+        probability: parseInt(row.probability) || 10,
+        expected_close: row.expectedClose || null,
+        notes: row.notes || ''
+      };
+
+      const res = await createDeal(newDeal);
+      if (!res.error) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+      setImportProgress(prev => ({ ...prev, current: i + 1 }));
+    }
+    fetchData();
+    setImporting(false);
+    setShowImport(false);
+    setCsvFile(null);
+    if (csvInputRef.current) csvInputRef.current.value = '';
+    alert(`Đã import ${successCount} deals thành công, ${failCount} rows bị bỏ qua hoặc lỗi.`);
   };
 
   const handleDeleteDeal = async () => {
-    const dealToDelete = selectedDeal || editingDeal;
-    if (!dealToDelete) return;
+    if (!selectedDeal) return;
     setSavingDeal(true);
     try {
-      const { error } = await deleteDeal(dealToDelete.id);
+      const { error } = await deleteDeal(selectedDeal.id);
       if (!error) {
-        setDeals(prev => prev.filter(d => d.id !== dealToDelete.id));
+        setDeals(prev => prev.filter(d => d.id !== selectedDeal.id));
         setSelected(null);
-        setEditingDeal(null);
         setShowDeleteConfirm(false);
-      }
-    } finally {
-      setSavingDeal(false);
-    }
-  };
-
-  const handleUpdateDeal = async (data) => {
-    setSavingDeal(true);
-    try {
-      const { error } = await updateDeal(editingDeal.id, data);
-      if (!error) {
-        await fetchData();
-        setEditingDeal(null);
       }
     } finally {
       setSavingDeal(false);
@@ -290,21 +432,38 @@ export default function Pipeline() {
   return (
     <div className="w-full bg-gray-50 min-h-screen pb-20">
       {/* 1. Header Bar */}
-      <Header onAdd={() => setShowAdd(true)} />
+      <Header 
+        onAdd={() => setShowAdd(true)} 
+        onExport={exportCSV}
+        onImportClick={handleImportClick}
+        onImport={handleFileChange}
+        csvInputRef={csvInputRef}
+      />
 
       <div className="w-full px-6 space-y-6">
         {/* 2. KPI Bar */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard title="Deals đang mở" value={kpis.activeDeals} sub="Cơ hội tiềm năng" icon={<BarChart2 className="text-blue-500" />} />
+          <KPICard title="Deals đang mở" value={kpis.activeDealsCount} sub="Cơ hội tiềm năng" icon={<BarChart2 className="text-blue-500" />} />
           <KPICard 
             title="Tổng pipeline" 
-            value={fmt(kpis.totalPipeline)} 
-            sub={fmtSGD(kpis.totalPipeline)} 
+            value={
+              <div className="flex flex-col">
+                <span className="text-2xl">{fmt(kpis.totalPipelineVND)}</span>
+                {kpis.totalPipelineSGD > 0 && <span className="text-xl text-blue-600">{fmtSGD(kpis.totalPipelineSGD)}</span>}
+              </div>
+            }
+            sub={kpis.totalPipelineSGD > 0 ? "VND + SGD Combined" : "Cơ hội (VND)"} 
             icon={<DollarSign className="text-emerald-500" />} 
           />
           <KPICard 
             title="Dự báo weighted" 
-            sub={<div className="flex flex-col"><span>VND (Tính theo xác suất)</span><span className="text-gray-400 normal-case">{fmtSGD(kpis.weightedForecast)}</span></div>} 
+            value={
+              <div className="flex flex-col">
+                <span className="text-2xl">{fmt(kpis.weightedForecastVND)}</span>
+                {kpis.weightedForecastSGD > 0 && <span className="text-xl text-blue-600">{fmtSGD(kpis.weightedForecastSGD)}</span>}
+              </div>
+            }
+            sub="Tính theo xác suất" 
             icon={<TrendingUp className="text-purple-500" />} 
           />
           <KPICard title="Tỷ lệ thắng" value={`${kpis.winRate.toFixed(1)}%`} sub={`${kpis.wonCount} thắng / ${kpis.lostCount} thua`} icon={<Target className="text-red-500" />} />
@@ -382,6 +541,29 @@ export default function Pipeline() {
           </div>
         </div>
 
+        {/* 3b. Tab Bar */}
+        <div className="flex items-center gap-8 border-b border-gray-200 px-2 mt-4">
+          <TabItem label="Tất cả" count={deals.length} active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
+          <TabItem 
+            label="Prospect" 
+            count={deals.filter(d => d.stage === 'Prospect').length} 
+            active={activeTab === 'prospect'} 
+            onClick={() => setActiveTab('prospect')} 
+          />
+          <TabItem 
+            label="Lead" 
+            count={deals.filter(d => d.stage === 'Qualified').length} 
+            active={activeTab === 'lead'} 
+            onClick={() => setActiveTab('lead')} 
+          />
+          <TabItem 
+            label="Opportunity" 
+            count={deals.filter(d => ['Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'].includes(d.stage)).length} 
+            active={activeTab === 'opportunity'} 
+            onClick={() => setActiveTab('opportunity')} 
+          />
+        </div>
+
         {/* 4. Sortable Table */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -392,7 +574,8 @@ export default function Pipeline() {
                   <Th label="Tài khoản" field="account_name" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                   <Th label="Sản phẩm" field="product" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                   <Th label="Giai đoạn" field="stage" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
-                  <Th label="Giá trị" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
+                  <Th label="Giá trị (VND)" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
+                  <Th label="Giá trị (SGD)" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
                   <Th label="Xác suất" field="probability" current={sortField} dir={sortDir} onSort={toggleSort} align="center" density={density} />
                   <Th label="Weighted" field="weighted" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
                   <Th label="Đóng" field="expected_close" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
@@ -416,15 +599,17 @@ export default function Pipeline() {
                       <CompactStageBadge stage={deal.stage} />
                     </td>
                     <td className={`${tdClass} text-right font-bold text-gray-900`}>
-                      <div>{fmt(deal.value)}</div>
-                      <div className="text-[10px] text-gray-400 font-normal">{fmtSGD(deal.value)}</div>
+                      {(deal.currency || 'VND') === 'VND' ? fmt(deal.value) : '—'}
+                    </td>
+                    <td className={`${tdClass} text-right font-bold text-blue-600`}>
+                      {deal.currency === 'SGD' ? fmtSGD(deal.value) : '—'}
                     </td>
                     <td className={`${tdClass} text-center`}>
                       <ProbBadge prob={deal.probability} />
                     </td>
                     <td className={`${tdClass} text-right font-bold text-emerald-600`}>
-                      <div>{fmt((deal.value || 0) * ((deal.probability || 0) / 100))}</div>
-                      <div className="text-[10px] text-gray-400 font-normal">{fmtSGD((deal.value || 0) * ((deal.probability || 0) / 100))}</div>
+                      <div>{deal.currency === 'SGD' ? fmtSGD((deal.value || 0) * (deal.probability || 0) / 100) : fmt((deal.value || 0) * (deal.probability || 0) / 100)}</div>
+                      <div className="text-[10px] text-gray-400 font-normal">{deal.currency || 'VND'}</div>
                     </td>
                     <td className={`${tdClass}`}>
                       <DateCell date={deal.expected_close} stage={deal.stage} />
@@ -434,7 +619,7 @@ export default function Pipeline() {
                     </td>
                     <td className={`${tdClass} text-center`}>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setSelected(deal); setIsEditing(true); }}
+                        onClick={(e) => { e.stopPropagation(); setSelected(deal); setEditingDeal(deal); }}
                         className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
                         title="Chỉnh sửa nhanh"
                       >
@@ -448,15 +633,19 @@ export default function Pipeline() {
                 <tr>
                   <td colSpan={4} className="px-4 py-2 text-right text-gray-500 uppercase tracking-wider text-[11px]">Tổng Pipeline:</td>
                   <td className="px-4 py-2 text-right text-gray-900 text-xs">
-                    <div>{fmt(tableTotals.totalRaw)}</div>
-                    <div className="text-[10px] text-gray-400 font-normal">{fmtSGD(tableTotals.totalRaw)}</div>
+                    {tableTotals.vndRaw > 0 ? fmt(tableTotals.vndRaw) : '—'}
+                  </td>
+                  <td className="px-4 py-2 text-right text-blue-700 text-xs">
+                    {tableTotals.sgdRaw > 0 ? fmtSGD(tableTotals.sgdRaw) : '—'}
                   </td>
                   <td></td>
-                  <td className="px-4 py-2 text-right text-emerald-700 text-xs">
-                    <div>{fmt(tableTotals.totalWeighted)}</div>
-                    <div className="text-[10px] text-gray-400 font-normal">{fmtSGD(tableTotals.totalWeighted)}</div>
+                  <td className="px-4 py-2 text-right text-emerald-700 text-xs text-nowrap">
+                    <div className="flex flex-col items-end">
+                      {tableTotals.vndWeighted > 0 && <span>{fmt(tableTotals.vndWeighted)}</span>}
+                      {tableTotals.sgdWeighted > 0 && <span className="text-blue-600 font-normal">{fmtSGD(tableTotals.sgdWeighted)}</span>}
+                    </div>
                   </td>
-                  <td colSpan={3}></td>
+                  <td colSpan={2}></td>
                 </tr>
               </tfoot>
             </table>
@@ -490,7 +679,7 @@ export default function Pipeline() {
         </div>
 
         {/* 5. Analytics Section */}
-        {deals.length > 0 && (
+        {deals.length > 0 && activeTab === 'all' && (
           <div className="pt-8 space-y-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-red-100 text-red-600 rounded-lg">
@@ -501,7 +690,7 @@ export default function Pipeline() {
             
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <ChartCard title="Giá trị theo giai đoạn">
-                <ValueByStageChart deals={deals} />
+                <ValueByStageChart deals={deals} colName="value" />
               </ChartCard>
               <ChartCard title="Dự báo theo tháng">
                 <ForecastByMonthChart deals={deals} />
@@ -545,6 +734,106 @@ export default function Pipeline() {
             </div>
           </div>
         )}
+
+        {deals.length > 0 && activeTab === 'prospect' && (
+          <div className="pt-8 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <MiniKPI title="Tổng Prospects" value={filteredDeals.length} icon={<List size={14}/>}/>
+              <MiniKPI 
+                title="Giá trị tiềm năng" 
+                value={
+                  <div className="flex flex-col">
+                    <span>{fmt(tableTotals.vndRaw)}</span>
+                    {tableTotals.sgdRaw > 0 && <span className="text-sm font-normal text-gray-400">{fmtSGD(tableTotals.sgdRaw)}</span>}
+                  </div>
+                } 
+                icon={<DollarSign size={14}/>}
+              />
+              <MiniKPI 
+                title="Xác suất TB" 
+                value={`${(filteredDeals.reduce((sum, d) => sum + (d.probability || 0), 0) / (filteredDeals.length || 1)).toFixed(0)}%`} 
+                icon={<Target size={14}/>}
+              />
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <ChartCard title="Top Accounts by Prospect Count">
+                <TopAccountsCountChart deals={filteredDeals} />
+              </ChartCard>
+              <ChartCard title="Prospects by Product">
+                <ProductDistributionChart deals={filteredDeals} />
+              </ChartCard>
+            </div>
+          </div>
+        )}
+
+        {deals.length > 0 && activeTab === 'lead' && (
+          <div className="pt-8 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <MiniKPI title="Tổng Leads" value={filteredDeals.length} icon={<List size={14}/>}/>
+              <MiniKPI 
+                title="Tổng Giá trị" 
+                value={
+                  <div className="flex flex-col">
+                    <span>{fmt(tableTotals.vndRaw)}</span>
+                    {tableTotals.sgdRaw > 0 && <span className="text-sm font-normal text-gray-400">{fmtSGD(tableTotals.sgdRaw)}</span>}
+                  </div>
+                } 
+                icon={<DollarSign size={14}/>}
+              />
+              <MiniKPI 
+                title="Xác suất TB" 
+                value={`${(filteredDeals.reduce((sum, d) => sum + (d.probability || 0), 0) / (filteredDeals.length || 1)).toFixed(0)}%`} 
+                icon={<Target size={14}/>}
+              />
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <ChartCard title="Giá trị theo Account (Top 8)">
+                <ValueByAccountChart deals={filteredDeals} />
+              </ChartCard>
+              <ChartCard title="Phân bố xác suất Lead">
+                <ProbDistributionChart deals={filteredDeals} />
+              </ChartCard>
+            </div>
+          </div>
+        )}
+
+        {deals.length > 0 && activeTab === 'opportunity' && (
+          <div className="pt-8 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <MiniKPI title="Active Opportunities" value={filteredDeals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost').length} icon={<Briefcase size={14}/>}/>
+              <MiniKPI 
+                title="Weighted Forecast" 
+                value={
+                  <div className="flex flex-col">
+                    <span>{fmt(tableTotals.vndWeighted)}</span>
+                    {tableTotals.sgdWeighted > 0 && <span className="text-sm font-normal text-gray-400">{fmtSGD(tableTotals.sgdWeighted)}</span>}
+                  </div>
+                } 
+                icon={<TrendingUp size={14}/>}
+              />
+              <MiniKPI 
+                title="Win Rate %" 
+                value={`${kpis.winRate.toFixed(1)}%`} 
+                icon={<Target size={14}/>}
+              />
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2">
+                <ChartCard title="Opportunity Funnel (Count & Value)">
+                  <OppFunnelChart deals={filteredDeals} />
+                </ChartCard>
+              </div>
+              <ChartCard title="Win vs Lost Ratio">
+                <WinLostDonutChart deals={filteredDeals} />
+              </ChartCard>
+              <div className="xl:col-span-3">
+                <ChartCard title="6-Month Opportunity Forecast">
+                  <ForecastByMonthChart deals={filteredDeals} />
+                </ChartCard>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 6. Side Drawer */}
@@ -552,14 +841,13 @@ export default function Pipeline() {
         <SideDrawer 
           deal={selectedDeal} 
           onClose={() => setSelected(null)} 
-          onSaveNotes={handleUpdateNotes}
-          saving={savingDeal}
           onAICoach={handleAICoach}
           coachLoading={coachLoading}
           coachResult={coachResult}
           onDelete={() => setShowDeleteConfirm(true)}
           accounts={accounts}
           onUpdateDeal={handleUpdateDeal}
+          saveSuccess={saveSuccess}
         />
       )}
 
@@ -568,14 +856,19 @@ export default function Pipeline() {
         <AddDealModal 
           accounts={accounts} 
           onClose={() => setShowAdd(false)} 
-          onSave={async (data) => {
-            setSaving(true);
-            const res = await createDeal(data);
-            if (!res.error) {
-              await fetchData();
+          onSave={async (formData) => {
+            const { data: resData, error } = await createDeal({
+              ...formData,
+              stage: stageToDb[formData.stage] || formData.stage
+            });
+            if (!error) {
+              const mapped = {
+                ...resData,
+                stage: stageFromDb[resData.stage] || resData.stage
+              };
+              setDeals(prev => [...prev, mapped]);
               setShowAdd(false);
             }
-            setSaving(false);
           }}
           saving={savingDeal}
         />
@@ -620,6 +913,18 @@ export default function Pipeline() {
           </div>
         </Modal>
       )}
+
+      {/* 9. Import Modal */}
+      {showImport && (
+        <ImportModal 
+          accounts={accounts}
+          file={csvFile}
+          onClose={() => { setShowImport(false); setCsvFile(null); }}
+          onExecute={executeImport}
+          importing={importing}
+          progress={importProgress}
+        />
+      )}
     </div>
   );
 }
@@ -633,12 +938,33 @@ function Header({ onAdd }) {
         <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase italic">Pipeline</h1>
         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none">Quản lý toàn bộ cơ hội bán hàng</p>
       </div>
-      <button 
-        onClick={onAdd}
-        className="btn-primary bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-red-200"
-      >
-        <Plus size={18} /> Tạo Deal Mới
-      </button>
+      <div className="flex items-center gap-3">
+        <input 
+          type="file" 
+          ref={csvInputRef} 
+          className="hidden" 
+          accept=".csv" 
+          onChange={onImport} 
+        />
+        <button 
+          onClick={onExport}
+          className="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors"
+        >
+          <ArrowDown className="text-gray-400" size={18} /> Export CSV
+        </button>
+        <button 
+          onClick={onImportClick}
+          className="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors"
+        >
+          <ArrowUp className="text-gray-400" size={18} /> Import CSV
+        </button>
+        <button 
+          onClick={onAdd}
+          className="btn-primary bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-red-200"
+        >
+          <Plus size={18} /> Tạo Deal Mới
+        </button>
+      </div>
     </div>
   );
 }
@@ -727,13 +1053,13 @@ function ChartCard({ title, children }) {
 
 // --- Charts ---
 
-function ValueByStageChart({ deals }) {
+function ValueByStageChart({ deals, colName = 'value' }) {
   const data = useMemo(() => {
     return Object.keys(STAGE_LABEL).map(stage => {
-      const val = deals.filter(d => d.stage === stage).reduce((sum, d) => sum + (d.value || 0), 0);
+      const val = deals.filter(d => d.stage === stage).reduce((sum, d) => sum + (d[colName] || 0), 0);
       return { name: STAGE_LABEL[stage], raw: stage, value: val };
     });
-  }, [deals]);
+  }, [deals, colName]);
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -965,25 +1291,31 @@ function DealAgeHeatmapChart({ deals }) {
   );
 }
 
-// --- Modals & Drawer ---
-
-function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoading, coachResult, onDelete, accounts, onUpdateDeal }) {
-  const [notes, setNotes] = useState(deal.notes || '');
+function SideDrawer({ deal, onClose, saving, onAICoach, coachLoading, coachResult, onDelete, accounts, onUpdateDeal, saveSuccess }) {
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
+    name: deal.name || '',
+    account_id: deal.account_id || '',
+    product: deal.product || '',
     value: deal.value || 0,
-    stage: deal.stage || 'prospect',
+    currency: deal.currency || 'VND',
+    stage: deal.stage || 'Prospect',
     probability: deal.probability || 0,
-    expected_close: deal.expected_close || ''
+    expected_close: deal.expected_close || '',
+    notes: deal.notes || ''
   });
 
   useEffect(() => {
-    setNotes(deal.notes || '');
     setForm({
+      name: deal.name || '',
+      account_id: deal.account_id || '',
+      product: deal.product || '',
       value: deal.value || 0,
-      stage: deal.stage || 'prospect',
+      currency: deal.currency || 'VND',
+      stage: deal.stage || 'Prospect',
       probability: deal.probability || 0,
-      expected_close: deal.expected_close || ''
+      expected_close: deal.expected_close || '',
+      notes: deal.notes || ''
     });
     setIsEditing(false);
   }, [deal]);
@@ -1001,51 +1333,84 @@ function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoadin
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X size={20} />
           </button>
-          {!isEditing ? (
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="px-3 py-1.5 bg-gray-50 text-blue-600 rounded-xl text-[11px] font-black uppercase hover:bg-blue-50 transition-colors flex items-center gap-2"
-            >
-              <Edit2 size={12} /> Chỉnh sửa
-            </button>
-          ) : (
-            <div className="flex gap-2">
-              <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-gray-400 text-[11px] font-black uppercase hover:underline">Hủy</button>
+          <div className="flex items-center gap-4">
+            {saveSuccess && <span className="text-emerald-500 font-bold text-xs animate-pulse">Đã lưu ✓</span>}
+            {!isEditing ? (
               <button 
-                onClick={handleSave}
-                className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
-                disabled={saving}
+                onClick={() => setIsEditing(true)}
+                className="px-3 py-1.5 bg-gray-50 text-blue-600 rounded-xl text-[11px] font-black uppercase hover:bg-blue-50 transition-colors flex items-center gap-2"
               >
-                {saving ? 'Đang lưu...' : 'Lưu'}
+                <Edit2 size={12} /> Chỉnh sửa
               </button>
-            </div>
-          )}
+            ) : (
+              <div className="flex gap-2">
+                <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-gray-400 text-[11px] font-black uppercase hover:underline">Hủy</button>
+                <button 
+                  onClick={handleSave}
+                  className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase hover:bg-blue-700 transition-all shadow-md shadow-blue-100 flex items-center gap-2"
+                  disabled={saving}
+                >
+                  {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="mt-4 flex items-center gap-3 mb-1">
           <div className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded">Strategic Deal</div>
           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">ID: {deal.id.slice(0, 8)}</span>
         </div>
-        <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">{deal.name}</h2>
-        <div className="flex items-center gap-2 mb-8">
-          <Briefcase size={14} className="text-red-500" />
-          <span className="text-sm font-bold text-gray-700">{deal.accounts?.name || 'Chưa gán tài khoản'}</span>
-        </div>
+
+        {isEditing ? (
+          <div className="space-y-4 mb-8">
+            <input 
+              type="text" 
+              className="text-2xl font-black text-gray-900 tracking-tighter uppercase italic w-full border-b border-gray-200 py-1 outline-none focus:border-blue-500"
+              value={form.name}
+              onChange={e => setForm({...form, name: e.target.value})}
+            />
+            <select 
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold"
+              value={form.account_id}
+              onChange={e => setForm({...form, account_id: e.target.value})}
+            >
+              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase italic leading-none mb-2">{deal.name}</h2>
+            <div className="flex items-center gap-2 mb-8">
+              <Briefcase size={14} className="text-red-500" />
+              <span className="text-sm font-bold text-gray-700">{deal.accounts?.name || 'Chưa gán tài khoản'}</span>
+            </div>
+          </>
+        )}
 
         <div className="grid grid-cols-2 gap-6 bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
           <div>
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><DollarSign size={14} />Giá trị</div>
             {isEditing ? (
-              <input 
-                type="number" 
-                className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold"
-                value={form.value} 
-                onChange={e => setForm({...form, value: parseInt(e.target.value) || 0})} 
-              />
+              <div className="flex gap-2">
+                <input 
+                  type="number" 
+                  className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold"
+                  value={form.value} 
+                  onChange={e => setForm({...form, value: parseInt(e.target.value) || 0})} 
+                />
+                <select 
+                  className="bg-white border border-gray-200 rounded-lg px-1 py-1 text-[10px] font-bold"
+                  value={form.currency}
+                  onChange={e => setForm({...form, currency: e.target.value})}
+                >
+                  <option value="VND">VND</option>
+                  <option value="SGD">SGD</option>
+                </select>
+              </div>
             ) : (
               <div className="text-sm text-gray-900 font-black tracking-tight">
-                {fmt(deal.value)}
-                <div className="text-[10px] text-gray-400 font-normal mt-0.5">{fmtSGD(deal.value)}</div>
+                {deal.currency === 'SGD' ? fmtSGD(deal.value) : fmt(deal.value)}
               </div>
             )}
           </div>
@@ -1064,7 +1429,7 @@ function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoadin
                 <div className="flex items-center gap-2">
                   <input 
                     type="range" min="0" max="100" step="5"
-                    className="flex-1"
+                    className="flex-1 accent-blue-600"
                     value={form.probability}
                     onChange={e => setForm({...form, probability: parseInt(e.target.value)})}
                   />
@@ -1081,7 +1446,16 @@ function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoadin
 
           <div>
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><FileText size={14} />Sản phẩm</div>
-            <div className="text-sm text-gray-900 font-bold">{deal.product || '—'}</div>
+            {isEditing ? (
+              <input 
+                type="text" 
+                className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm"
+                value={form.product}
+                onChange={e => setForm({...form, product: e.target.value})}
+              />
+            ) : (
+              <div className="text-sm text-gray-900 font-bold">{deal.product || '—'}</div>
+            )}
           </div>
 
           <div>
@@ -1106,19 +1480,12 @@ function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoadin
             <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
               <span className="w-1 h-3 bg-gray-300 rounded-full" /> Ghi chú chiến thuật
             </h3>
-            <button 
-              onClick={() => onSaveNotes(notes)}
-              className="text-[10px] font-bold text-blue-600 uppercase hover:underline flex items-center gap-1"
-              disabled={saving}
-            >
-              {saving ? 'Đang lưu...' : <><Save size={10} /> Lưu ghi chú</>}
-            </button>
           </div>
           <textarea 
             className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-xl text-sm italic focus:outline-none focus:ring-1 focus:ring-blue-200"
             placeholder="Nhập thông tin tình báo, chiến lược..."
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
+            value={form.notes}
+            onChange={e => setForm({...form, notes: e.target.value})}
           />
         </div>
 
@@ -1126,7 +1493,7 @@ function SideDrawer({ deal, onClose, onSaveNotes, saving, onAICoach, coachLoadin
           <button 
             onClick={onAICoach}
             className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg shadow-blue-100 transition-all active:scale-95 disabled:opacity-50"
-            disabled={coachLoading}
+            disabled={coachLoading || isEditing}
           >
             {coachLoading ? <LoadingSpinner size="sm" /> : <Zap size={18} />} AI Deal Coach Analysis
           </button>
@@ -1175,6 +1542,7 @@ function AddDealModal({ accounts, onClose, onSave, saving }) {
     value: '',
     stage: 'Prospect',
     probability: 10,
+    currency: 'VND',
     expected_close: '',
     notes: ''
   });
@@ -1231,15 +1599,28 @@ function AddDealModal({ accounts, onClose, onSave, saving }) {
               />
             </div>
 
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Giá trị (VND) *</label>
-              <input 
-                type="number" 
-                required 
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900"
-                value={form.value}
-                onChange={e => setForm({...form, value: e.target.value})}
-              />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Giá trị *</label>
+                <input 
+                  type="number" 
+                  required 
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900"
+                  value={form.value}
+                  onChange={e => setForm({...form, value: e.target.value})}
+                />
+              </div>
+              <div className="w-24">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Đơn vị</label>
+                <select 
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold"
+                  value={form.currency}
+                  onChange={e => setForm({...form, currency: e.target.value})}
+                >
+                  <option value="VND">VND</option>
+                  <option value="SGD">SGD</option>
+                </select>
+              </div>
             </div>
 
             <div>
@@ -1306,6 +1687,7 @@ function EditDealModal({ deal, accounts, onClose, onSave, saving, onDelete }) {
     account_id: deal.account_id || '',
     product: deal.product || '',
     value: deal.value || '',
+    currency: deal.currency || 'VND',
     stage: deal.stage || 'Prospect',
     probability: deal.probability || 10,
     expected_close: deal.expected_close || '',
@@ -1445,11 +1827,271 @@ function EditDealModal({ deal, accounts, onClose, onSave, saving, onDelete }) {
   );
 }
 
+function TabItem({ label, count, active, onClick }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`relative py-4 px-1 flex items-center gap-2 transition-all duration-300 ${active ? 'text-red-700' : 'text-gray-400 hover:text-gray-600'}`}
+    >
+      <span className={`text-sm font-black uppercase tracking-widest italic`}>{label}</span>
+      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${active ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+        {count}
+      </span>
+      {active && <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-700 rounded-t-full shadow-[0_-2px_8px_rgba(185,28,28,0.4)]" />}
+    </button>
+  );
+}
+
+function MiniKPI({ title, value, icon }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="p-2 bg-gray-50 rounded-lg text-gray-400">{icon}</div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{title}</span>
+      </div>
+      <div className="text-xl font-black text-gray-900 tracking-tighter uppercase italic">{value}</div>
+    </div>
+  );
+}
+
+function TopAccountsCountChart({ deals }) {
+  const data = useMemo(() => {
+    const counts = {};
+    deals.forEach(d => {
+      const name = d.accounts?.name || 'Unknown';
+      counts[name] = (counts[name] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} layout="vertical" margin={{ left: 60, right: 30 }}>
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+        <XAxis type="number" hide />
+        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <Tooltip cursor={{ fill: '#f8fafc' }} />
+        <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={15} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ProductDistributionChart({ deals }) {
+  const data = useMemo(() => {
+    const counts = {};
+    deals.forEach(d => {
+      const p = d.product || 'Chưa phân loại';
+      counts[p] = (counts[p] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, count]) => ({ name, count }));
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <Tooltip cursor={{ fill: '#f8fafc' }} />
+        <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={30} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ValueByAccountChart({ deals }) {
+  const data = useMemo(() => {
+    const vals = {};
+    deals.forEach(d => {
+      const name = d.accounts?.name || 'Unknown';
+      vals[name] = (vals[name] || 0) + (d.value || 0);
+    });
+    return Object.entries(vals)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={v => fmtShort(v)} />
+        <Tooltip cursor={{ fill: '#f8fafc' }} formatter={v => fmt(v)} />
+        <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function OppFunnelChart({ deals }) {
+  const stages = ['Proposal', 'Negotiation', 'Closed Won'];
+  const data = useMemo(() => {
+    return stages.map(s => ({
+      name: STAGE_LABEL[s],
+      count: deals.filter(d => d.stage === s).length,
+      value: deals.filter(d => d.stage === s).reduce((sum, d) => sum + (d.value || 0), 0)
+    }));
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} layout="vertical" margin={{ left: 80, right: 30 }}>
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+        <XAxis type="number" hide />
+        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#64748b' }} />
+        <Tooltip cursor={{ fill: '#f8fafc' }} formatter={(v, n) => [n === 'value' ? fmt(v) : v, n === 'value' ? 'Giá trị' : 'Số lượng']} />
+        <Bar dataKey="count" fill="#bfdbfe" radius={[0, 4, 4, 0]} barSize={20} />
+        <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={10} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function WinLostDonutChart({ deals }) {
+  const data = useMemo(() => {
+    const wonCount = deals.filter(d => d.stage === 'Closed Won').length;
+    const lostCount = deals.filter(d => d.stage === 'Closed Lost').length;
+    return [
+      { name: 'Thắng', value: wonCount, color: '#22c55e' },
+      { name: 'Thua', value: lostCount, color: '#ef4444' }
+    ];
+  }, [deals]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data}>
+        <XAxis dataKey="name" hide />
+        <YAxis hide />
+        <Tooltip />
+        <Bar dataKey="value" radius={[10, 10, 10, 10]} barSize={40}>
+          {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ImportModal({ accounts, onClose, onExecute, importing, progress, file }) {
+  const [preview, setPreview] = useState([]);
+  const [parsedData, setParsedData] = useState([]);
+
+  useEffect(() => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split('\n').map(l => l.split(',').map(v => v.replace(/^"|"$/g, '').trim()));
+      const data = lines.slice(1).filter(l => l.length > 1).map(l => ({
+        name: l[0],
+        accountName: l[1],
+        product: l[2],
+        stage: l[3],
+        value: l[4],
+        currency: l[5],
+        probability: l[6],
+        expectedClose: l[8],
+        notes: l[9]
+      }));
+      setParsedData(data);
+      setPreview(data.slice(0, 5));
+    };
+    reader.readAsText(file);
+  }, [file]);
+
+  const STAGE_REV = {
+    'Tiềm năng': 'Prospect',
+    'Đã xác nhận': 'Qualified',
+    'Báo giá': 'Proposal',
+    'Đàm phán': 'Negotiation',
+    'Thắng': 'Closed Won',
+    'Thua': 'Closed Lost',
+  };
+
+  const processImport = () => {
+    const processed = parsedData.map(d => ({
+      ...d,
+      stage: STAGE_REV[d.stage] || d.stage
+    }));
+    onExecute(processed);
+  };
+
+  return (
+    <Modal onClose={onClose}>
+      <div className="p-8">
+        <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-1 mt-0">Import Pipeline CSV</h2>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Review data before importing</p>
+        
+        {importing ? (
+          <div className="py-12 flex flex-col items-center justify-center">
+            <div className="w-full h-2 bg-gray-100 rounded-full mb-4 overflow-hidden">
+              <div 
+                className="h-full bg-blue-600 transition-all duration-300" 
+                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              />
+            </div>
+            <p className="text-sm font-bold text-gray-600">Đang xử lý: {progress.current} / {progress.total}</p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-6 overflow-x-auto border border-gray-100 rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-gray-50 font-bold">
+                  <tr>
+                    <th className="px-3 py-2">Deal Name</th>
+                    <th className="px-3 py-2">Account</th>
+                    <th className="px-3 py-2">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.map((row, i) => {
+                    const accFound = accounts.find(a => a.name.toLowerCase() === row.accountName?.toLowerCase());
+                    return (
+                      <tr key={i} className={`border-t border-gray-50 ${!accFound ? 'bg-amber-50' : ''}`}>
+                        <td className="px-3 py-2">{row.name}</td>
+                        <td className="px-3 py-2 flex items-center gap-1 font-bold">
+                          {row.accountName}
+                          {!accFound && <AlertCircle size={12} className="text-amber-500" title="Account not found"/>}
+                        </td>
+                        <td className="px-3 py-2">{row.value} {row.currency}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-[10px] text-gray-400 mb-6 italic">Hiển thị 5 dòng đầu tiên. Nhấn "Xác nhận" để import toàn bộ {parsedData.length} dòng.</p>
+            <div className="flex gap-4">
+              <button 
+                onClick={onClose}
+                className="flex-1 py-3 bg-gray-100 rounded-2xl font-black uppercase tracking-widest text-xs"
+              >
+                Hủy
+              </button>
+              <button 
+                onClick={processImport}
+                className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+              >
+                Xác nhận Import
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 function Modal({ children, onClose }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden">
         {children}
       </div>
     </div>
