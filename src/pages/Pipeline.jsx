@@ -98,7 +98,6 @@ export default function Pipeline() {
   const [coachLoading, setCoachL] = useState(false);
   const [coachResult, setCoachR] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const csvInputRef = useRef(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -111,6 +110,7 @@ export default function Pipeline() {
   const [showImport, setShowImport] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const csvInputRef = useRef(null);
 
   // Sort
   const [sortField, setSortField] = useState('value');
@@ -931,7 +931,7 @@ export default function Pipeline() {
 
 // --- Sub-Components ---
 
-function Header({ onAdd }) {
+function Header({ onAdd, onExport, onImportClick, onImport, csvInputRef }) {
   return (
     <div className="w-full h-20 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
       <div>
