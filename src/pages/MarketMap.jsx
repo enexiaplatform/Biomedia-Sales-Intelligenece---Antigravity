@@ -112,38 +112,38 @@ export default function MarketMap({ showToast }) {
   if (loading) return <PageLoader />;
 
   return (
-    <div className="flex flex-col h-full bg-surface-950 relative overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-50 relative overflow-hidden">
       {/* Background accents */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full -z-10" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full -z-10" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-3xl rounded-full -z-10" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-emerald-500/5 blur-3xl rounded-full -z-10" />
 
       {/* Navigation Header */}
-      <div className="px-10 py-8 border-b border-white/5 bg-surface-900/40 backdrop-blur-2xl flex justify-between items-center shrink-0 shadow-2xl">
+      <div className="px-10 py-8 border-b border-gray-200 bg-white/80 backdrop-blur-2xl flex justify-between items-center shrink-0 shadow-sm">
         <div className="flex items-center gap-8">
           <div>
-            <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tighter italic">Market Pulse Matrix</h2>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1">Strategic Coverage & Competitiveness</p>
+            <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter italic">Market Pulse Matrix</h2>
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.3em] mt-1">Strategic Coverage & Competitiveness</p>
           </div>
-          <div className="h-10 w-px bg-white/5 hidden md:block" />
-          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 shadow-inner">
+          <div className="h-10 w-px bg-gray-200 hidden md:block" />
+          <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200 shadow-inner">
             <button
               onClick={() => setActiveTab("matrix")}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
-                ${activeTab === "matrix" ? "bg-primary text-slate-900 shadow-glow shadow-primary/40" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}
+                ${activeTab === "matrix" ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-white/50"}`}
             >
               Ma trận thị trường
             </button>
             <button
               onClick={() => setActiveTab("map")}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
-                ${activeTab === "map" ? "bg-primary text-slate-900 shadow-glow shadow-primary/40" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}
+                ${activeTab === "map" ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-white/50"}`}
             >
               Bản đồ nhiệt
             </button>
             <button
               onClick={() => setActiveTab("trends")}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
-                ${activeTab === "trends" ? "bg-primary text-slate-900 shadow-glow shadow-primary/40" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}
+                ${activeTab === "trends" ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-white/50"}`}
             >
               Xu hướng thị trường
             </button>
@@ -155,22 +155,22 @@ export default function MarketMap({ showToast }) {
         <div className="w-full px-6 space-y-12">
           {activeTab === "matrix" && (
             <div className="space-y-10">
-              <div className="flex flex-wrap items-center justify-between gap-6 bg-white/5 p-10 rounded-[3rem] border border-white/5 shadow-inner">
+              <div className="flex flex-wrap items-center justify-between gap-6 bg-white p-10 rounded-[3rem] border border-gray-200 shadow-sm">
                 <div>
-                  <h3 className="text-xl font-black text-slate-100 uppercase tracking-tighter flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-primary rounded-full shadow-glow-sm" />
+                  <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-primary rounded-full shadow-sm" />
                     Phân tích mật độ bao phủ
                   </h3>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2 ml-4">Account Density × Regional Distribution</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-2 ml-4">Account Density × Regional Distribution</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-4">
                   {Object.entries(PENETRATION_CONFIG).map(([k, v]) => (
-                    <span key={k} className={`badge text-[9px] font-black uppercase tracking-widest py-1.5 px-4 shadow-glow-sm ${v.color}`}>{v.label}</span>
+                    <span key={k} className={`badge text-[9px] font-black uppercase tracking-widest py-1.5 px-4 shadow-sm ${v.color}`}>{v.label}</span>
                   ))}
                 </div>
               </div>
 
-              <div className="table-container rounded-[3.5rem] border border-white/5 bg-surface-950/30 overflow-hidden shadow-2xl">
+              <div className="table-container rounded-[3.5rem] border border-gray-200 bg-white overflow-hidden shadow-sm">
                 <table className="table">
                   <thead>
                     <tr>
@@ -180,39 +180,39 @@ export default function MarketMap({ showToast }) {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-gray-100">
                     {MATRIX_SEGMENTS.map((seg) => (
-                      <tr key={seg} className="group hover:bg-white/5 transition-all">
-                        <td className="px-8 py-10 font-black text-slate-100 uppercase text-xs tracking-widest bg-white/[0.02] border-r border-white/5">{seg}</td>
+                      <tr key={seg} className="group hover:bg-gray-50 transition-all">
+                        <td className="px-8 py-10 font-black text-gray-800 uppercase text-xs tracking-widest bg-gray-50/50 border-r border-gray-100">{seg}</td>
                         {MATRIX_REGIONS.map((region) => {
                           const cell = getMatrixCell(seg, region);
                           const config = PENETRATION_CONFIG[cell.penetration];
                           return (
                             <td key={region} className={`px-4 py-8 text-center transition-all ${cell.isWhitespace ? "relative overflow-hidden" : ""}`}>
-                              {cell.isWhitespace && <div className="absolute inset-0 bg-orange-500/[0.03] animate-pulse pointer-events-none" />}
+                              {cell.isWhitespace && <div className="absolute inset-0 bg-orange-50 animate-pulse pointer-events-none" />}
                               
-                              <div className={`p-5 rounded-3xl transition-all duration-500 border ${cell.isWhitespace ? "border-orange-500/20 bg-orange-500/5 shadow-glow shadow-orange-500/5 group-hover:scale-105" : "border-white/5 bg-white/[0.02] group-hover:bg-white/5 group-hover:-translate-y-1"}`}>
+                              <div className={`p-5 rounded-3xl transition-all duration-500 border ${cell.isWhitespace ? "border-orange-200 bg-orange-50 shadow-sm group-hover:scale-105" : "border-gray-100 bg-white group-hover:bg-white shadow-sm group-hover:shadow-md group-hover:-translate-y-1"}`}>
                                 {cell.isWhitespace ? (
                                   <div className="space-y-1.5">
                                     <div className="text-orange-500 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-1.5">
                                       <AlertCircle size={12}/>
                                       White Space
                                     </div>
-                                    <div className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">Cơ hội vàng</div>
+                                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Cơ hội vàng</div>
                                   </div>
                                 ) : (
                                   <div className="space-y-3">
-                                    <div className="font-black text-slate-100 text-lg tracking-tighter mb-1">
-                                      {cell.count} <span className="text-[8px] text-slate-600 uppercase tracking-widest font-bold">Accounts</span>
+                                    <div className="font-black text-gray-900 text-lg tracking-tighter mb-1">
+                                      {cell.count} <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold">Accounts</span>
                                     </div>
                                     {cell.dealValue > 0 && (
-                                      <div className="px-3 py-1 bg-primary/10 rounded-xl border border-primary/20 inline-block font-black text-primary text-[10px] drop-shadow-glow-sm">
+                                      <div className="px-3 py-1 bg-primary/10 rounded-xl border border-primary/20 inline-block font-black text-primary text-[10px] shadow-sm">
                                         {formatVND(cell.dealValue)}
                                       </div>
                                     )}
                                   </div>
                                 )}
-                                <div className={`badge mt-4 text-[8px] font-black uppercase tracking-widest py-1 px-3 shadow-glow-sm ${config.color}`}>{config.label}</div>
+                                <div className={`badge mt-4 text-[8px] font-black uppercase tracking-widest py-1 px-3 shadow-sm ${config.color}`}>{config.label}</div>
                               </div>
                             </td>
                           );
@@ -222,7 +222,7 @@ export default function MarketMap({ showToast }) {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center gap-3 px-8 py-5 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-400 text-[10px] font-black uppercase tracking-widest italic w-fit mx-auto shadow-glow shadow-orange-500/10">
+              <div className="flex items-center gap-3 px-8 py-5 bg-orange-50 border border-orange-200 rounded-full text-orange-600 text-[10px] font-black uppercase tracking-widest italic w-fit mx-auto shadow-sm">
                 <AlertCircle size={14} className="animate-pulse" />
                 Dữ liệu chỉ ra cơ hội thâm nhập tại các vùng trắng kinh tế
               </div>
@@ -231,38 +231,38 @@ export default function MarketMap({ showToast }) {
 
           {activeTab === "map" && (
             <div className="space-y-6 h-[700px] flex flex-col animate-fade-in">
-              <div className="flex items-center justify-between gap-4 bg-white/5 p-6 rounded-3xl border border-white/5 shrink-0">
+              <div className="flex items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm shrink-0">
                 <div className="flex items-center gap-4">
-                  <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                  <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
                     <button 
                       onClick={() => setMapFilter("all")}
                       className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
-                        ${mapFilter === "all" ? "bg-slate-700 text-white" : "text-slate-500"}`}
+                        ${mapFilter === "all" ? "bg-gray-800 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                     >
                       Tất cả
                     </button>
                     <button 
                       onClick={() => setMapFilter("accounts")}
                       className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
-                        ${mapFilter === "accounts" ? "bg-primary text-white" : "text-slate-500"}`}
+                        ${mapFilter === "accounts" ? "bg-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                     >
                       Tài khoản
                     </button>
                     <button 
                       onClick={() => setMapFilter("intel")}
                       className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all
-                        ${mapFilter === "intel" ? "bg-amber-600 text-white" : "text-slate-500"}`}
+                        ${mapFilter === "intel" ? "bg-amber-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                     >
                       Cơ hội mới
                     </button>
                   </div>
                 </div>
-                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">
+                <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">
                   Hiển thị {mapAccounts.length + mapIntel.length} điểm dữ liệu chiến lược
                 </div>
               </div>
 
-              <div className="flex-1 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative">
+              <div className="flex-1 rounded-[2.5rem] overflow-hidden border border-gray-200 shadow-sm relative">
                 <MapContainer 
                   center={[16.0471, 108.2062]} 
                   zoom={6} 
@@ -333,19 +333,19 @@ export default function MarketMap({ showToast }) {
                           <td>{seg.region}</td>
                           <td>{seg.opportunity_size || "—"}</td>
                           <td>
-                            <span className={`badge ${PENETRATION_CONFIG[seg.penetration]?.color || "bg-surface-800 text-slate-500 border-surface-700"}`}>
+                            <span className={`badge ${PENETRATION_CONFIG[seg.penetration]?.color || "bg-gray-50 text-gray-500 border-gray-200"}`}>
                               {PENETRATION_CONFIG[seg.penetration]?.label || seg.penetration}
                             </span>
                           </td>
                           <td className="max-w-xs">
-                            <p className="text-sm line-clamp-2" style={{ color: 'var(--text-2)' }}>{seg.trends || "—"}</p>
+                            <p className="text-sm line-clamp-2 text-gray-600">{seg.trends || "—"}</p>
                           </td>
                           <td>
                             <div className="flex gap-2">
-                              <button onClick={() => { setEditingSegment(seg); setModalOpen(true); }} style={{ color: 'var(--text-3)' }} className="hover:text-primary transition-colors">
+                              <button onClick={() => { setEditingSegment(seg); setModalOpen(true); }} className="text-gray-400 hover:text-primary transition-colors">
                                 <Edit2 size={14} />
                               </button>
-                              <button onClick={() => setDeleteTarget(seg)} style={{ color: 'var(--text-3)' }} className="hover:text-red-400 transition-colors">
+                              <button onClick={() => setDeleteTarget(seg)} className="text-gray-400 hover:text-red-500 transition-colors">
                                 <Trash2 size={14} />
                               </button>
                             </div>
@@ -373,10 +373,10 @@ export default function MarketMap({ showToast }) {
           )}
 
           {deleteTarget && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="rounded-xl shadow-2xl p-6 max-w-sm w-full" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                <h3 className="font-semibold mb-2" style={{ color: 'var(--text-1)' }}>Xóa phân khúc?</h3>
-                <p className="text-sm mb-5" style={{ color: 'var(--text-2)' }}>Xóa "<strong>{deleteTarget.name}</strong>"?</p>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+              <div className="rounded-xl shadow-xl p-6 max-w-sm w-full bg-white border border-gray-200">
+                <h3 className="font-semibold mb-2 text-gray-900">Xóa phân khúc?</h3>
+                <p className="text-sm mb-5 text-gray-600">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
                 <div className="flex gap-3">
                   <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1">Hủy</button>
                   <button onClick={() => handleDelete(deleteTarget.id)} className="btn-danger flex-1">Xóa</button>
@@ -413,11 +413,11 @@ function SegmentModal({ segment, onClose, onSave }) {
   const REGIONS = ["Hà Nội", "TP.HCM", "Miền Trung", "Miền Nam", "Miền Bắc", "Toàn quốc"];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>{segment ? "Sửa phân khúc" : "Thêm phân khúc"}</h2>
-          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+      <div className="rounded-xl shadow-xl w-full max-w-md bg-white border border-gray-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+          <h2 className="font-semibold text-gray-900">{segment ? "Sửa phân khúc" : "Thêm phân khúc"}</h2>
+          <button onClick={onClose} className="text-xl text-gray-400 hover:text-gray-600 transition-colors">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>

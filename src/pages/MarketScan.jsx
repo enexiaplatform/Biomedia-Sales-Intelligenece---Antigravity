@@ -13,11 +13,11 @@ import { PageLoader } from "../components/LoadingSpinner";
 
 // Enum mappings
 const CATEGORY_MAP = {
-  pharma_factory: { label: "Nhà máy Pharma", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  fnb_factory: { label: "Nhà máy F&B", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  gmp_license: { label: "GMP License", color: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
-  tender: { label: "Đấu thầu", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  regulatory: { label: "Quy định", color: "bg-slate-500/10 text-slate-400 border-slate-500/20" }
+  pharma_factory: { label: "Nhà máy Pharma", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  fnb_factory: { label: "Nhà máy F&B", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  gmp_license: { label: "GMP License", color: "bg-violet-50 text-violet-700 border-violet-200" },
+  tender: { label: "Đấu thầu", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  regulatory: { label: "Quy định", color: "bg-gray-50 text-gray-700 border-gray-200" }
 };
 
 export default function MarketScan({ showToast }) {
@@ -113,21 +113,21 @@ export default function MarketScan({ showToast }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-900 p-6 rounded-2xl border border-surface-700/50 shadow-xl overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -mr-32 -mt-32"></div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl -mr-32 -mt-32"></div>
         <div className="flex items-center gap-4 relative z-10">
-          <div className="p-3 bg-primary/10 text-primary rounded-2xl shadow-glow-sm">
+          <div className="p-3 bg-primary/10 text-primary rounded-2xl shadow-sm">
             <Radar size={28} className={isScanning ? "animate-pulse" : ""} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-100 tracking-tight">Market Scan</h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Tin tức & Cơ hội mới tại Việt Nam</p>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Market Scan</h1>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">Tin tức & Cơ hội mới tại Việt Nam</p>
           </div>
         </div>
         <button 
           onClick={handleScanNow} 
           disabled={isScanning}
-          className="btn-primary flex items-center gap-2 whitespace-nowrap h-12 px-6 rounded-xl shadow-lg shadow-primary/20 relative z-10"
+          className="btn-primary flex items-center gap-2 whitespace-nowrap h-12 px-6 rounded-xl shadow-sm relative z-10"
         >
           <RefreshCw size={18} className={isScanning ? "animate-spin" : ""} />
           <span className="font-bold">{isScanning ? "Đang quét..." : "Quét Ngay"}</span>
@@ -147,18 +147,18 @@ export default function MarketScan({ showToast }) {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-surface-900 p-4 rounded-xl border border-surface-700/50 shadow-sm flex flex-col md:flex-row gap-4 items-center flex-wrap">
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center flex-wrap">
         <div className="w-full md:flex-1">
           <input 
             type="text" 
             placeholder="Tìm theo tiêu đề, công ty..." 
-            className="input w-full bg-surface-950/50 border-surface-700"
+            className="input w-full bg-gray-50 border-gray-200"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <select 
-          className="input w-full md:w-auto bg-surface-950/50 border-surface-700"
+          className="input w-full md:w-auto bg-gray-50 border-gray-200"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
         >
@@ -169,17 +169,17 @@ export default function MarketScan({ showToast }) {
           <option value="tender">Đấu thầu</option>
           <option value="regulatory">Quy định</option>
         </select>
-        <label className="flex items-center gap-2 cursor-pointer w-full md:w-auto py-2 pr-4 bg-surface-950/30 rounded-lg px-3 border border-surface-700/50">
+        <label className="flex items-center gap-2 cursor-pointer w-full md:w-auto py-2 pr-4 bg-gray-50 rounded-lg px-3 border border-gray-200">
           <input 
             type="checkbox" 
-            className="rounded border-surface-700 bg-surface-950 text-primary cursor-pointer"
+            className="rounded border-gray-200 bg-white text-primary cursor-pointer"
             checked={onlyLeads}
             onChange={(e) => setOnlyLeads(e.target.checked)}
           />
-          <span className="text-[10px] uppercase font-black text-slate-400">Chỉ xem Lead</span>
+          <span className="text-[10px] uppercase font-black text-gray-500">Chỉ xem Lead</span>
         </label>
         <select 
-          className="input w-full md:w-auto bg-surface-950/50 border-surface-700"
+          className="input w-full md:w-auto bg-gray-50 border-gray-200"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
         >
@@ -194,12 +194,12 @@ export default function MarketScan({ showToast }) {
           {[1, 2, 3, 4].map(k => <SkeletonCard key={k} />)}
         </div>
       ) : displayData.length === 0 ? (
-        <div className="card flex flex-col items-center justify-center p-16 text-center">
-          <div className="p-4 rounded-full mb-4" style={{ background: 'var(--bg-elevated)' }}>
-            <Radar size={48} style={{ color: 'var(--text-3)' }} />
+        <div className="card flex flex-col items-center justify-center p-16 text-center shadow-sm">
+          <div className="p-4 rounded-full mb-4 bg-gray-50">
+            <Radar size={48} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-1)' }}>Chưa có dữ liệu</h3>
-          <p className="mb-6 max-w-sm" style={{ color: 'var(--text-2)' }}>Chưa có thông tin thị trường nào. Bấm 'Quét Ngay' để bắt đầu lấy dữ liệu mới.</p>
+          <h3 className="text-lg font-bold mb-2 text-gray-900">Chưa có dữ liệu</h3>
+          <p className="mb-6 max-w-sm text-gray-600">Chưa có thông tin thị trường nào. Bấm 'Quét Ngay' để bắt đầu lấy dữ liệu mới.</p>
           <button onClick={handleScanNow} className="btn-primary">
             Quét Ngay
           </button>
@@ -244,23 +244,23 @@ function IntelCard({ item, onUpdateNotes, onConvertClick }) {
   const [expanded, setExpanded] = useState(false);
   const [localNotes, setLocalNotes] = useState(item.notes || "");
   
-  const catInfo = CATEGORY_MAP[item.category] || { label: item.category, color: "bg-surface-800 text-slate-400 border-surface-700" };
+  const catInfo = CATEGORY_MAP[item.category] || { label: item.category, color: "bg-gray-100 text-gray-500 border-gray-200" };
   const score = item.relevance_score || 0;
   
-  let scoreColor = "text-amber-400 bg-amber-400/10 border-amber-400/20";
-  if (score >= 70) scoreColor = "text-primary bg-primary/10 border-primary/20 shadow-glow-sm";
-  else if (score < 40) scoreColor = "text-slate-500 bg-slate-500/10 border-slate-500/20";
+  let scoreColor = "text-amber-500 bg-amber-50 border-amber-200";
+  if (score >= 70) scoreColor = "text-primary bg-primary/10 border-primary/20 shadow-sm";
+  else if (score < 40) scoreColor = "text-gray-500 bg-gray-100 border-gray-200";
 
   return (
-    <div className="bg-surface-900 rounded-2xl border border-surface-700/50 shadow-sm flex flex-col h-full hover:shadow-xl transition-all duration-300 group overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full hover:shadow-xl transition-all duration-300 group overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-surface-700/50 flex items-center justify-between gap-2 flex-wrap bg-surface-800/30">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-2 flex-wrap bg-gray-50/50">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border ${catInfo.color}`}>
             {catInfo.label}
           </span>
           {item.is_lead_candidate && (
-            <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-500 flex items-center gap-1">
+            <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border border-amber-200 bg-amber-50 text-amber-600 flex items-center gap-1">
               <Star size={10} className="fill-amber-500"/> Lead
             </span>
           )}
@@ -277,17 +277,17 @@ function IntelCard({ item, onUpdateNotes, onConvertClick }) {
 
       {/* Body */}
       <div className="p-5 flex-1 flex flex-col">
-        <h3 className="text-lg font-black text-slate-100 mb-3 leading-tight tracking-tight group-hover:text-primary transition-colors">
+        <h3 className="text-lg font-black text-gray-900 mb-3 leading-tight tracking-tight group-hover:text-primary transition-colors">
           {item.title}
         </h3>
         {item.region && (
-          <div className="flex items-center gap-1.5 text-slate-400 text-xs font-bold mb-4">
+          <div className="flex items-center gap-1.5 text-gray-500 text-xs font-bold mb-4">
             <MapPin size={12} className="text-primary" />
             {item.region}
           </div>
         )}
         
-        <div className="text-sm text-slate-400 mb-6 whitespace-pre-wrap leading-relaxed">
+        <div className="text-sm text-gray-700 mb-6 whitespace-pre-wrap leading-relaxed">
           {expanded ? item.summary : (item.summary?.substring(0, 150) || "") + (item.summary?.length > 150 ? "..." : "")}
           {item.summary?.length > 150 && (
             <button 
@@ -302,22 +302,22 @@ function IntelCard({ item, onUpdateNotes, onConvertClick }) {
         {item.companies_mentioned?.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {item.companies_mentioned.map((c, i) => (
-              <span key={i} className="px-2 py-1 bg-surface-950 text-slate-400 text-[10px] font-bold rounded border border-surface-700 flex items-center gap-1.5 shadow-inner">
+              <span key={i} className="px-2 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold rounded border border-gray-200 flex items-center gap-1.5 shadow-none">
                 <Building size={10} className="text-primary" /> {c}
               </span>
             ))}
           </div>
         )}
 
-        <div className="text-[10px] font-black text-slate-500 mb-4 mt-auto uppercase tracking-widest flex items-center gap-2">
-           <div className="w-1 h-1 rounded-full bg-slate-600"></div>
+        <div className="text-[10px] font-black text-gray-500 mb-4 mt-auto uppercase tracking-widest flex items-center gap-2">
+           <div className="w-1 h-1 rounded-full bg-gray-400"></div>
            Cập nhật: {format(new Date(item.scan_date), "dd/MM/yyyy")}
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-4 border-t border-surface-700/50 flex flex-col gap-3">
+        <div className="pt-4 border-t border-gray-200 flex flex-col gap-3">
           <textarea
-            className="input w-full text-xs resize-none bg-surface-950 border-surface-700 focus:border-primary/50 text-slate-300"
+            className="input w-full text-xs resize-none bg-gray-50 border-gray-200 focus:border-primary/50 text-gray-900"
             placeholder="Ghi chú thêm..."
             rows={2}
             value={localNotes}
@@ -327,7 +327,7 @@ function IntelCard({ item, onUpdateNotes, onConvertClick }) {
             }}
           />
           {item.is_lead_candidate && !item.converted_to_account && (
-            <button onClick={onConvertClick} className="btn-secondary w-full justify-center h-10 rounded-xl font-black uppercase tracking-widest text-[10px] border-amber-500/20 text-amber-500 hover:bg-amber-500/5">
+            <button onClick={onConvertClick} className="btn-secondary w-full justify-center h-10 rounded-xl font-black uppercase tracking-widest text-[10px] border-amber-300 text-amber-600 hover:bg-amber-50">
               Tạo Account
             </button>
           )}
@@ -394,18 +394,18 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="rounded-xl shadow-xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>Tạo Account mới</h2>
-          <button onClick={onClose} style={{ color: 'var(--text-3)' }} className="hover:opacity-70"><X size={20}/></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+      <div className="rounded-xl shadow-xl w-full max-w-md bg-white border border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+          <h2 className="font-semibold text-gray-900">Tạo Account mới</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={20}/></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="label">Tên Account</label>
             <input
               type="text"
-              className="input"
+              className="input w-full bg-gray-50 border-gray-200"
               value={form.name}
               onChange={e => setForm({...form, name: e.target.value})}
               required
@@ -415,17 +415,17 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
             <div>
               <label className="label">Loại ngành</label>
               <div className="flex gap-4 items-center h-10">
-                <label className="flex items-center gap-1 text-sm cursor-pointer" style={{ color: 'var(--text-2)' }}>
+                <label className="flex items-center gap-1 text-sm cursor-pointer text-gray-600">
                   <input type="radio" checked={form.type === "pharma"} onChange={() => setForm({...form, type:"pharma"})} className="accent-primary" /> Pharma
                 </label>
-                <label className="flex items-center gap-1 text-sm cursor-pointer" style={{ color: 'var(--text-2)' }}>
+                <label className="flex items-center gap-1 text-sm cursor-pointer text-gray-600">
                   <input type="radio" checked={form.type === "fnb"} onChange={() => setForm({...form, type:"fnb"})} className="accent-primary" /> F&B
                 </label>
               </div>
             </div>
             <div>
               <label className="label">Khu vực</label>
-              <select className="input" value={form.region} onChange={e => setForm({...form, region: e.target.value})}>
+              <select className="input w-full bg-gray-50 border-gray-200" value={form.region} onChange={e => setForm({...form, region: e.target.value})}>
                 <option value="North">Miền Bắc</option>
                 <option value="South">Miền Nam</option>
                 <option value="Central">Miền Trung</option>
@@ -433,7 +433,7 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
             </div>
           </div>
 
-          <div className="pt-4 space-y-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <div className="pt-4 space-y-4 border-t border-gray-200">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -441,16 +441,16 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
                 onChange={e => setForm({...form, createDeal: e.target.checked})}
                 className="rounded accent-primary"
               />
-              <span className="text-sm font-bold" style={{ color: 'var(--text-2)' }}>Tạo kèm một Deal (Cơ hội)</span>
+              <span className="text-sm font-bold text-gray-700">Tạo kèm một Deal (Cơ hội)</span>
             </label>
 
             {form.createDeal && (
-              <div className="space-y-3 p-3 rounded-lg animate-in fade-in duration-300" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+              <div className="space-y-3 p-3 rounded-lg animate-in fade-in duration-300 bg-gray-50 border border-gray-200">
                 <div>
                   <label className="label">Tên Deal</label>
                   <input
                     type="text"
-                    className="input h-9 text-sm"
+                    className="input w-full bg-white border-gray-200 h-9 text-sm"
                     value={form.dealName}
                     onChange={e => setForm({...form, dealName: e.target.value})}
                   />
@@ -460,7 +460,7 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
                     <label className="label">Giá trị dự kiến</label>
                     <input
                       type="number"
-                      className="input h-9 text-sm"
+                      className="input w-full bg-white border-gray-200 h-9 text-sm"
                       value={form.dealValue}
                       onChange={e => setForm({...form, dealValue: parseInt(e.target.value) || 0})}
                     />
@@ -469,7 +469,7 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
                     <label className="label">Ngày dự kiến chốt</label>
                     <input
                       type="date"
-                      className="input h-9 text-sm"
+                      className="input w-full bg-white border-gray-200 h-9 text-sm"
                       value={form.dealDate}
                       onChange={e => setForm({...form, dealDate: e.target.value})}
                     />
@@ -491,11 +491,11 @@ function CreateAccountModal({ intel, onClose, onSuccess, showToast }) {
   );
 }
 
-function StatCard({ label, value, color = "text-slate-100", valueClassName = "text-2xl md:text-3xl" }) {
+function StatCard({ label, value, color = "text-gray-900", valueClassName = "text-2xl md:text-3xl" }) {
   return (
-    <div className="bg-surface-900 p-5 rounded-2xl border border-surface-700/50 shadow-sm flex flex-col justify-center relative overflow-hidden group">
+    <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-center relative overflow-hidden group">
       <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">{label}</div>
+      <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">{label}</div>
       <div className={`${valueClassName} font-black tracking-tight ${color}`}>{value}</div>
     </div>
   );
@@ -503,18 +503,18 @@ function StatCard({ label, value, color = "text-slate-100", valueClassName = "te
 
 function SkeletonCard() {
   return (
-    <div className="card p-5 animate-pulse flex flex-col gap-4">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 animate-pulse flex flex-col gap-4">
       <div className="flex gap-2">
-        <div className="h-6 w-24 rounded-full" style={{ background: 'var(--bg-elevated)' }}></div>
-        <div className="h-6 w-16 rounded-full" style={{ background: 'var(--bg-elevated)' }}></div>
+        <div className="h-6 w-24 rounded-full bg-gray-100"></div>
+        <div className="h-6 w-16 rounded-full bg-gray-100"></div>
       </div>
-      <div className="h-6 rounded w-3/4" style={{ background: 'var(--bg-elevated)' }}></div>
-      <div className="h-4 rounded w-1/4" style={{ background: 'var(--bg-elevated)' }}></div>
+      <div className="h-6 rounded w-3/4 bg-gray-100"></div>
+      <div className="h-4 rounded w-1/4 bg-gray-100"></div>
       <div className="space-y-2 mt-2">
-        <div className="h-3 rounded w-full" style={{ background: 'var(--bg-elevated)' }}></div>
-        <div className="h-3 rounded w-5/6" style={{ background: 'var(--bg-elevated)' }}></div>
+        <div className="h-3 rounded w-full bg-gray-100"></div>
+        <div className="h-3 rounded w-5/6 bg-gray-100"></div>
       </div>
-      <div className="mt-auto h-10 rounded w-full" style={{ background: 'var(--bg-elevated)' }}></div>
+      <div className="mt-auto h-10 rounded w-full bg-gray-100"></div>
     </div>
   );
 }

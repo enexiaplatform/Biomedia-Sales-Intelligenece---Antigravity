@@ -12,8 +12,8 @@ import { callAISalesCoach } from "../lib/ai";
 
 const ADVANTAGE_CONFIG = {
 // Using Brain instead of Sparkles to prevent ReferenceError
-  biomedia: { label: "Biomedia", color: "bg-primary/10 text-primary border-primary/20 shadow-glow-sm", icon: Brain },
-  neutral: { label: "Ngang nhau", color: "bg-slate-500/10 text-slate-400 border-slate-500/20", icon: GitBranch },
+  biomedia: { label: "Biomedia", color: "bg-primary/10 text-primary border-primary/20 shadow-sm", icon: Brain },
+  neutral: { label: "Ngang nhau", color: "bg-gray-100 text-gray-500 border-gray-200", icon: GitBranch },
   competitor: { label: "Đối thủ", color: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: X }
 };
 
@@ -94,29 +94,29 @@ export default function Competitors({ showToast }) {
   return (
     <div className="space-y-8">
       {/* Premium Header */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6 mb-8 border-b border-white/5 pb-8">
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6 mb-8 border-b border-gray-200 pb-8">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 shadow-glow-sm">
+          <div className="p-3 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
             <TrendingUp className="text-red-500" size={28} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-slate-100 uppercase tracking-tighter">ĐỐI THỦ CẠNH TRANH</h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1">Competitive Intelligence</p>
+            <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">ĐỐI THỦ CẠNH TRANH</h1>
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mt-1">Competitive Intelligence</p>
           </div>
         </div>
       </div>
-      <div className="flex gap-2 p-1 rounded-2xl border border-surface-700/50 w-fit shadow-xl" style={{ background: 'var(--bg-elevated)' }}>
+      <div className="flex gap-2 p-1 rounded-2xl border border-gray-200 w-fit shadow-sm bg-white">
         <button
           onClick={() => setActiveTab("competitors")}
           className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
-            ${activeTab === "competitors" ? "bg-primary text-surface-950 shadow-glow-sm" : "text-slate-500 hover:text-slate-300"}`}
+            ${activeTab === "competitors" ? "bg-primary text-white shadow-md" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
         >
           Battlecenter
         </button>
         <button
           onClick={() => setActiveTab("winloss")}
           className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
-            ${activeTab === "winloss" ? "bg-primary text-surface-950 shadow-glow-sm" : "text-slate-500 hover:text-slate-300"}`}
+            ${activeTab === "winloss" ? "bg-primary text-white shadow-md" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
         >
           Phân Tích Thắng/Thua
         </button>
@@ -131,46 +131,46 @@ export default function Competitors({ showToast }) {
           </div>
 
           {competitors.length === 0 ? (
-            <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Chưa có đối thủ nào được theo dõi</div>
+            <div className="text-center py-16 text-sm text-gray-500">Chưa có đối thủ nào được theo dõi</div>
           ) : (
             <div className="space-y-3">
               {competitors.map((comp) => (
-                <div key={comp.id} className="bg-surface-900 border border-surface-700/50 rounded-3xl overflow-hidden group hover:border-primary/30 transition-all duration-300 shadow-xl relative">
-                   <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-[60px] pointer-events-none"></div>
+                <div key={comp.id} className="bg-white border border-gray-200 rounded-3xl overflow-hidden group hover:border-primary/50 transition-all duration-300 shadow-sm relative">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-red-50/50 blur-xl opacity-50 pointer-events-none"></div>
                   {/* Card Header */}
                   <div className="flex items-center gap-4 p-5">
-                    <div className="w-12 h-12 rounded-2xl bg-surface-950 border border-surface-700 flex items-center justify-center text-red-500 font-black text-xl shadow-inner group-hover:border-red-500/50 transition-colors">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center text-red-500 font-black text-xl shadow-sm group-hover:border-red-500/50 transition-colors">
                       {comp.name?.charAt(0)?.toUpperCase()}
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-black text-slate-100 uppercase tracking-tight">{comp.name}</div>
+                      <div className="text-sm font-black text-gray-900 uppercase tracking-tight">{comp.name}</div>
                       <div className="flex items-center gap-3 mt-1.5">
                          {comp.market_share && (
-                           <div className="text-[10px] bg-surface-950 px-2 py-0.5 rounded border border-surface-700 text-slate-400 font-bold uppercase tracking-widest">
+                           <div className="text-[10px] bg-gray-50 px-2 py-0.5 rounded border border-gray-200 text-gray-600 font-bold uppercase tracking-widest">
                              Share: {comp.market_share}
                            </div>
                          )}
-                         <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                            {battlecards[comp.id]?.length || 0} TIÊU CHÍ • {comp.win_loss?.[0]?.count ?? 0} HỒ SƠ
                          </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 z-10">
                       <button
                         onClick={() => handleGenerateAI(comp)}
                         disabled={aiLoading[comp.id]}
-                        className="h-10 px-4 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-surface-950 transition-all flex items-center gap-2 shadow-glow-sm"
+                        className="h-10 px-4 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all flex items-center gap-2 shadow-sm"
                       >
                         {aiLoading[comp.id] ? <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div> : <Brain size={14} />}
                         Tactical Intel
                       </button>
-                      <button onClick={() => setCompetitorModal(comp)} className="p-2.5 text-slate-500 hover:text-primary transition-colors">
+                      <button onClick={() => setCompetitorModal(comp)} className="p-2.5 text-gray-400 hover:text-primary transition-colors">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => setDeleteTarget(comp)} className="p-2.5 text-slate-500 hover:text-red-500 transition-colors">
+                      <button onClick={() => setDeleteTarget(comp)} className="p-2.5 text-gray-400 hover:text-red-500 transition-colors">
                         <Trash2 size={16} />
                       </button>
-                      <button onClick={() => toggleExpand(comp)} className="p-2.5 text-slate-500 hover:text-slate-100 transition-colors">
+                      <button onClick={() => toggleExpand(comp)} className="p-2.5 text-gray-400 hover:text-gray-800 transition-colors">
                         {expandedId === comp.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                       </button>
                     </div>
@@ -178,7 +178,7 @@ export default function Competitors({ showToast }) {
 
                   {/* AI Insight */}
                   {aiInsight[comp.id] && (
-                    <div className="mx-4 mb-4 bg-primary/5 border border-primary/20 rounded-2xl p-6 text-sm text-slate-300 whitespace-pre-wrap relative overflow-hidden group">
+                    <div className="mx-4 mb-4 bg-primary/5 border border-primary/20 rounded-2xl p-6 text-sm text-gray-700 whitespace-pre-wrap relative overflow-hidden group">
                       <div className="absolute top-0 right-0 p-3 text-primary/30 group-hover:text-primary transition-colors">
                          <Brain size={24} className="animate-pulse" />
                       </div>
@@ -189,10 +189,10 @@ export default function Competitors({ showToast }) {
 
                   {/* Battlecard Table */}
                   {expandedId === comp.id && (
-                    <div className="border-t border-surface-700/50 bg-surface-950/20">
-                      <div className="px-5 py-4 flex items-center justify-between border-b border-surface-700/30">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-glow-sm"></div>
+                    <div className="border-t border-gray-200 bg-gray-50">
+                      <div className="px-5 py-4 flex items-center justify-between border-b border-gray-200">
+                        <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm"></div>
                            Comparison Matrix
                         </span>
                         <button
@@ -203,12 +203,12 @@ export default function Competitors({ showToast }) {
                         </button>
                       </div>
                       {(battlecards[comp.id] || []).length === 0 ? (
-                        <div className="text-center py-10 text-[10px] font-black text-slate-600 uppercase tracking-widest italic">Chưa có dữ liệu so sánh đặc thù</div>
+                        <div className="text-center py-10 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">Chưa có dữ liệu so sánh đặc thù</div>
                       ) : (
                         <div className="overflow-x-auto scrollbar-hide">
                           <table className="w-full text-left">
                             <thead>
-                              <tr className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-surface-700/30">
+                              <tr className="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200">
                                 <th className="px-6 py-4">Tiêu chí tác chiến</th>
                                 <th className="px-6 py-4">Biomedia Solution</th>
                                 <th className="px-6 py-4">{comp.name} Alternative</th>
@@ -221,10 +221,10 @@ export default function Competitors({ showToast }) {
                                 const cfg = ADVANTAGE_CONFIG[bc.advantage];
                                 const AdvIcon = cfg?.icon || GitBranch;
                                 return (
-                                  <tr key={bc.id} className="border-b border-surface-700/20 hover:bg-surface-800/30 transition-colors group/row">
-                                    <td className="px-6 py-4 text-xs font-black text-slate-300 uppercase tracking-tight">{bc.criteria}</td>
+                                  <tr key={bc.id} className="border-b border-gray-200 hover:bg-white transition-colors group/row">
+                                    <td className="px-6 py-4 text-xs font-black text-gray-800 uppercase tracking-tight">{bc.criteria}</td>
                                     <td className="px-6 py-4 text-xs font-bold text-primary">{bc.biomedia_value || "—"}</td>
-                                    <td className="px-6 py-4 text-xs text-slate-400">{bc.competitor_value || "—"}</td>
+                                    <td className="px-6 py-4 text-xs text-gray-600">{bc.competitor_value || "—"}</td>
                                     <td className="px-6 py-4">
                                       <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase flex items-center gap-1.5 border w-fit ${cfg?.color}`}>
                                         <AdvIcon size={10} />
@@ -240,7 +240,7 @@ export default function Competitors({ showToast }) {
                                             [comp.id]: prev[comp.id].filter((b) => b.id !== bc.id)
                                           }));
                                         }}
-                                        className="text-slate-600 hover:text-red-500 opacity-0 group-hover/row:opacity-100 transition-all"
+                                        className="text-gray-400 hover:text-red-500 opacity-0 group-hover/row:opacity-100 transition-all"
                                       >
                                         <Trash2 size={14} />
                                       </button>
@@ -255,23 +255,23 @@ export default function Competitors({ showToast }) {
 
                       {/* Strengths / Weaknesses */}
                       {(comp.strengths || comp.weaknesses) && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-surface-700/30 border-t border-surface-700/50">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-gray-100/50 border-t border-gray-200">
                           {comp.strengths && (
-                            <div className="p-6 bg-surface-900 group">
+                            <div className="p-6 bg-white group">
                               <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                  <div className="w-1 h-3 bg-primary rounded-full"></div>
                                  ĐIỂM MẠNH ĐÓI THỦ
                               </div>
-                              <p className="text-xs text-slate-400 leading-relaxed font-medium">{comp.strengths}</p>
+                              <p className="text-xs text-gray-600 leading-relaxed font-medium">{comp.strengths}</p>
                             </div>
                           )}
                           {comp.weaknesses && (
-                            <div className="p-6 bg-surface-900 border-l border-surface-700/50 group">
+                            <div className="p-6 bg-white border-l border-gray-200 group">
                               <div className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                  <div className="w-1 h-3 bg-amber-500 rounded-full"></div>
                                  ĐIỂM YẾU HÀNH QUÂN
                               </div>
-                              <p className="text-xs text-slate-400 leading-relaxed font-medium">{comp.weaknesses}</p>
+                              <p className="text-xs text-gray-600 leading-relaxed font-medium">{comp.weaknesses}</p>
                             </div>
                           )}
                         </div>
@@ -295,43 +295,43 @@ export default function Competitors({ showToast }) {
 
           {/* Win/Loss Summary Dashboard */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-             <div className="bg-surface-900 border border-surface-700/50 p-6 rounded-3xl relative overflow-hidden group shadow-lg">
+             <div className="bg-white border border-gray-200 p-6 rounded-3xl relative overflow-hidden group shadow-sm">
                 <div className="absolute top-0 left-0 w-1 h-full bg-primary/40"></div>
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Tỉ lệ thắng (Win Rate)</div>
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Tỉ lệ thắng (Win Rate)</div>
                 <div className="text-3xl font-black text-primary tracking-tighter">
                    {winLoss.length > 0 ? (winLoss.filter(wl => wl.outcome === 'won').length / winLoss.length * 100).toFixed(0) : 0}%
                 </div>
-                <div className="mt-4 h-1.5 w-full bg-surface-950 rounded-full overflow-hidden">
+                <div className="mt-4 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                    <div
-                     className="h-full bg-primary shadow-glow-sm transition-all duration-1000"
+                     className="h-full bg-primary shadow-sm transition-all duration-1000"
                      style={{ width: `${winLoss.length > 0 ? (winLoss.filter(wl => wl.outcome === 'won').length / winLoss.length * 100) : 0}%` }}
                    ></div>
                 </div>
              </div>
 
-             <div className="bg-surface-900 border border-surface-700/50 p-6 rounded-3xl shadow-lg relative overflow-hidden">
+             <div className="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/40"></div>
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Lý do thua phổ biến nhất</div>
-                <div className="text-xl font-black text-slate-100 tracking-tight mt-1 line-clamp-1">
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Lý do thua phổ biến nhất</div>
+                <div className="text-xl font-black text-gray-900 tracking-tight mt-1 line-clamp-1">
                    {winLoss.filter(wl => wl.outcome === 'lost').length > 0
                      ? "Giá cạnh tranh & Support"
                      : "—"}
                 </div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Dựa trên {winLoss.length} hồ sơ dự thầu</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase mt-2">Dựa trên {winLoss.length} hồ sơ dự thầu</p>
              </div>
 
-             <div className="bg-surface-900 border border-surface-700/50 p-6 rounded-3xl shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-slate-500/40"></div>
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Thắng nhiều nhất với</div>
-                <div className="text-xl font-black text-slate-100 tracking-tight mt-1">
+             <div className="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-gray-500/40"></div>
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Thắng nhiều nhất với</div>
+                <div className="text-xl font-black text-gray-900 tracking-tight mt-1">
                    Microbiology Quality Control
                 </div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Ngành hàng chủ đạo</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase mt-2">Ngành hàng chủ đạo</p>
              </div>
           </div>
 
           {winLoss.length === 0 ? (
-            <div className="text-center py-16 text-sm" style={{ color: 'var(--text-3)' }}>Chưa có kết quả W/L nào</div>
+            <div className="text-center py-16 text-sm text-gray-500">Chưa có kết quả W/L nào</div>
           ) : (
             <div className="card table-container">
               <table className="table">
@@ -353,15 +353,15 @@ export default function Competitors({ showToast }) {
                       <td>{wl.deals?.name || "—"}</td>
                       <td>{wl.competitors?.name || "—"}</td>
                       <td>
-                        <span className={`badge ${wl.outcome === "won" ? "bg-green-500/15 text-green-400 border-green-500/20" : "bg-red-500/15 text-red-400 border-red-500/20"}`}>
+                        <span className={`badge ${wl.outcome === "won" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}>
                           {wl.outcome === "won" ? "Thắng" : "Thua"}
                         </span>
                       </td>
                       <td className="max-w-xs">
-                        <p className="text-sm line-clamp-2" style={{ color: 'var(--text-2)' }}>{wl.reason || "—"}</p>
+                        <p className="text-sm line-clamp-2 text-gray-700">{wl.reason || "—"}</p>
                       </td>
                       <td className="max-w-xs">
-                        <p className="text-sm line-clamp-2" style={{ color: 'var(--text-2)' }}>{wl.lessons || "—"}</p>
+                        <p className="text-sm line-clamp-2 text-gray-700">{wl.lessons || "—"}</p>
                       </td>
                       <td>
                         <button
@@ -370,8 +370,7 @@ export default function Competitors({ showToast }) {
                             setWinLoss((p) => p.filter((w) => w.id !== wl.id));
                             showToast("Đã xóa");
                           }}
-                          style={{ color: 'var(--text-3)' }}
-                          className="hover:text-red-500"
+                          className="text-gray-400 hover:text-red-500"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -432,10 +431,10 @@ export default function Competitors({ showToast }) {
 
       {/* Delete Confirm */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="rounded-xl shadow-2xl p-6 max-w-sm w-full" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <h3 className="font-semibold mb-2" style={{ color: 'var(--text-1)' }}>Xóa đối thủ?</h3>
-            <p className="text-sm mb-5" style={{ color: 'var(--text-2)' }}>Xóa "<strong>{deleteTarget.name}</strong>"?</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+          <div className="rounded-xl shadow-xl p-6 max-w-sm w-full bg-white border border-gray-200">
+            <h3 className="font-semibold mb-2 text-gray-900">Xóa đối thủ?</h3>
+            <p className="text-sm mb-5 text-gray-600">Xóa "<strong>{deleteTarget.name}</strong>"?</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="btn-secondary flex-1">Hủy</button>
               <button onClick={() => handleDeleteCompetitor(deleteTarget.id)} className="btn-danger flex-1">Xóa</button>
@@ -469,11 +468,11 @@ function CompetitorModal({ competitor, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>{competitor ? "Sửa đối thủ" : "Thêm đối thủ"}</h2>
-          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+      <div className="rounded-xl shadow-xl w-full max-w-md bg-white border border-gray-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+          <h2 className="font-semibold text-gray-900">{competitor ? "Sửa đối thủ" : "Thêm đối thủ"}</h2>
+          <button onClick={onClose} className="text-xl text-gray-400 hover:text-gray-600 transition-colors">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
@@ -537,11 +536,11 @@ function BattlecardModal({ competitorId, competitorName, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>Thêm tiêu chí vs {competitorName}</h2>
-          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+      <div className="rounded-xl shadow-xl w-full max-w-md bg-white border border-gray-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+          <h2 className="font-semibold text-gray-900">Thêm tiêu chí vs {competitorName}</h2>
+          <button onClick={onClose} className="text-xl text-gray-400 hover:text-gray-600 transition-colors">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
@@ -600,11 +599,11 @@ function WinLossModal({ competitors, deals, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="rounded-xl shadow-2xl w-full max-w-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-          <h2 className="font-semibold" style={{ color: 'var(--text-1)' }}>Thêm kết quả Thắng/Thua</h2>
-          <button onClick={onClose} className="text-xl" style={{ color: 'var(--text-3)' }}>×</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+      <div className="rounded-xl shadow-xl w-full max-w-md bg-white border border-gray-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+          <h2 className="font-semibold text-gray-900">Thêm kết quả Thắng/Thua</h2>
+          <button onClick={onClose} className="text-xl text-gray-400 hover:text-gray-600 transition-colors">×</button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
