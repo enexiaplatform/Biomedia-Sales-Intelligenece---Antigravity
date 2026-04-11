@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Plus, X, AlertCircle, Zap, Search, Filter,
@@ -98,6 +98,7 @@ export default function Pipeline() {
   const [coachLoading, setCoachL] = useState(false);
   const [coachResult, setCoachR] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const csvInputRef = useRef(null);
 
   // Filters
   const [search, setSearch] = useState('');
