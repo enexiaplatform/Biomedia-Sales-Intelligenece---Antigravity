@@ -447,20 +447,24 @@ export default function Pipeline() {
           <KPICard 
             title="Tổng pipeline" 
             value={
-              <div className="flex flex-col">
-                <span className="text-2xl">{fmt(kpis.totalPipelineVND)}</span>
-                {kpis.totalPipelineSGD > 0 && <span className="text-xl text-blue-600">{fmtSGD(kpis.totalPipelineSGD)}</span>}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-2xl font-black">{fmt(kpis.totalPipelineVND)}</span>
+                <span className="text-sm font-semibold text-blue-500">
+                  SGD: {new Intl.NumberFormat('en-SG').format(kpis.totalPipelineSGD)} SGD
+                </span>
               </div>
             }
-            sub={kpis.totalPipelineSGD > 0 ? "VND + SGD Combined" : "Cơ hội (VND)"} 
+            sub="VND + SGD tracked separately" 
             icon={<DollarSign className="text-emerald-500" />} 
           />
           <KPICard 
             title="Dự báo weighted" 
             value={
-              <div className="flex flex-col">
-                <span className="text-2xl">{fmt(kpis.weightedForecastVND)}</span>
-                {kpis.weightedForecastSGD > 0 && <span className="text-xl text-blue-600">{fmtSGD(kpis.weightedForecastSGD)}</span>}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-2xl font-black">{fmt(kpis.weightedForecastVND)}</span>
+                <span className="text-sm font-semibold text-blue-500">
+                  SGD: {new Intl.NumberFormat('en-SG').format(Math.round(kpis.weightedForecastSGD))} SGD
+                </span>
               </div>
             }
             sub="Tính theo xác suất" 
@@ -573,6 +577,7 @@ export default function Pipeline() {
                   <Th label="Tên Deal" field="name" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                   <Th label="Tài khoản" field="account_name" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                   <Th label="Sản phẩm" field="product" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
+                  <Th label="Hãng" field="brand" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                   <Th label="Giai đoạn" field="stage" current={sortField} dir={sortDir} onSort={toggleSort} density={density} />
                   <Th label="Giá trị (VND)" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
                   <Th label="Giá trị (SGD)" field="value" current={sortField} dir={sortDir} onSort={toggleSort} align="right" density={density} />
@@ -595,6 +600,7 @@ export default function Pipeline() {
                     <td className={`${tdClass} font-semibold text-gray-900`}>{deal.name}</td>
                     <td className={`${tdClass} text-gray-600`}>{deal.accounts?.name || '—'}</td>
                     <td className={`${tdClass} text-gray-400 italic`}>{deal.product || '—'}</td>
+                    <td className={`${tdClass} text-gray-500 italic text-xs`}>{deal.brand || '—'}</td>
                     <td className={`${tdClass}`}>
                       <CompactStageBadge stage={deal.stage} />
                     </td>
@@ -619,9 +625,9 @@ export default function Pipeline() {
                     </td>
                     <td className={`${tdClass} text-center`}>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setSelected(deal); setEditingDeal(deal); }}
+                        onClick={(e) => { e.stopPropagation(); setSelected(deal); }}
                         className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
-                        title="Chỉnh sửa nhanh"
+                        title="Mở chi tiết"
                       >
                         <Edit2 size={14} />
                       </button>
@@ -631,7 +637,7 @@ export default function Pipeline() {
               </tbody>
               <tfoot className="bg-gray-50/50 font-bold border-t border-gray-100">
                 <tr>
-                  <td colSpan={4} className="px-4 py-2 text-right text-gray-500 uppercase tracking-wider text-[11px]">Tổng Pipeline:</td>
+                  <td colSpan={5} className="px-4 py-2 text-right text-gray-500 uppercase tracking-wider text-[11px]">Tổng Pipeline:</td>
                   <td className="px-4 py-2 text-right text-gray-900 text-xs">
                     {tableTotals.vndRaw > 0 ? fmt(tableTotals.vndRaw) : '—'}
                   </td>
@@ -874,17 +880,7 @@ export default function Pipeline() {
         />
       )}
 
-      {/* 8. Edit Deal Modal */}
-      {editingDeal && (
-        <EditDealModal 
-          deal={editingDeal}
-          accounts={accounts} 
-          onClose={() => setEditingDeal(null)} 
-          onSave={handleUpdateDeal}
-          saving={savingDeal}
-          onDelete={() => setShowDeleteConfirm(true)}
-        />
-      )}
+
 
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
@@ -1297,6 +1293,7 @@ function SideDrawer({ deal, onClose, saving, onAICoach, coachLoading, coachResul
     name: deal.name || '',
     account_id: deal.account_id || '',
     product: deal.product || '',
+    brand: deal.brand || '',
     value: deal.value || 0,
     currency: deal.currency || 'VND',
     stage: deal.stage || 'Prospect',
@@ -1310,6 +1307,7 @@ function SideDrawer({ deal, onClose, saving, onAICoach, coachLoading, coachResul
       name: deal.name || '',
       account_id: deal.account_id || '',
       product: deal.product || '',
+      brand: deal.brand || '',
       value: deal.value || 0,
       currency: deal.currency || 'VND',
       stage: deal.stage || 'Prospect',
@@ -1459,6 +1457,25 @@ function SideDrawer({ deal, onClose, saving, onAICoach, coachLoading, coachResul
           </div>
 
           <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><Briefcase size={14} />Hãng</div>
+            {isEditing ? (
+              <input 
+                type="text"
+                list="brand-suggestions"
+                className="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm"
+                value={form.brand}
+                onChange={e => setForm({...form, brand: e.target.value})}
+                placeholder="Tailin, PMM, Merck..."
+              />
+            ) : (
+              <div className="text-sm text-gray-900 font-bold">{deal.brand || '—'}</div>
+            )}
+            <datalist id="brand-suggestions">
+              {['Tailin','PMM','CulturaLab','Scitek','Merck','Thermo Fisher'].map(b => <option key={b} value={b} />)}
+            </datalist>
+          </div>
+
+          <div>
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5"><Clock size={14} />Ngày dự kiến</div>
             {isEditing ? (
               <input 
@@ -1539,6 +1556,7 @@ function AddDealModal({ accounts, onClose, onSave, saving }) {
     name: '',
     account_id: '',
     product: '',
+    brand: '',
     value: '',
     stage: 'Prospect',
     probability: 10,
@@ -1597,6 +1615,21 @@ function AddDealModal({ accounts, onClose, onSave, saving }) {
                 value={form.product}
                 onChange={e => setForm({...form, product: e.target.value})}
               />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-2">Hãng</label>
+              <input 
+                type="text"
+                list="add-brand-suggestions"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none"
+                value={form.brand}
+                onChange={e => setForm({...form, brand: e.target.value})}
+                placeholder="Tailin, PMM, Merck..."
+              />
+              <datalist id="add-brand-suggestions">
+                {['Tailin','PMM','CulturaLab','Scitek','Merck','Thermo Fisher'].map(b => <option key={b} value={b} />)}
+              </datalist>
             </div>
 
             <div className="flex gap-2">
@@ -1681,7 +1714,8 @@ function AddDealModal({ accounts, onClose, onSave, saving }) {
   );
 }
 
-function EditDealModal({ deal, accounts, onClose, onSave, saving, onDelete }) {
+// EditDealModal removed — editing is handled by SideDrawer
+function _EditDealModal_REMOVED({ deal, accounts, onClose, onSave, saving, onDelete }) {
   const [form, setForm] = useState({
     name: deal.name || '',
     account_id: deal.account_id || '',
